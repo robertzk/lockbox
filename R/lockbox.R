@@ -22,8 +22,29 @@ lockbox.character <- function(file) {
 }
 
 lockbox.list <- function(lock) {
+  lock <- lapply(lock, as.locked_package)
 
+  mismatch <- lapply(lock, version_mismatch)
 }
+
+as.locked_package <- function(list) {
+  stopifnot(is.element("name", names(list)),
+            is.element("version", names(list)))
+
+  if (is.element("repo", names(list)) && !is.element("remote", names(list))) {
+    list$remote <- "github"
+  }
+
+  if (is.na(package_version(list$version))) {
+    stop(sprintf("Invalid package %s version %s.", 
+                 sQuote(list$name), sQuote(list$version)))
+  }
+
+  # TODO: (RK) Support CRAN version dependencies.
+  structure(list, class = "locked_package")
+}
+
+is.locked_package <- function(obj) is(obj, "locked_package")
 
 lockbox.default <- function(obj) {
   stop(

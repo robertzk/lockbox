@@ -31,7 +31,7 @@ lockbox.list <- function(lock) {
   align(lock[mismatches])
 
   ## And re-build our search path.
-  rebuild() 
+  rebuild(lock) 
 }
 
 as.locked_package <- function(list) {
@@ -65,7 +65,7 @@ lockbox.default <- function(obj) {
 
 #' The secret lockbox library path.
 lockbox_dir <- function() {
-  getOption("lockbox.dir") %||% normalizePath("~/.R/lockbox")
+  getOption("lockbox.dir") %||% normalizePath("~/.R/lockbox", mustWork = FALSE)
 }
 
 

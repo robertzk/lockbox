@@ -15,7 +15,7 @@
 #'    does not exist.
 `ensure_package_exists_in_lockbox!` <- function(locked_package) {
   if (!exists_in_lockbox(locked_package)) {
-    place_in_lockbox(locked_package)
+    `place_in_lockbox!`(locked_package)
   }
 }
 
@@ -27,9 +27,12 @@ lockbox_package_path <- function(locked_package) {
   file.path(lockbox_dir(), locked_package$name, locked_package$version)
 }
 
-place_in_lockbox <- function(locked_package) {
+`place_in_lockbox!` <- function(locked_package) {
   remote <- locked_package$remote %||% "CRAN"
-  install_package(structure(locked_package, class = c(remote, locked_package)))
+  install_package(structure(
+    locked_package,
+    class = c(remote, class(locked_package))
+  ))
 }
 
 install_package <- function(locked_package) {
@@ -37,6 +40,7 @@ install_package <- function(locked_package) {
 }
 
 install_package.CRAN <- function(locked_package) {
+  # TODO: (RK) Fetch correct version?
   install_locked_package(locked_package, install.packages(locked_package$name))
 }
 
@@ -45,13 +49,15 @@ install_package.github <- function(locked_package) {
 
   ref <- locked_package$ref %||% locked_package$version
   install_locked_package(locked_package, {
-    devtools::install_github(paste(locked_package$repo, ref, sep = "@"))
+    devtools::install_github(
+      paste(locked_package$repo, ref, sep = "@"),
+      reload = FALSE
+    )
   })
 }
 
 install_locked_package <- function(locked_package, installing_expr) {
-  # TODO: (RK) Fetch correct version?
-  tempdir <- file.path(libPath(), locked_package$name, "download")
+  tempdir <- file.path(lockbox_dir(), locked_package$name, "download")
   dir.create(tempdir, FALSE, TRUE)
 
   on.exit({

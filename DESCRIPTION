@@ -8,14 +8,15 @@ Maintainer: Robert Krzyzanowski <technoguyrob@gmail.com>
 Authors@R: c(person("Robert", "Krzyzanowski",
     email = "technoguyrob@gmail.com", role = c("aut", "cre")))
 Depends:
-    R (>= 3.0.1)
+    R (>= 3.0.1),
+    httr,
+    RCurl
 License: MIT
 LazyData: true
 Imports:
     yaml,
     digest,
-    testthatsomemore,
-    httr
+    testthatsomemore
 Suggests:
     knitr,
     microbenchmark,

@@ -14,7 +14,7 @@ rebuild <- function(packages) {
 reset_search_path <- function() {
   # Helpfully borrowed from https://github.com/romainfrancois/nothing/blob/master/R/zzz.R
   repeat {
-    pkgs <- setdiff(.packages(), c(native_namespaces, "lockbox"))
+    pkgs <- setdiff(.packages(), c(native_namespaces, c("lockbox", "httr", "RCurl")))
     if (!length(pkgs)) break
     for (pkg in pkgs) {
       try(detach(paste0("package:", pkg),

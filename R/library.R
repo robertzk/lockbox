@@ -14,7 +14,50 @@
 #'    download the package from CRAN or github if the name + version combo
 #'    does not exist.
 `ensure_package_exists_in_lockbox!` <- function(locked_package) {
-  
+  if (!exists_in_lockbox(locked_package)) {
+    place_in_lockbox(locked_package)
+  }
+}
+
+exists_in_lockbox <- function(locked_package) {
+  file.exists(lockbox_package_path(locked_package))
+}
+
+lockbox_package_path <- function(locked_package) {
+  file.path(lockbox_dir(), locked_package$name, locked_package$version)
+}
+
+place_in_lockbox <- function(locked_package) {
+  remote <- locked_package$remote %||% "CRAN"
+  install_package(structure(locked_package, class = c(remote, locked_package)))
+}
+
+install_package <- function(locked_package) {
+  UseMethod("install_package")
+}
+
+install_package.CRAN <- function(locked_package) {
+  install_locked_package(locked_package, install.packages(locked_package$name))
+}
+
+install_locked_package <- function(locked_package, installing_expr) {
+  # TODO: (RK) Fetch correct version?
+  tempdir <- file.path(libPath(), locked_package$name, "download")
+  dir.create(tempdir, FALSE, TRUE)
+
+  on.exit({
+    pkgdir <- file.path(tempdir, locked_package$name)
+    stopifnot(file.exists(pkgdir)) # Must have installed the package.
+    newdir <- file.path(dirname(tempdir), as.character(locked_package$version))
+    file.rename(pkgdir, newdir)
+    unlink(tempdir, TRUE, TRUE)
+  })
+
+  ## Pretend our library path is the temporary library for this particular
+  ## package name.
+  testthatsomemore::package_stub("base", ".libPaths", function() tempdir, {
+    force(installing_expr)
+  })
 }
 
 #' Find packages whose version does not match the current library's version.

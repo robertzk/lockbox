@@ -14,9 +14,8 @@ rebuild <- function(packages) {
 reset_search_path <- function() {
   # Helpfully borrowed from https://github.com/romainfrancois/nothing/blob/master/R/zzz.R
   repeat {
-    pkgs <- setdiff(loadedNamespaces(), c(native_namespaces, c("lockbox", "httr", "RCurl", "bitops", "crayon", "yaml", "testthat", "testthatsomemore", "stringr", "digest", "lubridate", "memoise", "plyr", "magrittr")))
+    pkgs <- setdiff(loadedNamespaces(), c(native_namespaces, c("lockbox", "httr", "RCurl", "bitops", "crayon", "yaml", "testthat", "testthatsomemore", "stringr", "digest", "lubridate", "memoise", "plyr", "magrittr", "devtools")))
     if (!length(pkgs)) break
-      print(pkgs)
     for (pkg in pkgs) {
       try({
         unloadNamespace(pkg)
@@ -26,8 +25,7 @@ reset_search_path <- function() {
 }
 
 attach <- function(locked_package) {
-  loadNamespace(locked_package$name, lib.loc = libPath())
-  library(locked_package$name, character.only = TRUE, lib.loc = libPath())
+  library(locked_package$name, character.only = TRUE)
   locked_package$name
 }
 

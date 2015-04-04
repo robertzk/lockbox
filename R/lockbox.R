@@ -14,8 +14,24 @@
 #'    parsed out list format. This set of packages will be loaded into the
 #'    search path and \emph{all other packages will be unloaded}.
 lockbox <- function(file_or_list) {
+  UseMethod("lockbox")
+}
+
+lockbox.character <- function(file) {
+  lockbox(yaml::yaml.load_file(file))
+}
+
+lockbox.list <- function(lock) {
 
 }
+
+lockbox.default <- function(obj) {
+  stop("Invalid parameters passed to ", sQuote("lockbox"), " method: ",
+       "must be a ", sQuote("character"), " or ", sQuote("list"), " but ",
+       "instead I got a ", sQuote(class(obj)[1]), ".")
+}
+
+
 # lockfile <- yaml::yaml.load_file(file.path(root(), 'config', 'lockfile.yml'))
 # any_updated <- FALSE
 # lapply(lockfile, function(pkg) {

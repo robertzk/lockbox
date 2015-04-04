@@ -11,5 +11,7 @@ rebuild(packages)
 }
 \description{
 As with the \href{https://github.com/romainfrancois/nothing}{nothing package},
+this function will unload everything except the base R packages from the
+search path prior to re-building.
 }
 

@@ -9,6 +9,11 @@ libPath <- function() {
   lib
 }
 
+lockbox_imports <- function() {
+  dcf <- system.file("DESCRIPTION", package = "lockbox", lib.loc = .Library)
+  Filter(nzchar, strsplit(read.dcf(dcf)[,"Imports"], "[\n, ]+")[[1]])
+}
+
 #' @author Kevin Ushey
 #' @source \url{https://github.com/rstudio/packrat/blob/92492ebc882bd048f092238af033d8a6fd03902f/R/utils.R#L469}
 symlink <- function(from, to) {

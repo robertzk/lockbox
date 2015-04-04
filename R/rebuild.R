@@ -8,16 +8,24 @@
 rebuild <- function(packages) {
   reset_search_path()
 
-  lapply(packages, attach)
+  invisible(vapply(packages, attach, character(1)))
 }
 
 reset_search_path <- function() {
+  # Helpfully borrowed from https://github.com/romainfrancois/nothing/blob/master/R/zzz.R
   repeat {
-    pkgs <- setdiff(loadedNamespaces(), "base")
+    pkgs <- setdiff(.packages(), c(native_namespaces, "lockbox"))
+    if (!length(pkgs)) break
+    for (pkg in pkgs) {
+      try(detach(paste0("package:", pkg),
+                 character.only = TRUE, force = TRUE),
+          silent = TRUE)
+    }
   }
 }
 
 attach <- function(locked_package) {
+  library(locked_package$name, character.only = TRUE, lib.loc = libPath())
   locked_package$name
 }
 

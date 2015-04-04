@@ -23,8 +23,9 @@ lockbox.character <- function(file) {
 
 lockbox.list <- function(lock) {
   lock <- lapply(lock, as.locked_package)
-
-  mismatch <- lapply(lock, version_mismatch)
+  
+  ## Find the packages whose version does not match the current library.
+  mismatch <- vapply(lock, version_mismatch, logical(1))
 }
 
 as.locked_package <- function(list) {
@@ -38,6 +39,8 @@ as.locked_package <- function(list) {
   if (is.na(package_version(list$version))) {
     stop(sprintf("Invalid package %s version %s.", 
                  sQuote(list$name), sQuote(list$version)))
+  } else {
+    list$version <- package_version(list$version)
   }
 
   # TODO: (RK) Support CRAN version dependencies.

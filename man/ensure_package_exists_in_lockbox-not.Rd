@@ -19,7 +19,7 @@ each given version. By default, this is in
 is not set.
 }
 \note{
-The weird name is a derivative of a \url[=Rubyism]{http://stackoverflow.com/questions/612189/why-are-exclamation-marks-used-in-ruby-methods}
+The weird name is a derivative of a \href{http://stackoverflow.com/questions/612189/why-are-exclamation-marks-used-in-ruby-methods}{Rubyism}
    to indicate some serious side effects can occur! In this case, we
    download the package from CRAN or github if the name + version combo
    does not exist.

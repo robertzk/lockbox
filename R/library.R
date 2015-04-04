@@ -9,7 +9,7 @@
 #'    \code{version} elements will be used. If the package version is
 #'    not present in the lockbox, we will attempt to download it from
 #'    CRAN or github.
-#' @note The weird name is a derivative of a \url[=Rubyism]{http://stackoverflow.com/questions/612189/why-are-exclamation-marks-used-in-ruby-methods}
+#' @note The weird name is a derivative of a \href{http://stackoverflow.com/questions/612189/why-are-exclamation-marks-used-in-ruby-methods}{Rubyism}
 #'    to indicate some serious side effects can occur! In this case, we 
 #'    download the package from CRAN or github if the name + version combo
 #'    does not exist.

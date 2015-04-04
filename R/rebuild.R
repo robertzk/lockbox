@@ -14,24 +14,26 @@ rebuild <- function(packages) {
 reset_search_path <- function() {
   # Helpfully borrowed from https://github.com/romainfrancois/nothing/blob/master/R/zzz.R
   repeat {
-    pkgs <- setdiff(.packages(), c(native_namespaces, c("lockbox", "httr", "RCurl")))
+    pkgs <- setdiff(loadedNamespaces(), c(native_namespaces, c("lockbox", "httr", "RCurl", "bitops", "crayon", "yaml", "testthat", "testthatsomemore", "stringr", "digest", "lubridate", "memoise", "plyr", "magrittr")))
     if (!length(pkgs)) break
+      print(pkgs)
     for (pkg in pkgs) {
-      try(detach(paste0("package:", pkg),
-                 character.only = TRUE, force = TRUE),
-          silent = TRUE)
+      try({
+        unloadNamespace(pkg)
+      }, silent = TRUE)
     }
   }
 }
 
 attach <- function(locked_package) {
+  loadNamespace(locked_package$name, lib.loc = libPath())
   library(locked_package$name, character.only = TRUE, lib.loc = libPath())
   locked_package$name
 }
 
 # https://github.com/wch/r-source/tree/trunk/src/library
 native_namespaces <-
-  c("base", "compiler", "datasets", "grDevices", "graphics", "grid",
+  c("base", "stats", "compiler", "datasets", "grDevices", "graphics", "grid",
     "methods", "parallel", "profile", "splines", "stats4", "tcltk",
-    "tools", "translations", "utils")
+    "tools", "translations", "utils", "lattice", "Matrix")
 

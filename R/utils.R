@@ -1,6 +1,13 @@
 `%||%` <- function(x, y) if (is.null(x)) y else x
 
-libPath <- function() .libPaths()[1L]
+libPath <- function() {
+  lib <- .libPaths()[1L]
+  if (identical(lib, .Library)) {
+    # We *never* want to accidentally manipulate the system library!
+    stop("Something went wrong, restart R or lockbox.")
+  }
+  lib
+}
 
 #' @author Kevin Ushey
 #' @source \url{https://github.com/rstudio/packrat/blob/92492ebc882bd048f092238af033d8a6fd03902f/R/utils.R#L469}

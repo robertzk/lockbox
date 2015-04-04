@@ -25,7 +25,13 @@ lockbox.list <- function(lock) {
   lock <- lapply(lock, as.locked_package)
   
   ## Find the packages whose version does not match the current library.
-  mismatch <- vapply(lock, version_mismatch, logical(1))
+  mismatches <- vapply(lock, version_mismatch, logical(1))
+
+  ## Replace our library so that it has these packages instead.
+  align(lock[mismatches])
+
+  ## And re-build our search path.
+  rebuild() 
 }
 
 as.locked_package <- function(list) {

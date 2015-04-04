@@ -54,3 +54,7 @@ is.symlink <- function(path) {
   else nzchar(result)
 }
 
+setNames <- function(object = nm, nm) {
+  names(object) <- nm
+  object
+}

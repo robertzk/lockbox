@@ -68,3 +68,9 @@ lockbox_dir <- function() {
   getOption("lockbox.dir") %||% normalizePath("~/.R/lockbox", mustWork = FALSE)
 }
 
+#' The transient lockbox library path.
+lockbox_transient_dir <- function() {
+  getOption("lockbox.transient_dir") %||%
+    normalizePath("~/.R/lockbox_transient", mustWork = FALSE)
+}
+

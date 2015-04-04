@@ -14,7 +14,8 @@ LazyData: true
 Imports:
     yaml,
     digest,
-    testthatsomemore
+    testthatsomemore,
+    httr
 Suggests:
     knitr,
     microbenchmark,

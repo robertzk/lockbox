@@ -10,16 +10,17 @@ Authors@R: c(person("Robert", "Krzyzanowski",
 Depends:
     R (>= 3.0.1),
     httr,
-    RCurl
+    RCurl,
+    utils
 License: MIT
 LazyData: true
 Imports:
     yaml,
     digest,
-    testthatsomemore
+    testthatsomemore,
+    devtools
 Suggests:
     knitr,
     microbenchmark,
-    testthat,
-    devtools
+    testthat
 Roxygen: list(wrap = FALSE)

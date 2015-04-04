@@ -10,6 +10,7 @@
 #' Since lockbox maintains a separate directory for its library, it will not
 #' interfere with R's usual packages or libraries when R is restarted.
 #'
+#' @export
 #' @param file_or_list character or list. A yaml-based lock file or its
 #'    parsed out list format. This set of packages will be loaded into the
 #'    search path and \emph{all other packages will be unloaded}.
@@ -17,21 +18,25 @@ lockbox <- function(file_or_list) {
   UseMethod("lockbox")
 }
 
+#' @export
 lockbox.character <- function(file) {
   lockbox(yaml::yaml.load_file(file))
 }
 
+#' @export
 lockbox.list <- function(lock) {
   lock <- lapply(lock, as.locked_package)
   
   ## Find the packages whose version does not match the current library.
   mismatches <- vapply(lock, version_mismatch, logical(1))
 
-  ## Replace our library so that it has these packages instead.
-  align(lock[mismatches])
+  quietly({
+    ## Replace our library so that it has these packages instead.
+    align(lock[mismatches])
 
-  ## And re-build our search path.
-  rebuild(lock) 
+    ## And re-build our search path.
+    rebuild(lock) 
+  })
 }
 
 as.locked_package <- function(list) {
@@ -55,6 +60,7 @@ as.locked_package <- function(list) {
 
 is.locked_package <- function(obj) is(obj, "locked_package")
 
+#' @export
 lockbox.default <- function(obj) {
   stop(
     "Invalid parameters passed to ", sQuote("lockbox"), " method: ",

@@ -58,3 +58,7 @@ setNames <- function(object = nm, nm) {
   names(object) <- nm
   object
 }
+
+quietly <- function(expr) {
+  suppressPackageStartupMessages(suppressMessages(suppressWarnings(expr)))
+}

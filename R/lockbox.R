@@ -25,6 +25,8 @@ lockbox.character <- function(file) {
 
 #' @export
 lockbox.list <- function(lock) {
+  set_transient_library()
+
   lock <- lapply(lock, as.locked_package)
   
   ## Find the packages whose version does not match the current library.

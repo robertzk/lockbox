@@ -40,6 +40,15 @@ install_package.CRAN <- function(locked_package) {
   install_locked_package(locked_package, install.packages(locked_package$name))
 }
 
+install_package.github <- function(locked_package) {
+  stopifnot(is.element("repo", names(locked_package)))
+
+  ref <- locked_package$ref %||% locked_package$version
+  install_locked_package(locked_package, {
+    devtools::install_github(paste(locked_package$repo, ref, sep = "@"))
+  })
+}
+
 install_locked_package <- function(locked_package, installing_expr) {
   # TODO: (RK) Fetch correct version?
   tempdir <- file.path(libPath(), locked_package$name, "download")

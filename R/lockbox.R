@@ -63,6 +63,11 @@ lockbox.default <- function(obj) {
   )
 }
 
+#' The secret lockbox library path.
+lockbox_dir <- function() {
+  getOption("lockbox.dir") %||% normalizePath("~/.R/lockbox")
+}
+
 
 # lockfile <- yaml::yaml.load_file(file.path(root(), 'config', 'lockfile.yml'))
 # any_updated <- FALSE

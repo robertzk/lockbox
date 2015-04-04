@@ -14,6 +14,7 @@
 #'    download the package from CRAN or github if the name + version combo
 #'    does not exist.
 `ensure_package_exists_in_lockbox!` <- function(locked_package) {
+  
 }
 
 #' Find packages whose version does not match the current library's version.

@@ -7,4 +7,8 @@ align <- function(locked_package) {
 
   ## Make sure we have this package version in the lockbox secret library.
   `ensure_package_exists_in_lockbox!`(locked_package)
+
+  ## Symlink the locked package to the correct lockbox version.
+  `symlink_to_lockbox!`(locked_package)
 }
+

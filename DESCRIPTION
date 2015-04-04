@@ -18,5 +18,6 @@ Imports:
 Suggests:
     knitr,
     microbenchmark,
-    testthat
+    testthat,
+    devtools
 Roxygen: list(wrap = FALSE)

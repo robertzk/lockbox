@@ -68,27 +68,3 @@ lockbox_dir <- function() {
   getOption("lockbox.dir") %||% normalizePath("~/.R/lockbox", mustWork = FALSE)
 }
 
-
-# lockfile <- yaml::yaml.load_file(file.path(root(), 'config', 'lockfile.yml'))
-# any_updated <- FALSE
-# lapply(lockfile, function(pkg) {
-#   if (packageVersion(pkg$name) != pkg$version) {
-#     if (!any_updated) {
-#       packageStartupMessage(crayon::yellow(
-#         "Packages are out of date, updating...\n"))
-#     }
-#     cat(crayon::red(paste0(
-#       pkg$name, " is out of date, re-installing...\n")))
-#     get_ref <- function(pkg) {
-#       if (is.null(pkg$ref)) { pkg$version } else { pkg$ref }
-#     }
-#     devtools::install_github(pkg$repo, ref = get_ref(pkg))
-#     any_updated <<- TRUE
-#   }
-# })
-# 
-# if (any_updated) {
-#   packageStartupMessage(crayon::yellow(
-#     "Packages have been updated, exiting R. Please restart...\n"))
-#   base::q(save = 'no'); stop('Quit R') # Force quit R
-# }

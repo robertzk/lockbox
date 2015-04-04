@@ -26,9 +26,11 @@ lockbox.list <- function(lock) {
 }
 
 lockbox.default <- function(obj) {
-  stop("Invalid parameters passed to ", sQuote("lockbox"), " method: ",
-       "must be a ", sQuote("character"), " or ", sQuote("list"), " but ",
-       "instead I got a ", sQuote(class(obj)[1]), ".")
+  stop(
+    "Invalid parameters passed to ", sQuote("lockbox"), " method: ",
+    "must be a ", sQuote("character"), " or ", sQuote("list"), " but ",
+    "instead I got a ", sQuote(class(obj)[1]), "."
+  )
 }
 
 

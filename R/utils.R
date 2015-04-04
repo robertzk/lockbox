@@ -25,3 +25,18 @@ is.linux <- function() {
   Sys.info()["sysname"] == "Linux"
 }
 
+
+#' @author Kevin Ushey
+#' @source \url{https://github.com/rstudio/packrat/blob/649097381ad702c56e6326ae4cee5c56713f6276/R/library-support.R#L140}
+is.symlink <- function(path) {
+
+  ## Strip trailing '/'
+  path <- gsub("/*$", "", path)
+
+  ## Sys.readlink returns NA for error, "" for 'not a symlink', and <path> for symlink
+  ## return false for first two cases, true for second
+  result <- Sys.readlink(path)
+  if (is.na(result)) FALSE
+  else nzchar(result)
+}
+

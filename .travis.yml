@@ -25,7 +25,7 @@ notifications:
     template:
     - "%{repository}#%{build_number} (%{branch} - %{commit} : %{author}): %{message}
       | Details: %{build_url} | Changes: %{compare_url}"
-env:
-- global:
-  - WARNINGS_ARE_ERRORS=1
-  - _R_CHECK_FORCE_SUGGESTS_=0
+#env:
+#- global:
+#  - WARNINGS_ARE_ERRORS=1
+#  - _R_CHECK_FORCE_SUGGESTS_=0

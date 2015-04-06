@@ -44,12 +44,13 @@ install_package.CRAN <- function(locked_package) {
   install_locked_package(locked_package, install.packages(locked_package$name))
 }
 
+#' @importFrom devtools install_github
 install_package.github <- function(locked_package) {
   stopifnot(is.element("repo", names(locked_package)))
 
   ref <- locked_package$ref %||% locked_package$version
   install_locked_package(locked_package, {
-    devtools::install_github(
+    install_github(
       paste(locked_package$repo, ref, sep = "@"),
       reload = FALSE
     )

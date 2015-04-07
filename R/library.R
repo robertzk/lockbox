@@ -5,12 +5,12 @@
 #' \code{getOption("lockbox.lib")} or \code{"~/.R/lockbox"} if that option
 #' is not set.
 #'
-#' @param locked_package locked_package. In particular, \code{name} and 
+#' @param locked_package locked_package. In particular, \code{name} and
 #'    \code{version} elements will be used. If the package version is
 #'    not present in the lockbox, we will attempt to download it from
 #'    CRAN or github.
 #' @note The weird name is a derivative of a \href{http://stackoverflow.com/questions/612189/why-are-exclamation-marks-used-in-ruby-methods}{Rubyism}
-#'    to indicate some serious side effects can occur! In this case, we 
+#'    to indicate some serious side effects can occur! In this case, we
 #'    download the package from CRAN or github if the name + version combo
 #'    does not exist.
 `ensure_package_exists_in_lockbox!` <- function(locked_package) {
@@ -63,7 +63,8 @@ install_locked_package <- function(locked_package, installing_expr) {
 
   on.exit({
     pkgdir <- file.path(tempdir, locked_package$name)
-    stopifnot(file.exists(pkgdir)) # Must have installed the package.
+    if (!file.exists(pkgdir))
+      stop("Must have installed the package ", locked_package$name, "::", locked_package$version)
     newdir <- file.path(dirname(tempdir), as.character(locked_package$version))
     file.rename(pkgdir, newdir)
     unlink(tempdir, TRUE, TRUE)
@@ -77,7 +78,7 @@ install_locked_package <- function(locked_package, installing_expr) {
 }
 
 #' Find packages whose version does not match the current library's version.
-#' 
+#'
 #' @param locked_package locked_package.
 #' @return TRUE or FALSE according as the current library's package version
 #'   is incorrect.
@@ -115,4 +116,3 @@ description_file_for <- function(package_name) {
     NULL
   }
 }
-

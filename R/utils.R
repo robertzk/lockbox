@@ -57,3 +57,7 @@ is.symlink <- function(path) {
 quietly <- function(expr) {
   suppressPackageStartupMessages(suppressMessages(suppressWarnings(expr)))
 }
+
+package_version_from_path <- function(pkg_path) {
+  package_version(unname(read.dcf(file.path(pkg_path, "DESCRIPTION"))[, "Version"]))
+}

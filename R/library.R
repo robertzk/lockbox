@@ -41,7 +41,7 @@ install_package <- function(locked_package) {
 
 install_package.CRAN <- function(locked_package) {
   # TODO: (RK) Fetch correct version?
-  install_locked_package(locked_package, install.packages(locked_package$name))
+  install_locked_package(locked_package, utils::install.packages(locked_package$name))
 }
 
 #' @importFrom devtools install_github

@@ -14,7 +14,7 @@ rebuild <- function(packages) {
 reset_search_path <- function() {
   # Helpfully borrowed from https://github.com/romainfrancois/nothing/blob/master/R/zzz.R
   repeat {
-    pkgs <- setdiff(loadedNamespaces(), c(native_namespaces, c("lockbox", "httr", "RCurl", "bitops", "crayon", "yaml", "testthat", "testthatsomemore", "stringr", "digest", "lubridate", "memoise", "plyr", "magrittr", "devtools")))
+    pkgs <- setdiff(loadedNamespaces(), c(native_namespaces, pesky_namespaces))
     if (!length(pkgs)) break
     for (pkg in pkgs) {
       try({
@@ -34,4 +34,10 @@ native_namespaces <-
   c("base", "stats", "compiler", "datasets", "grDevices", "graphics", "grid",
     "methods", "parallel", "profile", "splines", "stats4", "tcltk",
     "tools", "translations", "utils", "lattice", "Matrix")
+
+# These namespaces are particularly difficult to unload because of dependencies.
+pesky_namespaces <-
+  c("lockbox", "httr", "RCurl", "bitops", "crayon", "yaml", "testthat",
+    "testthatsomemore", "stringr", "digest", "lubridate", "memoise",
+    "plyr", "magrittr", "devtools", "Rcpp", "roxygen")
 

@@ -40,9 +40,9 @@ lockbox_package_path <- function(locked_package) {
     unlink(pkg_path, TRUE, TRUE) # Delete the faulty package.
     stop(sprintf(paste0(
       "Incorrect version of package %s installed. Expected ",
-      "%s but downloaded %s instead.", sQuote(locked_package$name),
+      "%s but downloaded %s instead."), sQuote(locked_package$name),
       sQuote(locked_package$version),
-      sQuote(installed_version))), call. = FALSE)
+      sQuote(installed_version)), call. = FALSE)
   }
 }
 
@@ -52,7 +52,16 @@ install_package <- function(locked_package) {
 
 install_package.CRAN <- function(locked_package) {
   # TODO: (RK) Fetch correct version?
-  install_locked_package(locked_package, utils::install.packages(locked_package$name))
+  stop("Lockbox does not currently support versioned maintenance of CRAN packages")
+  utils_get_dependencies <- duplicate(utils:::getDependencies)
+  testthatsomemore::package_stub("utils", "getDependencies",
+    function(pkgs, dependencies, available, lib) { 
+      browser()
+      return(utils_get_dependencies(pkgs, dependencies, available, lib = .libPaths()[-(1L:2L)]))
+    },
+    install_locked_package(locked_package,
+      utils::install.packages(locked_package$name, type = "source"))
+  )
 }
 
 #' @importFrom devtools install_github
@@ -83,7 +92,8 @@ install_locked_package <- function(locked_package, installing_expr) {
 
   ## Pretend our library path is the temporary library for this particular
   ## package name.
-  testthatsomemore::package_stub("base", ".libPaths", function() tempdir, {
+  old_lib_paths <- .libPaths()
+  testthatsomemore::package_stub("base", ".libPaths", function(...) c(tempdir, old_lib_paths), {
     force(installing_expr)
   })
 }

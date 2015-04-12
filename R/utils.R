@@ -61,3 +61,8 @@ quietly <- function(expr) {
 package_version_from_path <- function(pkg_path) {
   package_version(unname(read.dcf(file.path(pkg_path, "DESCRIPTION"))[, "Version"]))
 }
+
+#' @useDynLib lockbox duplicate_
+duplicate <- function(x) {
+  .Call(duplicate_, x)
+}

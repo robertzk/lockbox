@@ -11,3 +11,8 @@ packageVersion <- function (pkg, lib.loc = NULL) {
     base::package_version(res)
   else stop(gettextf("package %s not found", sQuote(pkg)), domain = NA)
 }
+
+#' @export
+untar <- function(...) {
+  utils::untar(...)
+}

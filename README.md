@@ -8,7 +8,7 @@ The main difference between lockbox and more heavy-duty approaches like [Packrat
 is that lockbox believes you should spend a specific amount of time
 thinking about dependencies: none.
 
-To get started, just write a lockfile.yml (TODO: explain format) and execute
+To get started, just write a lockfile.yml (see an example below) and execute
 
 ```r
 lockbox::lockbox("lockfile.yml")
@@ -32,7 +32,36 @@ if (!require("devtools")) install.packages("devtools")
 devtools::install_github("robertzk/lockbox")
 ```
 
+Example Lock File
+-----------------
 
-
-
-
+```yml
+# lockfile.yml in the project you wish to dependency manage using lockbox
+-
+  # This will install the tundra package from github's robertzk/tundra repo
+  # off tag 0.2.2. You can specify a different tag / branch / ref using:
+  #   ref: v0.2.2 # For example
+  name: tundra
+  version: 0.2.2
+  repo: robertzk/tundra
+-
+  name: director
+  version: 0.2.1
+  repo: robertzk/director
+-
+  # Use the kselection package version 0.2.0 from CRAN.
+  # If this is not the current version, the CRAN archive will be used.
+  name: kselection
+  version: 0.2.0
+-
+  # Install a local (development) package version 0.1.0 from directory
+  # /your/pkg. Using this approach is not recommended, since you will
+  # not be able to keep your lock file under version control and shareable
+  # with other contributors to the project, as they are unlikely to have
+  # the same package / version in the same directory. However, it is useful
+  # for development prior to pushing a new version to, e.g., github.
+  name: yourpkg
+  version: 0.1.0
+  remote: local
+  dir: /your/pkg
+```

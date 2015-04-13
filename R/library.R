@@ -42,19 +42,8 @@ install_package <- function(locked_package) {
 
 install_package.CRAN <- function(locked_package) {
   # TODO: (RK) Fetch correct version?
-  install_locked_package(locked_package, utils::install.packages(locked_package$name))
-  return()
-
-  stop("Lockbox does not currently support versioned maintenance of CRAN packages")
-  utils_get_dependencies <- duplicate(utils:::getDependencies)
-  testthatsomemore::package_stub("utils", "getDependencies",
-    function(pkgs, dependencies, available, lib) { 
-      browser()
-      return(utils_get_dependencies(pkgs, dependencies, available, lib = .libPaths()[-(1L:2L)]))
-    },
-    install_locked_package(locked_package,
-      utils::install.packages(locked_package$name, type = "source"))
-  )
+  install_locked_package(locked_package,
+                         utils::install.packages(locked_package$name))
 }
 
 #' @importFrom devtools install_github
@@ -64,7 +53,7 @@ install_package.github <- function(locked_package) {
   ref <- locked_package$ref %||% locked_package$version
   # TODO: (RK) What if we just want latest from master?
   install_locked_package(locked_package, {
-    install_github(
+    devtools::install_github(
       paste(locked_package$repo, ref, sep = "@"),
       reload = FALSE
     )
@@ -73,10 +62,13 @@ install_package.github <- function(locked_package) {
 
 install_locked_package <- function(locked_package, installing_expr) {
   temp_library <- staging_library()
+  pkgdir <- file.path(temp_library, locked_package$name)
+    
+  # For some reason, if the package already exists, R CMD INSTALL does not
+  # let us install it.
+  unlink(pkgdir, TRUE, TRUE)
 
   on.exit({
-    pkgdir <- file.path(temp_library, locked_package$name)
-
     if (!file.exists(pkgdir)) {
       unlink(temp_library, TRUE, TRUE)
       stop("Must have installed the package ",

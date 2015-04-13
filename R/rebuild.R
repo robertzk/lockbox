@@ -18,7 +18,7 @@ reset_search_path <- function() {
   repeat_count <- 0
 
   repeat {
-    pkgs <- setdiff(loadedNamespaces(), c(native_namespaces, pesky_namespaces))
+    pkgs <- setdiff(loadedNamespaces(), special_namespaces)
     if (!length(pkgs)) break
     if (repeat_count > 1000) {
       warning("Could not unload the following namespaces when loading ",
@@ -49,4 +49,6 @@ pesky_namespaces <-
   c("lockbox", "httr", "RCurl", "bitops", "crayon", "yaml", "testthat",
     "testthatsomemore", "stringr", "digest", "lubridate", "memoise",
     "plyr", "magrittr", "devtools", "Rcpp", "roxygen")
+
+special_namespaces <- c(native_namespaces, pesky_namespaces)
 

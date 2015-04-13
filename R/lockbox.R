@@ -84,9 +84,8 @@ lockbox_transient_dir <- function() {
 }
 
 disallow_special_packages <- function(lock) {
-  special_packages <- c(native_namespaces, pesky_namespaces)
   package_names    <- vapply(lock, `[[`, character(1), "name")
-  if (any(package_names %in% special_packages)) {
+  if (any(package_names %in% special_namespaces)) {
     stop("Version maintenance of the following packages is not currently ",
       "supported by lockbox: ",
       paste(intersect(special_packages, package_names), collapse = ", "),

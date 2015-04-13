@@ -15,7 +15,7 @@ staging_library <- function() {
   # packages get the relevant version of the package symlinked.
   lapply(rev(.libPaths()), symlink_library, tempdir)
 
-
+  tempdir
 }
 
 #' Symlink all packages from a destination library to a target library.
@@ -26,4 +26,8 @@ staging_library <- function() {
 #'   populated with symlinked versions of the packages in the \code{destination}
 #'   library.
 symlink_library <- function(destination, target) {
+  packages     <- list.files(destination, full.names = TRUE)
+  new_packages <- file.path(target, basename(packages))
+  Map(symlink, packages, new_packages)
 }
+

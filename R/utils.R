@@ -16,7 +16,9 @@ lockbox_imports <- function() {
 
 #' @author Kevin Ushey
 #' @source \url{https://github.com/rstudio/packrat/blob/92492ebc882bd048f092238af033d8a6fd03902f/R/utils.R#L469}
-symlink <- function(from, to) {
+symlink <- function(from, to, force = FALSE) {
+  if (isTRUE(force) && file.exists(to)) unlink(to, force = TRUE)
+
   if (is.windows()) Sys.junction(from, to)
   else file.symlink(from, to)
 }
@@ -60,4 +62,9 @@ quietly <- function(expr) {
 
 package_version_from_path <- function(pkg_path) {
   package_version(unname(read.dcf(file.path(pkg_path, "DESCRIPTION"))[, "Version"]))
+}
+
+#' @useDynLib lockbox duplicate_lockbox_
+duplicate <- function(x) {
+  .Call(duplicate_lockbox_, x, PACKAGE = "lockbox")
 }

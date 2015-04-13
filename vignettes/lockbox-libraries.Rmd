@@ -1,0 +1,107 @@
+---
+title: "Libraries in Lockbox"
+author: "Robert Krzyzanowski"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Libraries in Lockbox (Technical Notes)}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+# Usage of libraries in lockbox
+
+Understanding the technical design of lockbox requires some knowledge of how R tracks and
+installs packages. As explained by Hadley in his [R package development book](http://r-pkgs.had.co.nz/package.html#library), R packages are stored in **libraries**; a library is simply a directory containing the
+code for one or more R packages. R looks for packages by traversing over each library and 
+detecting whether it contains the package in question. You can see what libraries you
+are using (usually a single default library) with
+
+```{r}
+.libPaths()
+```
+
+However, the limitation is that you can only have one version installed of each package. The structure
+of an R library looks like:
+
+  * first_package
+    * DESCRIPTION
+    * Other files...
+  * second_package
+    * DESCRIPTION
+    * Other files...
+  * ...
+  
+To overcome this limitation and provide the ability to load different versions of the same package,
+lockbox creates an entirely new directory (by default in `~/.R/lockbox`, but customizable using
+the `lockbox.directory` option) with the following structure:
+
+  * first_package
+    * 0.1.0
+         - DESCRIPTION
+         - ...
+    * 0.1.1
+         - DESCRIPTION
+         - ...
+  * second_package
+    * 1.0.1
+         - DESCRIPTION
+         - ...
+    * 1.0.2
+         - DESCRIPTION
+         - ...
+  * ...
+  
+In other words, the lockbox directory contains code for *different versions* of each package. However, this 
+means it cannot be used directly as an R library, because the R runtime expects a flat structure with the
+package's contents in each subdirectory. Nevertheless, we refer to this directory, which contains all
+package versions lockbox has ever encountered, as the **lockbox library**.
+
+## The transient library
+
+To construct an R session that uses the requested versions of each package managed by lockbox,
+a special directory is constructed wherein each subdirectory points to a specific version's directory
+in the lockbox library.
+
+For example, this might look like
+
+  * first_package
+  * second_package
+  * ...
+  
+where `first_package` is a symlink to `~/.R/lockbox/first_package/0.1.0/`, `second_package`
+is a symlink to `~/.R/lockbox/second_package/1.0.2/`, and so on, according to the versions
+requested by the lockfile for a given project.
+
+With this setup, no code has to be copied, and only the lockbox library contains the canonical
+copy of each package / version combination.
+
+## The staging library
+
+To install new dependencies using lockbox, R's built-in `utils::install.packages` assumes
+that the first directory given in `.libPaths()` is the installation location and all
+libraries in `.libPaths()` are used for determining whether dependencies need to be installed.
+
+For example, if we have `.libPaths() == c("/foo", "/default/system/library")`, are trying to
+install a package that requires `crayon` and `plyr`, and have already installed `crayon`
+in the `/default/system/library`, running `install.packages` will install the dependency
+`plyr` to `/foo`. This is a problem for lockbox, since
+
+   1. The lockbox library is technically not a library, so cannot be used as the installation library,
+   
+   2. and the transient library is meant to be read-only and consisting entirely of symlinks.
+   
+Instead, when new packages that do not exist in the lockbox library must be installed, a new
+directory is created which iterates over each library in `.libPaths()` and creates a single virtual library
+consisting entirely of symlinks that represents the union of those libraries. For example,
+if `.libPaths() == c("/foo", "/bar")` and the `/foo` library contains packages `a` and `b` of
+version `1.0.0` and `1.0.1` while the `/bar` library contains packages `b` and `c` of
+version `1.0.2` and `1.0.3`, the final directory will contain packages `a`, `b`, and `c`,
+of versions `1.0.0`, `1.0.1`, and `1.0.3`, respectively (note that `/foo`'s version of `b`
+takes precedence over `/bar`'s version of `b`).
+
+This newly created temporary directory, consisting entirely of symlinks, is the **staging library**
+lockbox uses to install new dependencies. After calling `install.packages`, any directories
+within the staging library that are *not* symlinks are necessarily newly installed packages,
+and are automatically moved to the lockbox library. After the installation process is complete,
+the staging library is removed, and thus only exists while new package installation is in progress.

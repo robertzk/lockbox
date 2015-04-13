@@ -28,6 +28,7 @@ lockbox.list <- function(lock) {
   set_transient_library()
 
   lock <- lapply(lock, as.locked_package)
+  disallow_special_packages(lock)
   
   ## Find the packages whose version does not match the current library.
   mismatches <- vapply(lock, version_mismatch, logical(1))
@@ -72,7 +73,7 @@ lockbox.default <- function(obj) {
 }
 
 #' The secret lockbox library path.
-lockbox_dir <- function() {
+lockbox_library <- function() {
   getOption("lockbox.directory") %||% normalizePath("~/.R/lockbox", mustWork = FALSE)
 }
 
@@ -82,3 +83,12 @@ lockbox_transient_dir <- function() {
     normalizePath("~/.R/lockbox_transient", mustWork = FALSE)
 }
 
+disallow_special_packages <- function(lock) {
+  package_names    <- vapply(lock, `[[`, character(1), "name")
+  if (any(package_names %in% special_namespaces)) {
+    stop("Version maintenance of the following packages is not currently ",
+      "supported by lockbox: ",
+      paste(intersect(special_packages, package_names), collapse = ", "),
+      ".", call. = FALSE)
+  }
+}

@@ -24,26 +24,16 @@ exists_in_lockbox <- function(locked_package) {
 }
 
 lockbox_package_path <- function(locked_package) {
-  file.path(lockbox_dir(), locked_package$name, locked_package$version)
+  file.path(lockbox_library(), locked_package$name, locked_package$version)
 }
 
 `place_in_lockbox!` <- function(locked_package) {
   remote <- locked_package$remote %||% "CRAN"
+
   install_package(structure(
     locked_package,
     class = c(remote, class(locked_package))
   ))
-
-  pkg_path <- lockbox_package_path(locked_package)
-  installed_version <- package_version_from_path(pkg_path)
-  if (installed_version != locked_package$version) {
-    unlink(pkg_path, TRUE, TRUE) # Delete the faulty package.
-    stop(sprintf(paste0(
-      "Incorrect version of package %s installed. Expected ",
-      "%s but downloaded %s instead.", sQuote(locked_package$name),
-      sQuote(locked_package$version),
-      sQuote(installed_version))), call. = FALSE)
-  }
 }
 
 install_package <- function(locked_package) {
@@ -51,8 +41,9 @@ install_package <- function(locked_package) {
 }
 
 install_package.CRAN <- function(locked_package) {
-  # TODO: (RK) Fetch correct version?
-  install_locked_package(locked_package, utils::install.packages(locked_package$name))
+  # TODO: (RK) Fetch correct version? Support install from source?
+  install_locked_package(locked_package,
+    utils::install.packages(locked_package$name))
 }
 
 #' @importFrom devtools install_github
@@ -60,8 +51,9 @@ install_package.github <- function(locked_package) {
   stopifnot(is.element("repo", names(locked_package)))
 
   ref <- locked_package$ref %||% locked_package$version
+  # TODO: (RK) What if we just want latest from master?
   install_locked_package(locked_package, {
-    install_github(
+    devtools::install_github(
       paste(locked_package$repo, ref, sep = "@"),
       reload = FALSE
     )
@@ -69,21 +61,35 @@ install_package.github <- function(locked_package) {
 }
 
 install_locked_package <- function(locked_package, installing_expr) {
-  tempdir <- file.path(lockbox_dir(), locked_package$name, "download")
-  dir.create(tempdir, FALSE, TRUE)
+  temp_library <- staging_library()
+  pkgdir <- file.path(temp_library, locked_package$name)
+    
+  # For some reason, if the package already exists, R CMD INSTALL does not
+  # let us install it.
+  unlink(pkgdir, TRUE, TRUE)
 
   on.exit({
-    pkgdir <- file.path(tempdir, locked_package$name)
-    if (!file.exists(pkgdir))
-      stop("Must have installed the package ", locked_package$name, "::", locked_package$version)
-    newdir <- file.path(dirname(tempdir), as.character(locked_package$version))
-    file.rename(pkgdir, newdir)
-    unlink(tempdir, TRUE, TRUE)
+    if (!file.exists(pkgdir)) {
+      unlink(temp_library, TRUE, TRUE)
+      stop("Must have installed the package ",
+           crayon::red(as.character(locked_package$name)),
+           " of version ", sQuote(as.character(locked_package$version)))
+    }
+
+    if ((ver <- package_version_from_path(pkgdir)) != locked_package$version) {
+      unlink(temp_library, TRUE, TRUE)
+      stop(sprintf(paste0(
+        "Incorrect version of package %s installed. Expected ",
+        "%s but downloaded %s instead."), sQuote(locked_package$name),
+        sQuote(locked_package$version), sQuote(ver)), call. = FALSE)
+    }
+
+    copy_real_packages_to_lockbox_library(temp_library)
+    unlink(temp_library, TRUE, TRUE)
   })
 
-  ## Pretend our library path is the temporary library for this particular
-  ## package name.
-  testthatsomemore::package_stub("base", ".libPaths", function() tempdir, {
+  ## Pretend our library path is the staging library during installation.
+  testthatsomemore::package_stub("base", ".libPaths", function(...) temp_library, {
     force(installing_expr)
   })
 }

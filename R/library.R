@@ -62,7 +62,7 @@ install_old_CRAN_package <- function(name, version, repo = "http://cran.r-projec
   repos <- getOption('lockbox.CRAN_mirror') %||% c(CRAN = "http://cran.rstudio.com")
   remote_version <- package_version(as.character(pkg$Version))
   if (dim(pkg)[1] == 1 && remote_version == version) {
-    return(utils::install.packages(name, repos = repos))
+    return(utils::install.packages(name, repos = repos, INSTALL_opts = "--vanilla"))
   }
 
   # If we did not find the package on CRAN - try CRAN archive.
@@ -78,7 +78,8 @@ install_old_CRAN_package <- function(name, version, repo = "http://cran.r-projec
   dir.create(tmpdir, FALSE, TRUE)
   setwd(tmpdir)
 
-  utils::install.packages(pkg.tarball, repos = NULL, type = "source")
+  utils::install.packages(pkg.tarball, repos = NULL, type = "source",
+                          INSTALL_opts = "--vanilla")
   unlink(pkg.tarball)
 }
 

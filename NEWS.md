@@ -1,3 +1,7 @@
+# Version 0.1.5
+
+  * Installing non-github (i.e. CRAN) packages now works on Ubuntu.
+
 # Version 0.1.4
 
   * Support for installing from local packages by setting `remote: local`

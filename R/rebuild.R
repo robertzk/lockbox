@@ -27,9 +27,7 @@ reset_search_path <- function() {
     }
 
     for (pkg in pkgs) {
-      try({
-        unloadNamespace(pkg)
-      }, silent = TRUE)
+      try(unloadNamespace(pkg), silent = TRUE)
     }
     repeat_count <- repeat_count + 1
   }

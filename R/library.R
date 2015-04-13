@@ -13,6 +13,7 @@
 #'    to indicate some serious side effects can occur! In this case, we
 #'    download the package from CRAN or github if the name + version combo
 #'    does not exist.
+#' @name ensure_package_exists_in_lockbox
 `ensure_package_exists_in_lockbox!` <- function(locked_package) {
   if (!exists_in_lockbox(locked_package)) {
     `place_in_lockbox!`(locked_package)
@@ -40,10 +41,47 @@ install_package <- function(locked_package) {
   UseMethod("install_package")
 }
 
+# Helpfully borrowed from https://github.com/christophergandrud/repmis/blob/master/R/InstallOldPackages.R
+# Did not simply import the function because it introduces too many dependencies
+#' @author Kirill Sevastyanenko
+install_old_CRAN_package <- function(name, version, repo = "http://cran.r-project.org") {
+  # List available packages on the repo. Maybe we can simply install.packages?
+  available <- available.packages(contriburl =
+    contrib.url(repos = "http://cran.us.r-project.org", type = "source"))
+  available <- data.frame(unique(available[, c("Package", "Version")]))
+  pkg <- available[available$Package == name, ]
+
+  # Simply install.packages if version happens to be the latest available on CRAN.
+  # You can specify the fastest CRAN mirror by setting the `lockbox.CRAN_mirror` option
+  # or Rstudio mirror will be used by default.
+  repos <- getOption('lockbox.CRAN_mirror') %||% c(CRAN = "http://cran.rstudio.com")
+  remote_version <- package_version(as.character(pkg$Version))
+  if (dim(pkg)[1] == 1 && remote_version == version) {
+    return(utils::install.packages(name, repos = repos))
+  }
+
+  # If we did not find the package on CRAN - try CRAN archive.
+  from <- paste0(repo, "/src/contrib/Archive/", name, "/", name, "_", version, ".tar.gz")
+  pkg.tarball <- tempfile(fileext = ".tar.gz")
+  download.file(url = from, destfile = pkg.tarball)
+
+  # We need to switch directories to ensure no infinite loop happens when
+  # the .Rprofile calls lockbox::lockbox.
+  old_dir <- getwd()
+  on.exit(setwd(old_dir))
+  tmpdir <- file.path(tempdir(), "foo")
+  dir.create(tmpdir, FALSE, TRUE)
+  setwd(tmpdir)
+
+  utils::install.packages(pkg.tarball, repos = NULL, type = "source")
+  unlink(pkg.tarball)
+}
+
 install_package.CRAN <- function(locked_package) {
   # TODO: (RK) Fetch correct version? Support install from source?
+  locked_package$repo <- locked_package$repo %||% "http://cran.r-project.org"
   install_locked_package(locked_package,
-    utils::install.packages(locked_package$name))
+    install_old_CRAN_package(locked_package$name, locked_package$version))
 }
 
 #' @importFrom devtools install_github
@@ -108,7 +146,7 @@ version_mismatch <- function(locked_package) {
 #' @param pkg character or locked_package. The name of the package.
 #' @return a \code{\link{package_version}} object representing the version of
 #'   this package in the current library.
-current_version <- function(package_name) {
+current_version <- function(pkg) {
   UseMethod("current_version")
 }
 

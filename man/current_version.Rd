@@ -4,7 +4,7 @@
 \alias{current_version}
 \title{The current version of this package in the current library.}
 \usage{
-current_version(package_name)
+current_version(pkg)
 }
 \arguments{
 \item{pkg}{character or locked_package. The name of the package.}

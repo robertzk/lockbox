@@ -6,7 +6,7 @@ set_transient_library <- function() {
   dir <- lockbox_transient_dir()
   if (!file.exists(dir)) dir.create(dir, FALSE, TRUE)
   .lockbox_env$old_dir <- .libPaths()
-  .libPaths(dir)
+  .libPaths(c(dir, .libPaths()))
 }
 
 set_default_mirror <- function() {

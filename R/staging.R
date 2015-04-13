@@ -31,3 +31,19 @@ symlink_library <- function(destination, target) {
   Map(symlink, packages, new_packages)
 }
 
+#' Copy real (non-symlinked) packages to the lockbox library.
+#'
+#' @param staging_library character. The location of the staging library.
+copy_real_packages_to_lockbox_library <- function(staging_library) {
+  packages <- list.files(staging_library, full.names = TRUE)
+  packages <- Filter(Negate(is.symlink), packages)
+  lapply(packages, move_package_to_lockbox_library)
+}
+
+move_package_to_lockbox_library <- function(pkg_path) {
+  new_path <- file.path(lockbox_library(), basename(pkg_path),
+                        package_version_from_path(pkg_path))
+  dir.create(dirname(new_path), FALSE, TRUE)
+  file.copy(pkg_path, new_path, TRUE, TRUE)
+}
+

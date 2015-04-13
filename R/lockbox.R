@@ -73,7 +73,7 @@ lockbox.default <- function(obj) {
 }
 
 #' The secret lockbox library path.
-lockbox_dir <- function() {
+lockbox_library <- function() {
   getOption("lockbox.directory") %||% normalizePath("~/.R/lockbox", mustWork = FALSE)
 }
 

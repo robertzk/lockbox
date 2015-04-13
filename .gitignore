@@ -1,3 +1,6 @@
 \.\.Rcheck
 \.tar\.gz$
 inst/doc
+
+**/*\.o
+**/*\.so

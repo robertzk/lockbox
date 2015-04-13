@@ -1,3 +1,8 @@
+# Version 0.1.3
+
+  * Fixed a bug where empty libraries were not correctly symlinked during staging
+    library creation and instead triggered an error.
+
 # Version 0.1.2
 
   * [Thanks](https://github.com/robertzk/lockbox/pull/6) to [Kirill Sevastyanenko](https://github.com/kirillseva),

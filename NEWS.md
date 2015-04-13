@@ -1,3 +1,8 @@
+# Version 0.1.4
+
+  * Support for installing from local packages by setting `remote: local`
+    and `dir: /your/pkg/dir`.
+
 # Version 0.1.3
 
   * Fixed a bug where empty libraries were not correctly symlinked during staging

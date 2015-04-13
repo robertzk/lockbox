@@ -34,12 +34,6 @@ lockbox_package_path <- function(locked_package) {
     locked_package,
     class = c(remote, class(locked_package))
   ))
-
-  pkg_path <- lockbox_package_path(locked_package)
-  installed_version <- package_version_from_path(pkg_path)
-  if (installed_version != locked_package$version) {
-    unlink(pkg_path, TRUE, TRUE) # Delete the faulty package.
-  }
 }
 
 install_package <- function(locked_package) {

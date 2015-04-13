@@ -1,3 +1,8 @@
+# Version 0.1.2
+
+  * [Thanks](https://github.com/robertzk/lockbox/pull/6) to [Kirill Sevastyanenko](https://github.com/kirillseva),
+    support for downloaded older versions of packages from CRAN was added. #15
+
 # Version 0.1.1
 
   * Added a vignette "Libraries in Lockbox" explaining the three different libraries

@@ -13,14 +13,25 @@ rebuild <- function(packages) {
 
 reset_search_path <- function() {
   # Helpfully borrowed from https://github.com/romainfrancois/nothing/blob/master/R/zzz.R
+  native_loaded_namespace <- intersect(loadedNamespaces(), native_namespaces)
+  on.exit(lapply(native_loaded_namespace, loadNamespace), add = TRUE)
+  repeat_count <- 0
+
   repeat {
     pkgs <- setdiff(loadedNamespaces(), c(native_namespaces, pesky_namespaces))
     if (!length(pkgs)) break
+    if (repeat_count > 1000) {
+      warning("Could not unload the following namespaces when loading ",
+              "lockfile: ", paste(sQuote(pkgs), collapse = ", "), call. = FALSE)
+      break
+    }
+
     for (pkg in pkgs) {
       try({
         unloadNamespace(pkg)
       }, silent = TRUE)
     }
+    repeat_count <- repeat_count + 1
   }
 }
 

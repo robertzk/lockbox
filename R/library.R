@@ -41,9 +41,9 @@ install_package <- function(locked_package) {
   UseMethod("install_package")
 }
 
-install.local <- function(locked_package) {
+install_package.local <- function(locked_package) {
   stopifnot(is.element("dir", names(locked_package)))
-  devtools::install(locked_package$dir)
+  install_locked_package(locked_package, devtools::install(locked_package$dir))
 }
 
 # Helpfully borrowed from https://github.com/christophergandrud/repmis/blob/master/R/InstallOldPackages.R

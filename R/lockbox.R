@@ -88,7 +88,7 @@ disallow_special_packages <- function(lock) {
   if (any(package_names %in% special_namespaces)) {
     stop("Version maintenance of the following packages is not currently ",
       "supported by lockbox: ",
-      paste(intersect(special_packages, package_names), collapse = ", "),
+      paste(intersect(special_namespaces, package_names), collapse = ", "),
       ".", call. = FALSE)
   }
 }

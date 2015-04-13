@@ -28,8 +28,10 @@ staging_library <- function() {
 #'   library.
 symlink_library <- function(src, target) {
   packages     <- list.files(src, full.names = TRUE)
-  new_packages <- file.path(target, basename(packages))
-  Map(symlink, packages, new_packages, force = TRUE)
+  if (length(packages)) {
+    new_packages <- file.path(target, basename(packages))
+    Map(symlink, packages, new_packages, force = TRUE)
+  }
 }
 
 #' Copy real (non-symlinked) packages to the lockbox library.

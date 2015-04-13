@@ -15,10 +15,6 @@
 #'    does not exist.
 #' @name ensure_package_exists_in_lockbox
 `ensure_package_exists_in_lockbox!` <- function(locked_package) {
-  if (locked_package$name == "lockbox") {
-    stop("Lockbox cannot manage itself, Mr. Hofstadter.", call. = FALSE)
-  }
-
   if (!exists_in_lockbox(locked_package)) {
     `place_in_lockbox!`(locked_package)
   }

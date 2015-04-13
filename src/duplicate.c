@@ -4,6 +4,6 @@
 #include <Rdefines.h>
 #include <R_ext/Error.h>
 
-SEXP duplicate_(SEXP x) {
+SEXP duplicate_lockbox_(SEXP x) {
   return duplicate(x);
 }

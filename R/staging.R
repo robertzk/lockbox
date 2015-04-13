@@ -41,9 +41,11 @@ copy_real_packages_to_lockbox_library <- function(staging_library) {
 }
 
 move_package_to_lockbox_library <- function(pkg_path) {
-  new_path <- file.path(lockbox_library(), basename(pkg_path),
-                        package_version_from_path(pkg_path))
-  dir.create(dirname(new_path), FALSE, TRUE)
-  file.copy(pkg_path, new_path, TRUE, TRUE)
+  tmp_path <- file.path(lockbox_library(), basename(pkg_path))
+  new_path <- file.path(tmp_path, package_version_from_path(pkg_path))
+  dir.create(tmp_path, FALSE, TRUE)
+  file.copy(pkg_path, tmp_path, TRUE, TRUE)
+  unlink(new_path, TRUE, TRUE)
+  file.rename(file.path(tmp_path, basename(pkg_path)), new_path)
 }
 

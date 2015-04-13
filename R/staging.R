@@ -21,13 +21,13 @@ staging_library <- function() {
 
 #' Symlink all packages from a destination library to a target library.
 #'
-#' @param destination character. The location of the library to use for
+#' @param src character. The location of the library to use for
 #'   generating symlinks
 #' @param target character. The location of the library which will be
 #'   populated with symlinked versions of the packages in the \code{destination}
 #'   library.
-symlink_library <- function(destination, target) {
-  packages     <- list.files(destination, full.names = TRUE)
+symlink_library <- function(src, target) {
+  packages     <- list.files(src, full.names = TRUE)
   new_packages <- file.path(target, basename(packages))
   Map(symlink, packages, new_packages, force = TRUE)
 }

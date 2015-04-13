@@ -4,10 +4,10 @@
 \alias{symlink_library}
 \title{Symlink all packages from a destination library to a target library.}
 \usage{
-symlink_library(destination, target)
+symlink_library(src, target)
 }
 \arguments{
-\item{destination}{character. The location of the library to use for
+\item{src}{character. The location of the library to use for
 generating symlinks}
 
 \item{target}{character. The location of the library which will be

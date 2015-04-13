@@ -15,7 +15,7 @@ Understanding the technical design of lockbox requires some knowledge of how R t
 installs packages. As explained by Hadley in his [R package development book](http://r-pkgs.had.co.nz/package.html#library), R packages are stored in **libraries**; a library is simply a directory containing the
 code for one or more R packages. R looks for packages by traversing over each library and 
 detecting whether it contains the package in question. You can see what libraries you
-are using (usually one default) with
+are using (usually a single default library) with
 
 ```{r}
 .libPaths()
@@ -38,69 +38,70 @@ the `lockbox.directory` option) with the following structure:
 
   * first_package
     * 0.1.0
-      * DESCRIPTION
-      * ...
+         - DESCRIPTION
+         - ...
     * 0.1.1
-      * DESCRIPTION
-      * ...
+         - DESCRIPTION
+         - ...
   * second_package
     * 1.0.1
-      * DESCRIPTION
-      * ...
+         - DESCRIPTION
+         - ...
     * 1.0.2
-      * DESCRIPTION
-      * ...
+         - DESCRIPTION
+         - ...
   * ...
   
 In other words, the lockbox directory contains code for *different versions* of each package. However, this 
 means it cannot be used directly as an R library, because the R runtime expects a flat structure with the
-package's contents in each subdirectory.
+package's contents in each subdirectory. Nevertheless, we refer to this directory, which contains all
+package versions lockbox has ever encountered, as the **lockbox library**.
 
+## The transient library
 
-Vignettes are long form documentation commonly included in packages. Because they are part of the distribution of the package, they need to be as compact as possible. The `html_vignette` output type provides a custom style sheet (and tweaks some options) to ensure that the resulting html is as small as possible. The `html_vignette` format:
+To construct an R session that uses the requested versions of each package managed by lockbox,
+a special directory is constructed wherein each subdirectory points to a specific version's directory
+in the lockbox library.
 
-- Never uses retina figures
-- Has a smaller default figure size
-- Uses a custom CSS stylesheet instead of the default Twitter Bootstrap style
+For example, this might look like
 
-## Vignette Info
+  * first_package
+  * second_package
+  * ...
+  
+where `first_package` is a symlink to `~/.R/lockbox/first_package/0.1.0/`, `second_package`
+is a symlink to `~/.R/lockbox/second_package/1.0.2/`, and so on, according to the versions
+requested by the lockfile for a given project.
 
-Note the various macros within the `vignette` setion of the metadata block above. These are required in order to instruct R how to build the vignette. Note that you should change the `title` field and the `\VignetteIndexEntry` to match the title of your vignette.
+With this setup, no code has to be copied, and only the lockbox library contains the canonical
+copy of each package / version combination.
 
-## Styles
+## The staging library
 
-The `html_vignette` template includes a basic CSS theme. To override this theme you can specify your own CSS in the document metadata as follows:
+To install new dependencies using lockbox, R's built-in `utils::install.packages` assumes
+that the first directory given in `.libPaths()` is the installation location and all
+libraries in `.libPaths()` are used for determining whether dependencies need to be installed.
 
-    output: 
-      rmarkdown::html_vignette:
-        css: mystyles.css
+For example, if we have `.libPaths() == c("/foo", "/default/system/library")`, are trying to
+install a package that requires `crayon` and `plyr`, and have already installed `crayon`
+in the `/default/system/library`, running `install.packages` will install the dependency
+`plyr` to `/foo`. This is a problem for lockbox, since
 
-## Figures
+   1. The lockbox library is technically not a library, so cannot be used as the installation library,
+   
+   2. and the transient library is meant to be read-only and consisting entirely of symlinks.
+   
+Instead, when new packages that do not exist in the lockbox library must be installed, a new
+directory is created which iterates over each library in `.libPaths()` and creates a single virtual library
+consisting entirely of symlinks that represents the union of those libraries. For example,
+if `.libPaths() == c("/foo", "/bar")` and the `/foo` library contains packages `a` and `b` of
+version `1.0.0` and `1.0.1` while the `/bar` library contains packages `b` and `c` of
+version `1.0.2` and `1.0.3`, the final directory will contain packages `a`, `b`, and `c`,
+of versions `1.0.0`, `1.0.1`, and `1.0.3`, respectively (note that `/foo`'s version of `b`
+takes precedence over `/bar`'s version of `b`).
 
-The figure sizes have been customised so that you can easily put two images side-by-side. 
-
-```{r, fig.show='hold'}
-plot(1:10)
-plot(10:1)
-```
-
-You can enable figure captions by `fig_caption: yes` in YAML:
-
-    output:
-      rmarkdown::html_vignette:
-        fig_caption: yes
-
-Then you can use the chunk option `fig.cap = "Your figure caption."` in **knitr**.
-
-## More Examples
-
-You can write math expressions, e.g. $Y = X\beta + \epsilon$, footnotes^[A footnote here.], and tables, e.g. using `knitr::kable()`.
-
-```{r, echo=FALSE, results='asis'}
-knitr::kable(avant::variable_definitions()[1:2, ])
-```
-
-Also a quote using `>`:
-
-> "He who gives up [code] safety for [code] speed deserves neither."
-([via](https://twitter.com/hadleywickham/status/504368538874703872))
+This newly created temporary directory, consisting entirely of symlinks, is the **staging library**
+lockbox uses to install new dependencies. After calling `install.packages`, any directories
+within the staging library that are *not* symlinks are necessarily newly installed packages,
+and are automatically moved to the lockbox library. After the installation process is complete,
+the staging library is removed, and thus only exists while new package installation is in progress.

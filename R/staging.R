@@ -28,7 +28,7 @@ staging_library <- function() {
 symlink_library <- function(destination, target) {
   packages     <- list.files(destination, full.names = TRUE)
   new_packages <- file.path(target, basename(packages))
-  Map(symlink, packages, new_packages)
+  Map(symlink, packages, new_packages, force = TRUE)
 }
 
 #' Copy real (non-symlinked) packages to the lockbox library.

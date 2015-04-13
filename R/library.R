@@ -29,6 +29,7 @@ lockbox_package_path <- function(locked_package) {
 
 `place_in_lockbox!` <- function(locked_package) {
   remote <- locked_package$remote %||% "CRAN"
+
   install_package(structure(
     locked_package,
     class = c(remote, class(locked_package))
@@ -78,6 +79,8 @@ install_package.github <- function(locked_package) {
 }
 
 install_locked_package <- function(locked_package, installing_expr) {
+  temp_library <- staging_library()
+
   tempdir <- file.path(lockbox_dir(), locked_package$name, "download")
   dir.create(tempdir, FALSE, TRUE)
 

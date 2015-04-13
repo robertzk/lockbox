@@ -57,14 +57,23 @@ install_old_CRAN_package <- function(name, version, repo = "http://cran.r-projec
   repos <- getOption('lockbox.CRAN_mirror') %||% c(CRAN = "http://cran.rstudio.com")
   remote_version <- package_version(as.character(pkg$Version))
   if (dim(pkg)[1] == 1 && remote_version == version) {
-    return(install.packages(name, repos = repos))
+    return(utils::install.packages(name, repos = repos))
   }
 
   # If we did not find the package on CRAN - try CRAN archive.
   from <- paste0(repo, "/src/contrib/Archive/", name, "/", name, "_", version, ".tar.gz")
   pkg.tarball <- tempfile(fileext = ".tar.gz")
   download.file(url = from, destfile = pkg.tarball)
-  install.packages(pkg.tarball, repos = NULL, type = "source")
+
+  # We need to switch directories to ensure no infinite loop happens when
+  # the .Rprofile calls lockbox::lockbox.
+  old_dir <- getwd()
+  on.exit(setwd(old_dir))
+  tmpdir <- file.path(tempdir(), "foo")
+  dir.create(tmpdir, FALSE, TRUE)
+  setwd(tmpdir)
+
+  utils::install.packages(pkg.tarball, repos = NULL, type = "source")
   unlink(pkg.tarball)
 }
 

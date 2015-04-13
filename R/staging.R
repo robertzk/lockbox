@@ -10,6 +10,7 @@
 staging_library <- function() {
   tempdir <- file.path(tempdir(), "staging")
   dir.create(tempdir, FALSE, TRUE)  
+  tempdir <- normalizePath(tempdir)
 
   # Iterate over libraries in reverse order so that libraries with overlapping
   # packages get the relevant version of the package symlinked.

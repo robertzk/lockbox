@@ -25,10 +25,10 @@ lockbox.character <- function(file) {
 
 #' @export
 lockbox.list <- function(lock) {
-  set_transient_library()
-
   lock <- lapply(lock, as.locked_package)
   disallow_special_packages(lock)
+
+  set_transient_library()
   
   ## Find the packages whose version does not match the current library.
   mismatches <- vapply(lock, version_mismatch, logical(1))
@@ -85,6 +85,11 @@ lockbox_transient_dir <- function() {
 
 disallow_special_packages <- function(lock) {
   package_names    <- vapply(lock, `[[`, character(1), "name")
+
+  if ("lockbox" %in% package_names) {
+    stop("Lockbox cannot manage itself, Mr. Hofstadter.", call. = FALSE)
+  }
+
   if (any(package_names %in% special_namespaces)) {
     stop("Version maintenance of the following packages is not currently ",
       "supported by lockbox: ",

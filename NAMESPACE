@@ -3,7 +3,6 @@
 S3method(lockbox,character)
 S3method(lockbox,default)
 S3method(lockbox,list)
-export(install.packages)
 export(lockbox)
 export(packageVersion)
 export(setNames)

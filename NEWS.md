@@ -1,8 +1,11 @@
 # Version 0.1.7
   
-  * `install.packages` is now a global export that ensures installation of
-    new packages is not performed into the transient library. (TLDR: Packages
-    get installed into the right location).
+  * Using the `base::addTaskCallback` mechanism, lockbox moves any installed
+    packages from the transient library to the user's "real" library if
+    they installed packages in a session that was loaded using lockbox.
+
+    This is to ensure that no packages are installed into the transient library
+    or the lockbox library unless they are explicitly in a lockfile.
 
 # Version 0.1.5
 

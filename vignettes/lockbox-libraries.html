@@ -10,7 +10,7 @@
 
 <meta name="author" content="Robert Krzyzanowski" />
 
-<meta name="date" content="2015-04-12" />
+<meta name="date" content="2015-04-13" />
 
 <title>Libraries in Lockbox</title>
 
@@ -54,7 +54,7 @@ code > span.er { color: #ff0000; font-weight: bold; }
 <div id="header">
 <h1 class="title">Libraries in Lockbox</h1>
 <h4 class="author"><em>Robert Krzyzanowski</em></h4>
-<h4 class="date"><em>2015-04-12</em></h4>
+<h4 class="date"><em>2015-04-13</em></h4>
 </div>
 
 
@@ -63,6 +63,62 @@ code > span.er { color: #ff0000; font-weight: bold; }
 <p>Understanding the technical design of lockbox requires some knowledge of how R tracks and installs packages. As explained by Hadley in his <a href="http://r-pkgs.had.co.nz/package.html#library">R package development book</a>, R packages are stored in <strong>libraries</strong>; a library is simply a directory containing the code for one or more R packages. R looks for packages by traversing over each library and detecting whether it contains the package in question. You can see what libraries you are using (usually a single default library) with</p>
 <pre class="sourceCode r"><code class="sourceCode r"><span class="kw">.libPaths</span>()</code></pre>
 <pre><code>## [1] &quot;/Library/Frameworks/R.framework/Versions/3.0/Resources/library&quot;</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r">knitr::<span class="kw">kable</span>(<span class="kw">head</span>(iris))</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="right">Sepal.Length</th>
+<th align="right">Sepal.Width</th>
+<th align="right">Petal.Length</th>
+<th align="right">Petal.Width</th>
+<th align="left">Species</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">5.1</td>
+<td align="right">3.5</td>
+<td align="right">1.4</td>
+<td align="right">0.2</td>
+<td align="left">setosa</td>
+</tr>
+<tr class="even">
+<td align="right">4.9</td>
+<td align="right">3.0</td>
+<td align="right">1.4</td>
+<td align="right">0.2</td>
+<td align="left">setosa</td>
+</tr>
+<tr class="odd">
+<td align="right">4.7</td>
+<td align="right">3.2</td>
+<td align="right">1.3</td>
+<td align="right">0.2</td>
+<td align="left">setosa</td>
+</tr>
+<tr class="even">
+<td align="right">4.6</td>
+<td align="right">3.1</td>
+<td align="right">1.5</td>
+<td align="right">0.2</td>
+<td align="left">setosa</td>
+</tr>
+<tr class="odd">
+<td align="right">5.0</td>
+<td align="right">3.6</td>
+<td align="right">1.4</td>
+<td align="right">0.2</td>
+<td align="left">setosa</td>
+</tr>
+<tr class="even">
+<td align="right">5.4</td>
+<td align="right">3.9</td>
+<td align="right">1.7</td>
+<td align="right">0.4</td>
+<td align="left">setosa</td>
+</tr>
+</tbody>
+</table>
 <p>However, the limitation is that you can only have one version installed of each package. The structure of an R library looks like:</p>
 <ul>
 <li>first_package

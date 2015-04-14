@@ -17,10 +17,3 @@ untar <- function(...) {
   utils::untar(...)
 }
 
-#' @export
-install.packages <- function(pkg, lib, ...) {
-  if (missing(lib)) {
-    lib <- setdiff(.libPaths(), libPath()) # Exclude the lockbox transient library.
-  }
-  utils::install.packages(pkg, lib, ...)
-}

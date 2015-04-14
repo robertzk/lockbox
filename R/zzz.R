@@ -19,14 +19,48 @@ set_default_mirror <- function() {
   }
 }
 
+# Move non-symlinks from transient library to real library in case
+# user installs packages while using lockbox. See the addTaskCallback
+# in .onLoad
+sanitize_transient_library <- function(...) {
+  transient_lib <- libPath()
+  lib <- setdiff(.libPaths(), libPath())[1L] # Exclude the lockbox transient library.
+
+  pkg_moved <- character(0)
+  with_real_packages(transient_lib, function(pkgpath) {
+    pkgname   <- basename(pkgpath)                   
+    pkg_moved <<- c(pkg_moved, pkgname)
+    newpkg    <- file.path(lib, pkgname)
+
+    unlink(newpkg, TRUE, TRUE)
+    file.rename(pkgpath, newpkg)
+  })
+
+  if (length(pkg_moved)) {
+    warning("You just installed the following packages while using lockbox:\n\n",
+            paste(paste("-", pkg_moved), collapse = "\n"),
+            "\n\nThese have been moved from ", sQuote(transient_lib),
+            " to ", sQuote(lib), ". In general, you should only install ",
+            "packages in an R session that does not use lockbox, e.g., ",
+            "by calling ", sQuote("R --vanilla"), " in the terminal.",
+            call. = FALSE)
+  }
+
+  TRUE
+}
+
 .onLoad <- function(pkg, libPath) {
   set_transient_library()
+  addTaskCallback(sanitize_transient_library, "lockbox_callback")
 }
 
 .onUnLoad <- function(pkg) {
   .libPaths(.lockbox_env$old_dir)
+  removeTaskCallback("lockbox_callback")
+
   if (exists("old_opts", envir = .lockbox_env, inherits = FALSE)) {
     options(.lockbox_env$old_opts)
   }
 }
+
 

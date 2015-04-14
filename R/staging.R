@@ -38,9 +38,7 @@ symlink_library <- function(src, target) {
 #'
 #' @param staging_library character. The location of the staging library.
 copy_real_packages_to_lockbox_library <- function(staging_library) {
-  packages <- list.files(staging_library, full.names = TRUE)
-  packages <- Filter(Negate(is.symlink), packages)
-  lapply(packages, move_package_to_lockbox_library)
+  with_real_packages(staging_library, move_package_to_lockbox_library)
 }
 
 move_package_to_lockbox_library <- function(pkg_path) {
@@ -52,4 +50,16 @@ move_package_to_lockbox_library <- function(pkg_path) {
   unlink(new_path, TRUE, TRUE)
   file.rename(file.path(tmp_path, basename(pkg_path)), new_path)
 }
+
+with_real_packages <- function(libpath, action) {
+  stopifnot(is.function(action))
+
+  packages <- list.files(libpath, full.names = TRUE)
+  packages <- Filter(Negate(is.symlink), packages)
+
+  for (i in seq_along(packages)) {
+    action(packages[[i]])
+  }
+}
+
 

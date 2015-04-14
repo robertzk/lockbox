@@ -1,3 +1,12 @@
+# Version 0.1.7
+  
+  * Using the `base::addTaskCallback` mechanism, lockbox moves any installed
+    packages from the transient library to the user's "real" library if
+    they installed packages in a session that was loaded using lockbox.
+
+    This is to ensure that no packages are installed into the transient library
+    or the lockbox library unless they are explicitly in a lockfile.
+
 # Version 0.1.5
 
   * Installing non-github (i.e. CRAN) packages now works on Ubuntu.

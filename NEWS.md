@@ -1,3 +1,9 @@
+# Version 0.1.7
+  
+  * `install.packages` is now a global export that ensures installation of
+    new packages is not performed into the transient library. (TLDR: Packages
+    get installed into the right location).
+
 # Version 0.1.5
 
   * Installing non-github (i.e. CRAN) packages now works on Ubuntu.

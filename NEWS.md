@@ -1,3 +1,11 @@
+# Version 0.1.8
+
+  * If the user sets the `GIT_PAT` system environment variable to their Github
+    personal authorization token, private Github repos will be manageable by lockbox.
+    Check out [Github's guide](https://help.github.com/articles/creating-an-access-token-for-command-line-use/)
+    to understand how to obtain a personal authorization token. It should be a 
+    32 character hexadecimal string.
+
 # Version 0.1.7
   
   * Using the `base::addTaskCallback` mechanism, lockbox moves any installed

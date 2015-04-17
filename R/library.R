@@ -97,10 +97,15 @@ install_package.github <- function(locked_package) {
   ref <- locked_package$ref %||% locked_package$version
   # TODO: (RK) What if we just want latest from master?
   install_locked_package(locked_package, {
-    devtools::install_github(
+    arguments <- list(
       paste(locked_package$repo, ref, sep = "@"),
       reload = FALSE
     )
+    if (nzchar(token <- Sys.getenv("GIT_PAT"))) {
+      arguments$auth_token <- token
+    }
+
+    do.call(devtools::install_github, arguments)
   })
 }
 

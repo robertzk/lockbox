@@ -69,6 +69,7 @@ Example Lock File
   # GIT_PAT environment variable is set (using your shell or, e.g., Sys.setenv)
   # to the value of your Github authorization token. To obtain one, see:
   #   https://help.github.com/articles/creating-an-access-token-for-command-line-use/
+  # It should be a 32-character hexadecimal string.
   name: privatepkg
   version: 0.1.4
   repo: privateorg/privatepkg

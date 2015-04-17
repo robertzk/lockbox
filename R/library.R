@@ -104,6 +104,9 @@ install_package.github <- function(locked_package) {
     if (nzchar(token <- Sys.getenv("GIT_PAT"))) {
       arguments$auth_token <- token
     }
+    if (!is.null(locked_package$subdir)) {
+      arguments$subdir <- locked_package$subdir
+    }
 
     do.call(devtools::install_github, arguments)
   })

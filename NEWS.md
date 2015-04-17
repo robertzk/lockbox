@@ -1,3 +1,12 @@
+# Version 0.1.9
+
+  * For packages installed from github, the `subdir` parameter in the lock file
+    will be passed to `devtools::install_github` during installation.
+
+  * Added the `load` option to elements in the lock file. If set to `false`, 
+    the package will not be loaded by default, but will have to be requested
+    by the user using `library(packagename)`.
+
 # Version 0.1.8
 
   * If the user sets the `GIT_PAT` system environment variable to their Github

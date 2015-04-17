@@ -64,4 +64,12 @@ Example Lock File
   version: 0.1.0
   remote: local
   dir: /your/pkg
+-
+  # You can even install repos that are private on Github, as long as your
+  # GIT_PAT environment variable is set (using your shell or, e.g., Sys.setenv)
+  # to the value of your Github authorization token. To obtain one, see:
+  #   https://help.github.com/articles/creating-an-access-token-for-command-line-use/
+  name: privatepkg
+  version: 0.1.4
+  repo: privateorg/privatepkg
 ```

@@ -34,7 +34,9 @@ reset_search_path <- function() {
 }
 
 attach <- function(locked_package) {
-  library(locked_package$name, character.only = TRUE)
+  if (!identical(locked_package$load, FALSE)) {
+    library(locked_package$name, character.only = TRUE)
+  }
   locked_package$name
 }
 

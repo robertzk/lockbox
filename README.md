@@ -48,6 +48,9 @@ Example Lock File
   name: director
   version: 0.2.1
   repo: robertzk/director
+  load: false # This package will not be loaded by default. The user must
+              # request it by calling library(director). In that case,
+              # the correct version (0.2.1) will be loaded.
 -
   # Use the kselection package version 0.2.0 from CRAN.
   # If this is not the current version, the CRAN archive will be used.

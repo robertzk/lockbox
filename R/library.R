@@ -101,7 +101,7 @@ install_package.github <- function(locked_package) {
       paste(locked_package$repo, ref, sep = "@"),
       reload = FALSE
     )
-    if (nzchar(token <- Sys.getenv("GIT_PAT"))) {
+    if (nzchar(token <- Sys.getenv("GITHUB_PAT"))) {
       arguments$auth_token <- token
     }
     if (!is.null(locked_package$subdir)) {
@@ -115,7 +115,7 @@ install_package.github <- function(locked_package) {
 install_locked_package <- function(locked_package, installing_expr) {
   temp_library <- staging_library()
   pkgdir <- file.path(temp_library, locked_package$name)
-    
+
   # For some reason, if the package already exists, R CMD INSTALL does not
   # let us install it.
   unlink(pkgdir, TRUE, TRUE)

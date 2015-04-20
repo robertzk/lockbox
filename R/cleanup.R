@@ -3,5 +3,5 @@
 #' @rdname cleanup
 #' @export
 emptybox <- function() {
-  quietly(unlink(lockbox_library()))
+  quietly(unlink(lockbox_library(), recursive = TRUE))
 }

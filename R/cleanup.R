@@ -1,4 +1,4 @@
-#' Remove all packages from lockbox `library`.
+#' Remove all packages from lockbox library.
 #'
 #' @rdname cleanup
 #' @export

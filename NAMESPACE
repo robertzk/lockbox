@@ -3,6 +3,7 @@
 S3method(lockbox,character)
 S3method(lockbox,default)
 S3method(lockbox,list)
+export(emptybox)
 export(lockbox)
 export(packageVersion)
 export(setNames)

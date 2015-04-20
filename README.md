@@ -1,4 +1,4 @@
-Painless Dependencies in R [![Build Status](https://travis-ci.org/robertzk/lockbox.svg?branch=master)](https://travis-ci.org/robertzk/lockbox) [![Coverage Status](https://coveralls.io/repos/robertzk/lockbox/badge.svg?branch=master)](https://coveralls.io/r/robertzk/lockbox)
+Painless Dependencies in R [![Build Status](https://img.shields.io/travis/robertzk/lockbox.svg)](https://travis-ci.org/robertzk/lockbox) [![Coverage Status](https://img.shields.io/coveralls/robertzk/lockbox.svg)](https://coveralls.io/r/robertzk/lockbox) ![Release Tag](https://img.shields.io/github/tag/robertzk/lockbox.svg)
 -------------
 
 [Lockbox](https://screen.yahoo.com/gore-bush-first-debate-strategery-050000058.html) is

@@ -6,7 +6,7 @@
 #' on demand. When a given set of versioned packages is requested, lockbox will
 #' unload \emph{all other packages} and ensure only the given set of packages
 #' with their respective versions are present.
-#' 
+#'
 #' Since lockbox maintains a separate directory for its library, it will not
 #' interfere with R's usual packages or libraries when R is restarted.
 #'
@@ -14,22 +14,32 @@
 #' @param file_or_list character or list. A yaml-based lock file or its
 #'    parsed out list format. This set of packages will be loaded into the
 #'    search path and \emph{all other packages will be unloaded}.
-lockbox <- function(file_or_list) {
-  UseMethod("lockbox")
+lockbox <- function(file_or_list, env) {
+  UseMethod("lockbox", file_or_list)
 }
 
 #' @export
-lockbox.character <- function(file) {
-  lockbox(yaml::yaml.load_file(file))
+lockbox.character <- function(file, env) {
+  lockbox(yaml::yaml.load_file(file), env)
 }
 
 #' @export
-lockbox.list <- function(lock) {
+lockbox.list <- function(lock, env) {
+  if (missing(env)) env <- "!packages"
+  if (is.null(lock$packages))
+    stop("Invalid config. Make sure your config format is correct")
+  lock <-
+    if (identical(env, "!packages") || is.null(lock[[env]])) {
+      lock$packages
+    } else {
+      lock$packages[lock$env]
+    }
+
   lock <- lapply(lock, as.locked_package)
   disallow_special_packages(lock)
 
   set_transient_library()
-  
+
   ## Find the packages whose version does not match the current library.
   mismatches <- vapply(lock, version_mismatch, logical(1))
 
@@ -38,8 +48,17 @@ lockbox.list <- function(lock) {
     align(lock[mismatches])
 
     ## And re-build our search path.
-    rebuild(lock) 
+    rebuild(lock)
   })
+}
+
+#' @export
+lockbox.default <- function(obj) {
+  stop(
+    "Invalid parameters passed to ", sQuote("lockbox"), " method: ",
+    "must be a ", sQuote("character"), " or ", sQuote("list"), " but ",
+    "instead I got a ", sQuote(class(obj)[1]), "."
+  )
 }
 
 as.locked_package <- function(list) {
@@ -51,7 +70,7 @@ as.locked_package <- function(list) {
   }
 
   if (is.na(package_version(list$version))) {
-    stop(sprintf("Invalid package %s version %s.", 
+    stop(sprintf("Invalid package %s version %s.",
                  sQuote(list$name), sQuote(list$version)))
   } else {
     list$version <- package_version(list$version)
@@ -62,15 +81,6 @@ as.locked_package <- function(list) {
 }
 
 is.locked_package <- function(obj) is(obj, "locked_package")
-
-#' @export
-lockbox.default <- function(obj) {
-  stop(
-    "Invalid parameters passed to ", sQuote("lockbox"), " method: ",
-    "must be a ", sQuote("character"), " or ", sQuote("list"), " but ",
-    "instead I got a ", sQuote(class(obj)[1]), "."
-  )
-}
 
 #' The secret lockbox library path.
 lockbox_library <- function() {

@@ -2,24 +2,24 @@ Package: lockbox
 Type: Package
 Title: lockbox (http://github.com/robertzk/lockbox)
 Description: Bundler-style dependency management for R.
-Version: 0.1.9
+Version: 0.1.9.1
 Author: Robert Krzyzanowski <technoguyrob@gmail.com>
 Maintainer: Robert Krzyzanowski <technoguyrob@gmail.com>
 Authors@R: c(person("Robert", "Krzyzanowski",
     email = "technoguyrob@gmail.com", role = c("aut", "cre")))
-Depends: 
+Depends:
     R (>= 3.0.1),
     httr,
     RCurl
 License: MIT
 LazyData: true
-Imports: 
+Imports:
     yaml,
     digest,
     testthatsomemore,
     devtools,
     utils
-Suggests: 
+Suggests:
     knitr,
     microbenchmark,
     testthat

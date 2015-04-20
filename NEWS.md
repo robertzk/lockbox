@@ -1,9 +1,14 @@
+# Version 0.1.9.1
+
+  * To be more consistent with `devtools`, you now have to set GITHUB_PAT
+    environment variable to install private repos from github.
+
 # Version 0.1.9
 
   * For packages installed from github, the `subdir` parameter in the lock file
     will be passed to `devtools::install_github` during installation.
 
-  * Added the `load` option to elements in the lock file. If set to `false`, 
+  * Added the `load` option to elements in the lock file. If set to `false`,
     the package will not be loaded by default, but will have to be requested
     by the user using `library(packagename)`.
 
@@ -12,11 +17,11 @@
   * If the user sets the `GIT_PAT` system environment variable to their Github
     personal authorization token, private Github repos will be manageable by lockbox.
     Check out [Github's guide](https://help.github.com/articles/creating-an-access-token-for-command-line-use/)
-    to understand how to obtain a personal authorization token. It should be a 
+    to understand how to obtain a personal authorization token. It should be a
     32 character hexadecimal string.
 
 # Version 0.1.7
-  
+
   * Using the `base::addTaskCallback` mechanism, lockbox moves any installed
     packages from the transient library to the user's "real" library if
     they installed packages in a session that was loaded using lockbox.
@@ -56,4 +61,4 @@
 
 # Version 0.1.0
 
-  * The initial creation of the package. 
+  * The initial creation of the package.

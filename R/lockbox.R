@@ -32,7 +32,10 @@ lockbox.list <- function(lock, env) {
     if (identical(env, "!packages") || is.null(lock[[env]])) {
       lock$packages
     } else {
-      lock$packages[lock$env]
+      lock <- lapply(lock$packages, function(package) {
+        if(package$name %in% lock[[env]]) package else NULL
+      })
+      lock <- lock[!sapply(lock, is.null)]
     }
 
   lock <- lapply(lock, as.locked_package)

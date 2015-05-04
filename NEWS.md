@@ -1,3 +1,10 @@
+# Version 0.1.9.5
+
+  * Added a `lockbox.default` option which, when set to the path of a 
+    lockfile.yml, will load that lockfile after attaching the package
+    to the search path (note this behavior is disabled if 
+    `options(lockbox.autoload = FALSE)`).
+
 # Version 0.1.9.2-4
 
   * Assorted fixes to library loading.

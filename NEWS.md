@@ -6,6 +6,9 @@
     is a project managed by lockbox (i.e., has a lockfile.yml somewhere in
     a parent directory), the relevant package versions will be autoloaded.
     This behavior can be disabled with `options(lockbox.autoload = FALSE)`.
+  
+  * The option `lockbox.env` for controlling the default environment to
+    load when calling `lockbox::lockbox`.
 
 # Version 0.1.9.1
 

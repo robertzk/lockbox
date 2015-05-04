@@ -1,3 +1,12 @@
+# Version 0.1.9.2-4
+
+  * Assorted fixes to library loading.
+
+  * When lockbox is attached to the search path while the current directory
+    is a project managed by lockbox (i.e., has a lockfile.yml somewhere in
+    a parent directory), the relevant package versions will be autoloaded.
+    This behavior can be disabled with `options(lockbox.autoload = FALSE)`.
+
 # Version 0.1.9.1
 
   * To be more consistent with `devtools`, you now have to set GITHUB_PAT

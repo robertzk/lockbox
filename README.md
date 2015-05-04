@@ -77,3 +77,15 @@ Example Lock File
   version: 0.1.4
   repo: privateorg/privatepkg
 ```
+
+Notes
+-----
+
+If you call `library(lockbox)` from within a directory that contains
+a `lockfile.yml` somewhere in a parent directory, that lockfile
+will be loaded and the relevant package versions attached to the 
+search path. In particular, you can place `library(lockbox)` in
+your `~/.Rprofile` and lockbox will be loaded if and only if
+you start your R session from a project that is managed by lockbox.
+
+This behavior can be disabled by setting `options(lockbox.autoload = FALSE)`.

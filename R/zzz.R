@@ -19,6 +19,26 @@ set_default_mirror <- function() {
   }
 }
 
+# If a parent directory has a lockfile.yml, load it when the package is attached.
+load_project <- function(path = getwd()) {
+  has_lockfile <- function(path) {
+    file.exists(file.path(path, "lockfile.yml"))
+  }
+
+  is_root <- function(path) {
+    identical(path, dirname(path))
+  }
+
+  path <- normalizePath(path, mustWork = FALSE)
+  while (!has_lockfile(path) && !is_root(path)) {
+    path <- dirname(path)
+  }
+
+  if (!is_root(path)) {
+    lockbox(file.path(path, 'lockfile.yml'))
+  } 
+}
+
 # Move non-symlinks from transient library to real library in case
 # user installs packages while using lockbox. See the addTaskCallback
 # in .onLoad
@@ -52,6 +72,10 @@ sanitize_transient_library <- function(...) {
 .onLoad <- function(pkg, libPath) {
   set_transient_library()
   addTaskCallback(sanitize_transient_library, "lockbox_callback")
+}
+
+.onAttach <- function(pkg, libPath) {
+  load_project()
 }
 
 .onUnLoad <- function(pkg) {

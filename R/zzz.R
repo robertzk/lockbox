@@ -36,7 +36,9 @@ load_project <- function(path = getwd()) {
 
   if (!is_root(path)) {
     lockbox(file.path(path, 'lockfile.yml'))
-  } 
+  } else if (!is.null(getOption("lockbox.default"))) {
+    lockbox(getOption("lockbox.default"))
+  }
 }
 
 # Move non-symlinks from transient library to real library in case

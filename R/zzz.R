@@ -75,7 +75,9 @@ sanitize_transient_library <- function(...) {
 }
 
 .onAttach <- function(pkg, libPath) {
-  load_project()
+  if (!isTRUE(getOption("lockbox.autoload", TRUE))) { 
+    load_project()
+  }
 }
 
 .onUnLoad <- function(pkg) {

@@ -120,30 +120,28 @@ install_locked_package <- function(locked_package, installing_expr) {
   # let us install it.
   unlink(pkgdir, TRUE, TRUE)
 
-  on.exit({
-    if (!file.exists(pkgdir)) {
-      unlink(temp_library, TRUE, TRUE)
-      stop("Must have installed the package ",
-           crayon::red(as.character(locked_package$name)),
-           " of version ", sQuote(as.character(locked_package$version)))
-    }
-
-    if ((ver <- package_version_from_path(pkgdir)) != locked_package$version) {
-      unlink(temp_library, TRUE, TRUE)
-      stop(sprintf(paste0(
-        "Incorrect version of package %s installed. Expected ",
-        "%s but downloaded %s instead."), sQuote(locked_package$name),
-        sQuote(locked_package$version), sQuote(ver)), call. = FALSE)
-    }
-
-    copy_real_packages_to_lockbox_library(temp_library)
-    unlink(temp_library, TRUE, TRUE)
-  })
-
   ## Pretend our library path is the staging library during installation.
   testthatsomemore::package_stub("base", ".libPaths", function(...) temp_library, {
     force(installing_expr)
   })
+
+  if (!file.exists(pkgdir)) {
+    unlink(temp_library, TRUE, TRUE)
+    stop("Must have installed the package ",
+         crayon::red(as.character(locked_package$name)),
+         " of version ", sQuote(as.character(locked_package$version)))
+  }
+
+  if ((ver <- package_version_from_path(pkgdir)) != locked_package$version) {
+    unlink(temp_library, TRUE, TRUE)
+    stop(sprintf(paste0(
+      "Incorrect version of package %s installed. Expected ",
+      "%s but downloaded %s instead."), sQuote(locked_package$name),
+      sQuote(locked_package$version), sQuote(ver)), call. = FALSE)
+  }
+
+  copy_real_packages_to_lockbox_library(temp_library)
+  unlink(temp_library, TRUE, TRUE)
 }
 
 #' Find packages whose version does not match the current library's version.

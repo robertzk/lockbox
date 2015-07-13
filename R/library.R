@@ -38,12 +38,13 @@ lockbox_package_path <- function(locked_package) {
 }
 
 install_package <- function(locked_package) {
+  cat('Installing', crayon::green(locked_package$name), as.character(locked_package$version), 'from', class(locked_package)[1], '\n')
   UseMethod("install_package")
 }
 
 install_package.local <- function(locked_package) {
   stopifnot(is.element("dir", names(locked_package)))
-  install_locked_package(locked_package, devtools::install(locked_package$dir))
+  install_locked_package(locked_package, devtools::install(locked_package$dir, quiet = notTRUE(getOption('lockbox.verbose'))))
 }
 
 # Helpfully borrowed from https://github.com/christophergandrud/repmis/blob/master/R/InstallOldPackages.R
@@ -62,7 +63,7 @@ install_old_CRAN_package <- function(name, version, repo = "http://cran.r-projec
   repos <- getOption('lockbox.CRAN_mirror') %||% c(CRAN = "http://cran.rstudio.com")
   remote_version <- package_version(as.character(pkg$Version))
   if (dim(pkg)[1] == 1 && remote_version == version) {
-    return(utils::install.packages(name, repos = repos, INSTALL_opts = "--vanilla"))
+    return(utils::install.packages(name, repos = repos, INSTALL_opts = "--vanilla", quiet = notTRUE(getOption('lockbox.verbose'))))
   }
 
   # If we did not find the package on CRAN - try CRAN archive.
@@ -79,7 +80,7 @@ install_old_CRAN_package <- function(name, version, repo = "http://cran.r-projec
   setwd(tmpdir)
 
   utils::install.packages(pkg.tarball, repos = NULL, type = "source",
-                          INSTALL_opts = "--vanilla")
+                          INSTALL_opts = "--vanilla", quiet = notTRUE(getOption('lockbox.verbose')))
   unlink(pkg.tarball)
 }
 
@@ -99,7 +100,8 @@ install_package.github <- function(locked_package) {
   install_locked_package(locked_package, {
     arguments <- list(
       paste(locked_package$repo, ref, sep = "@"),
-      reload = FALSE
+      reload = FALSE,
+      quiet  = notTRUE(getOption('lockbox.verbose'))
     )
     if (nzchar(token <- Sys.getenv("GITHUB_PAT"))) {
       arguments$auth_token <- token
@@ -122,7 +124,7 @@ install_locked_package <- function(locked_package, installing_expr) {
 
   ## Pretend our library path is the staging library during installation.
   testthatsomemore::package_stub("base", ".libPaths", function(...) temp_library, {
-    force(installing_expr)
+    force(quietly(installing_expr))
   })
 
   if (!file.exists(pkgdir)) {

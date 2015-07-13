@@ -1,5 +1,7 @@
 `%||%` <- function(x, y) if (is.null(x)) y else x
 
+notTRUE <- Negate(isTRUE)
+
 libPath <- function() {
   lib <- .libPaths()[1L]
   if (identical(lib, .Library)) {

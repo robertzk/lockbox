@@ -1,8 +1,14 @@
+# Version 0.1.9.6
+
+  * Prettified the output of the installation and made it look more bundler like.
+    This comes at a price of hiding the installation log output. If you want
+    to debug some issue with lockbox make sure to set `options(lockbox.autoload = TRUE)`.
+
 # Version 0.1.9.5
 
-  * Added a `lockbox.default` option which, when set to the path of a 
+  * Added a `lockbox.default` option which, when set to the path of a
     lockfile.yml, will load that lockfile after attaching the package
-    to the search path (note this behavior is disabled if 
+    to the search path (note this behavior is disabled if
     `options(lockbox.autoload = FALSE)`).
 
 # Version 0.1.9.2-4
@@ -13,7 +19,7 @@
     is a project managed by lockbox (i.e., has a lockfile.yml somewhere in
     a parent directory), the relevant package versions will be autoloaded.
     This behavior can be disabled with `options(lockbox.autoload = FALSE)`.
-  
+
   * The option `lockbox.env` for controlling the default environment to
     load when calling `lockbox::lockbox`.
 

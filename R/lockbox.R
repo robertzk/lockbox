@@ -46,6 +46,10 @@ lockbox.list <- function(lock, env) {
   ## Find the packages whose version does not match the current library.
   mismatches <- vapply(lock, version_mismatch, logical(1))
 
+  sapply(lock[!mismatches], function(locked_package) {
+    cat('Using', crayon::green(locked_package$name), as.character(locked_package$version), '\n')
+  })
+
   quietly({
     ## Replace our library so that it has these packages instead.
     align(lock[mismatches])

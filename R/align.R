@@ -7,7 +7,7 @@ align <- function(locked_package) {
     return(lapply(locked_package, align))
   }
 
-  stopifnot(is.locked_package(locked_package)) 
+  stopifnot(is.locked_package(locked_package))
 
   ## Make sure we have this package version in the lockbox secret library.
   `ensure_package_exists_in_lockbox!`(locked_package)
@@ -21,4 +21,3 @@ align <- function(locked_package) {
   if (is.symlink(path)) unlink(path, force = TRUE)
   symlink(lockbox_package_path(locked_package), path)
 }
-

@@ -1,3 +1,16 @@
+# Version 0.1.10
+
+  * Added the notion of a transient staging library. Previously, installing packages
+    while lockboxed would conflict with the transient library, since one may overwrite
+    the symlinks in the transient library. Instead of attaching one extra library path
+    (the transient library), we now attach *two*: the other is the *transient
+    staging library*, which is simply an empty directory used in conjunction with
+    a [task callback](https://stat.ethz.ch/R-manual/R-devel/library/base/html/taskCallbackManager.html)
+    to transfer interactively installed packages to the vanilla library.
+
+    The location of the transient staging library is fixed to be the 
+    same as the transient library suffixed with `_staging`.
+
 # Version 0.1.9.6
 
   * Prettified the output of the installation and made it look more bundler like.

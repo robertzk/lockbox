@@ -100,6 +100,14 @@ lockbox_transient_dir <- function() {
     normalizePath("~/.R/lockbox_transient", mustWork = FALSE)
 }
 
+#' The transient staging lockbox library path.
+#' 
+#' This will be used to copy interactively installed packages to
+#' the vanilla library.
+lockbox_transient_staging_dir <- function() {
+  paste0(lockbox_transient_dir(), "_staging")
+}
+
 disallow_special_packages <- function(lock) {
   package_names    <- vapply(lock, `[[`, character(1), "name")
 

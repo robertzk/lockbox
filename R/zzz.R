@@ -71,7 +71,7 @@ sanitize_transient_library <- function(...) {
   if (length(pkg_moved)) {
     warning("You just installed the following packages while using lockbox:\n\n",
             paste(paste("-", pkg_moved), collapse = "\n"),
-            "\n\nThese have been moved from ", sQuote(transient_lib),
+            "\n\nThese have been moved from ", sQuote(transient_staging_lib),
             " to ", sQuote(lib), ". In general, you should only install ",
             "packages in an R session that does not use lockbox, e.g., ",
             "by calling ", sQuote("R --vanilla"), " in the terminal.",

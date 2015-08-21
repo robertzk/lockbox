@@ -12,8 +12,8 @@ set_transient_library <- function() {
   # library.
   transient_staging_path <- transientStagingPath()
   if (!file.exists(transient_staging_path)) {
-    dir.create(transient_staging_path, FALSE, TRUE)
     unlink(transient_staging_path, TRUE, TRUE)
+    dir.create(transient_staging_path, FALSE, TRUE)
   }
   .libPaths(c(transient_staging_path, dir, .libPaths()))
 }

@@ -3,7 +3,7 @@
 notTRUE <- Negate(isTRUE)
 
 libPath <- function() {
-  lib <- .libPaths()[1L]
+  lib <- .libPaths()[2L]
   if (identical(lib, .Library)) {
     # We *never* want to accidentally manipulate the system library!
     stop("Something went wrong, restart R or lockbox.")

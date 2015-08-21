@@ -54,12 +54,12 @@ load_project <- function(path = getwd()) {
 # user installs packages while using lockbox. See the addTaskCallback
 # in .onLoad
 sanitize_transient_library <- function(...) {
-  transient_lib <- libPath()
+  transient_staging_lib <- lockbox_transient_staging_dir()
   # Exclude the lockbox transient library and transient staging library.
-  lib <- setdiff(.libPaths(), c(libPath(), lockbox_transient_staging_dir()))[1L] 
+  lib <- setdiff(.libPaths(), c(libPath(), transient_staging_lib))[1L] 
 
   pkg_moved <- character(0)
-  with_real_packages(transient_lib, function(pkgpath) {
+  with_real_packages(transient_staging_lib, function(pkgpath) {
     pkgname   <- basename(pkgpath)                   
     pkg_moved <<- c(pkg_moved, pkgname)
     newpkg    <- file.path(lib, pkgname)

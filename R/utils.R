@@ -11,6 +11,10 @@ libPath <- function() {
   lib
 }
 
+transientStagingPath <- function() {
+  paste0(libPath(), "_staging")
+}
+
 lockbox_imports <- function() {
   dcf <- system.file("DESCRIPTION", package = "lockbox", lib.loc = .Library)
   Filter(nzchar, strsplit(read.dcf(dcf)[,"Imports"], "[\n, ]+")[[1]])

@@ -10,7 +10,7 @@ set_transient_library <- function() {
   # We add one final library path: a transient staging library
   # that is used to copy over installed packages to the vanilla
   # library.
-  transient_staging_path <- transientStagingPath()
+  transient_staging_path <- lockbox_transient_staging_dir()
   if (!file.exists(transient_staging_path)) {
     unlink(transient_staging_path, TRUE, TRUE)
     dir.create(transient_staging_path, FALSE, TRUE)
@@ -56,7 +56,7 @@ load_project <- function(path = getwd()) {
 sanitize_transient_library <- function(...) {
   transient_lib <- libPath()
   # Exclude the lockbox transient library and transient staging library.
-  lib <- setdiff(.libPaths(), c(libPath(), transientStagingPath()))[1L] 
+  lib <- setdiff(.libPaths(), c(libPath(), lockbox_transient_staging_dir()))[1L] 
 
   pkg_moved <- character(0)
   with_real_packages(transient_lib, function(pkgpath) {

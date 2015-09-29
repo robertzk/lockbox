@@ -1,3 +1,7 @@
+# Version 0.1.11
+
+  * Fixed help files by moving storage of all packages to `pkg_name/version/pkg_name`.
+
 # Version 0.1.10
 
   * Added the notion of a transient staging library. Previously, installing packages

@@ -25,7 +25,11 @@ exists_in_lockbox <- function(locked_package) {
 }
 
 lockbox_package_path <- function(locked_package) {
-  file.path(lockbox_library(), locked_package$name, locked_package$version)
+  # The final package is stored in lockbox_lib_path/pkg_name/version/pkg_name
+  # The trailing pkg_name is to ensure help files work, since these depend
+  # on the directory name:
+  # https://github.com/wch/r-source/blob/ed66b715221d2720f5b334470335635bada520b1/src/library/utils/R/help.R#L213
+  file.path(lockbox_library(), locked_package$name, locked_package$version, locked_package$name)
 }
 
 `place_in_lockbox!` <- function(locked_package) {

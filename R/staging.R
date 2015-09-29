@@ -43,7 +43,7 @@ copy_real_packages_to_lockbox_library <- function(staging_library) {
 
 move_package_to_lockbox_library <- function(pkg_path) {
   tmp_path <- file.path(lockbox_library(), basename(pkg_path))
-  new_path <- file.path(tmp_path, package_version_from_path(pkg_path))
+  new_path <- file.path(tmp_path, package_version_from_path(pkg_path), basename(pkg_path))
   # A little gymnastics because R sucks at copying directories.
   dir.create(tmp_path, FALSE, TRUE)
   file.copy(pkg_path, tmp_path, TRUE, TRUE)

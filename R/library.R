@@ -105,6 +105,8 @@ install_package.github <- function(locked_package) {
     )
     if (nzchar(token <- Sys.getenv("GITHUB_PAT"))) {
       arguments$auth_token <- token
+    } else {
+      stop("GITHUB_PAT not found in system environment.")
     }
     if (!is.null(locked_package$subdir)) {
       arguments$subdir <- locked_package$subdir

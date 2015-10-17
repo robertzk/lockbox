@@ -5,3 +5,4 @@
 emptybox <- function() {
   quietly(unlink(lockbox_library(), recursive = TRUE))
 }
+

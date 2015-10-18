@@ -3,7 +3,7 @@
 notTRUE <- Negate(isTRUE)
 
 libPath <- function() {
-  lib <- .libPaths()[2L]
+  lib <- .libPaths()[2L] # We use the second index to skip the transient stagin library.
   if (identical(lib, .Library)) {
     # We *never* want to accidentally manipulate the system library!
     stop("Something went wrong, restart R or lockbox.")
@@ -70,3 +70,4 @@ package_version_from_path <- function(pkg_path) {
 duplicate <- function(x) {
   .Call(duplicate_lockbox_, x, PACKAGE = "lockbox")
 }
+

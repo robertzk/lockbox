@@ -27,7 +27,7 @@ staging_library <- function() {
 #'   populated with symlinked versions of the packages in the \code{destination}
 #'   library.
 symlink_library <- function(src, target) {
-  packages     <- list.files(src, full.names = TRUE)
+  packages <- list.files(src, full.names = TRUE)
   if (length(packages)) {
     new_packages <- file.path(target, basename(packages))
     Map(symlink, packages, new_packages, force = TRUE)

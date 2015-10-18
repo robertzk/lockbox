@@ -24,8 +24,12 @@ exists_in_lockbox <- function(locked_package) {
   file.exists(lockbox_package_path(locked_package))
 }
 
-lockbox_package_path <- function(locked_package) {
-  file.path(lockbox_library(), locked_package$name, locked_package$version)
+lockbox_package_path <- function(locked_package, library = lockbox_library()) {
+  # The final package is stored in lockbox_lib_path/pkg_name/version/pkg_name
+  # The trailing pkg_name is to ensure help files work, since these depend
+  # on the directory name:
+  # https://github.com/wch/r-source/blob/ed66b715221d2720f5b334470335635bada520b1/src/library/utils/R/help.R#L213
+  file.path(library, locked_package$name, locked_package$version, locked_package$name)
 }
 
 `place_in_lockbox!` <- function(locked_package) {
@@ -38,13 +42,16 @@ lockbox_package_path <- function(locked_package) {
 }
 
 install_package <- function(locked_package) {
-  cat('Installing', crayon::green(locked_package$name), as.character(locked_package$version), 'from', class(locked_package)[1], '\n')
+  cat("Installing", crayon::green(locked_package$name),
+      as.character(locked_package$version), "from", class(locked_package)[1], "\n")
   UseMethod("install_package")
 }
 
 install_package.local <- function(locked_package) {
   stopifnot(is.element("dir", names(locked_package)))
-  install_locked_package(locked_package, devtools::install(locked_package$dir, quiet = notTRUE(getOption('lockbox.verbose'))))
+  install_locked_package(locked_package,
+    devtools::install(locked_package$dir,
+                      quiet = notTRUE(getOption("lockbox.verbose"))))
 }
 
 # Helpfully borrowed from https://github.com/christophergandrud/repmis/blob/master/R/InstallOldPackages.R
@@ -63,7 +70,9 @@ install_old_CRAN_package <- function(name, version, repo = "http://cran.r-projec
   repos <- getOption('lockbox.CRAN_mirror') %||% c(CRAN = "http://cran.rstudio.com")
   remote_version <- package_version(as.character(pkg$Version))
   if (dim(pkg)[1] == 1 && remote_version == version) {
-    return(utils::install.packages(name, repos = repos, INSTALL_opts = "--vanilla", quiet = notTRUE(getOption('lockbox.verbose'))))
+    return(utils::install.packages(
+      name, repos = repos, INSTALL_opts = "--vanilla",
+      quiet = notTRUE(getOption('lockbox.verbose'))))
   }
 
   # If we did not find the package on CRAN - try CRAN archive.
@@ -80,7 +89,8 @@ install_old_CRAN_package <- function(name, version, repo = "http://cran.r-projec
   setwd(tmpdir)
 
   utils::install.packages(pkg.tarball, repos = NULL, type = "source",
-                          INSTALL_opts = "--vanilla", quiet = notTRUE(getOption('lockbox.verbose')))
+                          INSTALL_opts = "--vanilla",
+                          quiet = notTRUE(getOption("lockbox.verbose")))
   unlink(pkg.tarball)
 }
 

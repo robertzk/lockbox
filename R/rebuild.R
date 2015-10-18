@@ -20,7 +20,7 @@ reset_search_path <- function() {
   repeat {
     pkgs <- setdiff(loadedNamespaces(), special_namespaces)
     if (!length(pkgs)) break
-    if (repeat_count > 1000) {
+    if (repeat_count > 25) {
       warning("Could not unload the following namespaces when loading ",
               "lockfile: ", paste(sQuote(pkgs), collapse = ", "), call. = FALSE)
       break

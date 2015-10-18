@@ -24,12 +24,12 @@ exists_in_lockbox <- function(locked_package) {
   file.exists(lockbox_package_path(locked_package))
 }
 
-lockbox_package_path <- function(locked_package) {
+lockbox_package_path <- function(locked_package, library = lockbox_library()) {
   # The final package is stored in lockbox_lib_path/pkg_name/version/pkg_name
   # The trailing pkg_name is to ensure help files work, since these depend
   # on the directory name:
   # https://github.com/wch/r-source/blob/ed66b715221d2720f5b334470335635bada520b1/src/library/utils/R/help.R#L213
-  file.path(lockbox_library(), locked_package$name, locked_package$version, locked_package$name)
+  file.path(library, locked_package$name, locked_package$version, locked_package$name)
 }
 
 `place_in_lockbox!` <- function(locked_package) {
@@ -42,7 +42,8 @@ lockbox_package_path <- function(locked_package) {
 }
 
 install_package <- function(locked_package) {
-  cat('Installing', crayon::green(locked_package$name), as.character(locked_package$version), 'from', class(locked_package)[1], '\n')
+  cat("Installing", crayon::green(locked_package$name),
+      as.character(locked_package$version), "from", class(locked_package)[1], "\n")
   UseMethod("install_package")
 }
 
@@ -50,7 +51,7 @@ install_package.local <- function(locked_package) {
   stopifnot(is.element("dir", names(locked_package)))
   install_locked_package(locked_package,
     devtools::install(locked_package$dir,
-                      quiet = notTRUE(getOption('lockbox.verbose'))))
+                      quiet = notTRUE(getOption("lockbox.verbose"))))
 }
 
 # Helpfully borrowed from https://github.com/christophergandrud/repmis/blob/master/R/InstallOldPackages.R

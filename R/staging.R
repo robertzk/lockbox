@@ -8,7 +8,10 @@
 #' @return the directory of the staging library. This should be unlinked 
 #'   after use.
 staging_library <- function() {
-  tempdir <- file.path(tempdir(), "staging")
+  # We need to be careful to pick a directory the user will always
+  # have access to. The only guarantees we have are the lockbox directory
+  # and lockbox transient library themselves.
+  tempdir <- file.path(lockbox_library(), ".staging")
   dir.create(tempdir, FALSE, TRUE)  
   tempdir <- normalizePath(tempdir)
 

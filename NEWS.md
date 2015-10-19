@@ -1,3 +1,9 @@
+# Version 0.1.12
+
+  * Use a path for the staging library that is always available
+    from a permissions perspective. (`tempdir()` may not always be
+    writable) 
+
 # Version 0.1.11
 
   * Fixed help files by moving storage of all packages to `pkg_name/version/pkg_name`.

@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+<title>Index. lockbox 0.1.12</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="author" content="Robert Krzyzanowski &lt;technoguyrob@gmail.com&gt;">
+
+<link href="css/bootstrap.css" rel="stylesheet">
+<link href="css/bootstrap-responsive.css" rel="stylesheet">
+<link href="css/highlight.css" rel="stylesheet">
+<link href="css/staticdocs.css" rel="stylesheet">
+
+<!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+<![endif]-->
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+      processEscapes: true
+    }
+  });
+</script>
+<script type="text/javascript"
+  src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+  </head>
+
+  <body>
+    <div class="navbar">
+  <div class="navbar-inner">
+    <div class="container">
+      <a class="brand" href="#">lockbox 0.1.12</a>
+      <div class="nav">
+        <ul class="nav">
+          <li><a href="index.html"><i class="icon-home icon-white"></i> Index</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+    <div class="container">
+      <header>
+        
+      </header>
+      
+      <div class="row">
+  <div class="span8">
+    <h2>Painless Dependencies in R <a href="https://travis-ci.org/robertzk/lockbox"><img src="https://img.shields.io/travis/robertzk/lockbox.svg" alt="Build Status"/></a> <img src="https://img.shields.io/github/tag/robertzk/lockbox.svg" alt="Release Tag"/> <a href="http://robertzk.github.io/lockbox/"><img src="https://img.shields.io/badge/rocco--docs-%E2%9C%93-blue.svg" alt="Documentation"/></a></h2>
+
+<p><a href="https://screen.yahoo.com/gore-bush-first-debate-strategery-050000058.html">Lockbox</a> is
+a very minimalistic <a href="http://bundler.io/">bundler</a>-style dependency manager for R.</p>
+
+<p>The main difference between lockbox and more heavy-duty approaches like <a href="https://github.com/rstudio/packrat">Packrat</a>
+is that lockbox believes you should spend a specific amount of time
+thinking about dependencies: none.</p>
+
+<p>To get started, just write a lockfile.yml (see an example below) and execute</p>
+
+<pre><code class="r">lockbox::lockbox(&quot;lockfile.yml&quot;)
+</code></pre>
+
+<p>Your search path will be cleared of all other loaded packages, ensuring you
+have exactly and only what is in the lockfile. If you place the above line
+in the <code>.Rprofile</code> accompanying your project directory and keep the 
+<code>lockfile.yml</code> under source control, launching the R console after
+switching to earlier commits will instantly load your old dependencies,
+forever freeing you from having to worry about dependency management.</p>
+
+<h2>Installation</h2>
+
+<p>This package is not yet available from CRAN (as of April 4, 2015).
+To install the latest development builds directly from GitHub, run this instead:</p>
+
+<pre><code class="R">if (!require(&quot;devtools&quot;)) install.packages(&quot;devtools&quot;)
+devtools::install_github(&quot;robertzk/lockbox&quot;)
+</code></pre>
+
+<h2>Example Lock File</h2>
+
+<pre><code class="yml"># lockfile.yml in the project you wish to dependency manage using lockbox
+-
+  # This will install the tundra package from github&#39;s robertzk/tundra repo
+  # off tag 0.2.2. You can specify a different tag / branch / ref using:
+  #   ref: v0.2.2 # For example
+  name: tundra
+  version: 0.2.2
+  repo: robertzk/tundra
+-
+  name: director
+  version: 0.2.1
+  repo: robertzk/director
+  load: false # This package will not be loaded by default. The user must
+              # request it by calling library(director). In that case,
+              # the correct version (0.2.1) will be loaded.
+-
+  # Use the kselection package version 0.2.0 from CRAN.
+  # If this is not the current version, the CRAN archive will be used.
+  name: kselection
+  version: 0.2.0
+-
+  # Install a local (development) package version 0.1.0 from directory
+  # /your/pkg. Using this approach is not recommended, since you will
+  # not be able to keep your lock file under version control and shareable
+  # with other contributors to the project, as they are unlikely to have
+  # the same package / version in the same directory. However, it is useful
+  # for development prior to pushing a new version to, e.g., github.
+  name: yourpkg
+  version: 0.1.0
+  remote: local
+  dir: /your/pkg
+-
+  # You can even install repos that are private on Github, as long as your
+  # GIT_PAT environment variable is set (using your shell or, e.g., Sys.setenv)
+  # to the value of your Github authorization token. To obtain one, see:
+  #   https://help.github.com/articles/creating-an-access-token-for-command-line-use/
+  # It should be a 32-character hexadecimal string.
+  name: privatepkg
+  version: 0.1.4
+  repo: privateorg/privatepkg
+</code></pre>
+
+<h2>Notes</h2>
+
+<p>If you call <code>library(lockbox)</code> from within a directory that contains
+a <code>lockfile.yml</code> somewhere in a parent directory, that lockfile
+will be loaded and the relevant package versions attached to the 
+search path. In particular, you can place <code>library(lockbox)</code> in
+your <code>~/.Rprofile</code> and lockbox will be loaded if and only if
+you start your R session from a project that is managed by lockbox.</p>
+
+<p>This behavior can be disabled by setting <code>options(lockbox.autoload = FALSE)</code>.</p>
+
+
+    <h2>Help topics</h2>
+
+    <h3></h3>
+    
+    
+    <ul class="index">
+        
+      <li>
+        <code><a href="align.html">align</a></code><br />Symlink a package with the appropriate version into the current library.</li>
+            
+      <li>
+        <code><a href="copy_real_packages_to_lockbox_library.html">copy_real_packages_to_lockbox_library</a></code><br />Copy real (non-symlinked) packages to the lockbox library.</li>
+            
+      <li>
+        <code><a href="current_version.html">current_version</a></code><br />The current version of this package in the current library.</li>
+            
+      <li>
+        <code><a href="cleanup.html">emptybox</a></code><br />Remove all packages from lockbox library.</li>
+            
+      <li>
+        <code><a href="ensure_package_exists_in_lockbox.html">ensure_package_exists_in_lockbox</a></code>(ensure_package_exists_in_lockbox!)<br />Ensure package name and version exists in the lockbox secret library.</li>
+            
+      <li>
+        <code><a href="lockbox.html">lockbox</a></code>(lockbox-package)<br />Re-organize Search Path to Use Lockbox Library.</li>
+            
+      <li>
+        <code><a href="lockbox_library.html">lockbox_library</a></code><br />The secret lockbox library path.</li>
+            
+      <li>
+        <code><a href="lockbox_transient_dir.html">lockbox_transient_dir</a></code><br />The transient lockbox library path.</li>
+            
+      <li>
+        <code><a href="lockbox_transient_staging_dir.html">lockbox_transient_staging_dir</a></code><br />The transient staging lockbox library path.</li>
+            
+      <li>
+        <code><a href="rebuild.html">rebuild</a></code><br />Rebuild our current search path according to a list of locked packages.</li>
+            
+      <li>
+        <code><a href="staging_library.html">staging_library</a></code><br />Construct a lockbox staging library.</li>
+            
+      <li>
+        <code><a href="symlink_library.html">symlink_library</a></code><br />Symlink all packages from a destination library to a target library.</li>
+            
+      <li>
+        <code><a href="version_mismatch.html">version_mismatch</a></code><br />Find packages whose version does not match the current library's version.</li>
+    
+    </ul>
+  </div>
+  
+  <div class="span3 offset1">
+    <h2>Vignettes</h2>
+    <ul>
+      <li><a href="vignettes/lockbox-libraries.html">Libraries in Lockbox (Technical Notes)</a></li>
+    </ul>
+        
+    <h2>Dependencies</h2>
+    <ul>
+      <li><strong>Depends</strong>: httr, RCurl</li>
+      <li><strong>Imports</strong>: yaml, digest, testthatsomemore, devtools, utils</li>
+      <li><strong>Suggests</strong>: knitr, microbenchmark, testthat</li>
+      
+    </ul>
+    <h2>Authors</h2>
+    <ul>
+      <li><a href="mailto:technoguyrob@gmail.com">Robert Krzyzanowski</a> [aut, cre]</li>
+    </ul>
+
+  </div>
+</div>
+      
+      <footer>
+      <p class="pull-right"><a href="#">Back to top</a></p>
+<p>Built by <a href="https://github.com/hadley/staticdocs">staticdocs</a>. Styled with <a href="http://twitter.github.com/bootstrap">bootstrap</a>.</p>
+      </footer>
+    </div>
+  </body>
+</html>

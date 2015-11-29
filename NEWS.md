@@ -1,8 +1,13 @@
+# Version 0.1.13
+
+  * Do not try to install dependencies. This never ends well, only adds headache,
+    and also tries to update some packages to the latest CRAN version.
+
 # Version 0.1.12
 
   * Use a path for the staging library that is always available
     from a permissions perspective. (`tempdir()` may not always be
-    writable) 
+    writable)
 
 # Version 0.1.11
 
@@ -18,7 +23,7 @@
     a [task callback](https://stat.ethz.ch/R-manual/R-devel/library/base/html/taskCallbackManager.html)
     to transfer interactively installed packages to the vanilla library.
 
-    The location of the transient staging library is fixed to be the 
+    The location of the transient staging library is fixed to be the
     same as the transient library suffixed with `_staging`.
 
 # Version 0.1.9.6

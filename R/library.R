@@ -51,7 +51,8 @@ install_package.local <- function(locked_package) {
   stopifnot(is.element("dir", names(locked_package)))
   install_locked_package(locked_package,
     devtools::install(locked_package$dir,
-                      quiet = notTRUE(getOption("lockbox.verbose"))))
+                      quiet = notTRUE(getOption("lockbox.verbose")),
+                      dependencies = FALSE))
 }
 
 # Helpfully borrowed from https://github.com/christophergandrud/repmis/blob/master/R/InstallOldPackages.R
@@ -72,7 +73,8 @@ install_old_CRAN_package <- function(name, version, repo = "http://cran.r-projec
   if (dim(pkg)[1] == 1 && remote_version == version) {
     return(utils::install.packages(
       name, repos = repos, INSTALL_opts = "--vanilla",
-      quiet = notTRUE(getOption('lockbox.verbose'))))
+      quiet = notTRUE(getOption('lockbox.verbose')),
+      dependencies = FALSE))
   }
 
   # If we did not find the package on CRAN - try CRAN archive.
@@ -90,7 +92,8 @@ install_old_CRAN_package <- function(name, version, repo = "http://cran.r-projec
 
   utils::install.packages(pkg.tarball, repos = NULL, type = "source",
                           INSTALL_opts = "--vanilla",
-                          quiet = notTRUE(getOption("lockbox.verbose")))
+                          quiet = notTRUE(getOption("lockbox.verbose")),
+                          dependencies = FALSE)
   unlink(pkg.tarball)
 }
 
@@ -111,7 +114,8 @@ install_package.github <- function(locked_package) {
     arguments <- list(
       paste(locked_package$repo, ref, sep = "@"),
       reload = FALSE,
-      quiet  = notTRUE(getOption('lockbox.verbose'))
+      quiet  = notTRUE(getOption('lockbox.verbose')),
+      dependencies = FALSE
     )
     if (nzchar(token <- Sys.getenv("GITHUB_PAT"))) {
       arguments$auth_token <- token

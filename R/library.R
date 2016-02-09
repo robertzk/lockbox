@@ -215,6 +215,10 @@ get_ordered_dependencies <- function(lock) {
 }
 
 get_dependencies_for_list <- function(master_list, lock) {
+  current_dependencies <- list()
+  for (i in 1:length(master_list)) {
+    current_dependencies <- c(current_dependencies, get_dependencies(master_list[[i]]))
+  }
   current_list <- add_details(combine_dependencies(master_list, current_dependencies), lock)
   current_list <- lapply(current_list, as.locked_package)
   if (identical(master_list, current_list)) return(master_list)

@@ -122,7 +122,3 @@ disallow_special_packages <- function(lock) {
       ".", call. = FALSE)
   }
 }
-
-get_dependencies <- function(library_info) {
-  
-}

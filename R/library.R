@@ -196,9 +196,83 @@ description_file_for <- function(package_name) {
   }
 }
 
-recursively_get_dependencies <- function() {
+get_ordered_dependencies <- function(lock) {
+   is.cran <- vapply(lock, function(lp) is.null(lp$repo), logical(1))
+
+   lock_cran <- lock[is.cran]
+   lock_repo <- lock[!is.cran]
+    
+   unresolved_dependencies <- get_additional_dependencies()
+   
+   while(length(unresolved_dependencies) > 0) {
+     lapply(
+       lock_cran
+       , function(locked_package){
+       })
+   }
    
   get_dependencies(locked_package)
+}
+
+get_dependencies_for_list <- function(master_list, lock) {
+  current_list <- add_details(combine_dependencies(master_list, current_dependencies), lock)
+  current_list <- lapply(current_list, as.locked_package)
+  if (identical(master_list, current_list)) return(master_list)
+  get_dependencies_for_list(current_list, lock)
+}
+
+add_details <- function(current_list, lock) {
+  lock_names <- vapply(lock, function(l) l$name, character(1))
+  lapply(current_list
+    , function(el) {
+      print(el)
+      if (el$name %in% lock_names) {
+        locked_package <- lock[[which(lock_names == el$name)[1]]]
+        if (is.na(el$version) || identical(compareVersion(el$version, as.character(locked_package$version)), -1L)) {
+          el$version <- locked_package$version
+        }
+        if ("ref" %in% names(locked_package)) {
+          el$ref <- locked_package$ref
+        }
+        if ("repo" %in% names(locked_package)) {
+          el$repo <- locked_package$repo
+        }
+        if ("remote" %in% names(locked_package)) {
+          el$remote <- locked_package$remote
+        }
+      }
+      el})
+}
+
+combine_dependencies <- function(list1, list2) {
+  if (length(list1) == 0) return(list2)
+  if (length(list2) == 0) return(list1)
+  names1 <- lapply(list1, function(obj) obj$name)
+  names2 <- lapply(list2, function(obj) obj$name)
+  version1 <- lapply(list1, function(obj) obj$version)
+  version2 <- lapply(list2, function(obj) obj$version)
+  names(version1) <- names1
+  names(version2) <- names2
+
+  keep1 <- vapply(
+    names1
+    , function(n) {
+      if (n %in% names2) {
+        v1 <- version1[[n]]
+        v2 <- version2[[n]]
+        if (is.na(v2)) return(TRUE)
+        if (is.na(v1)) return(FALSE)
+        !identical(compareVersion(v1, v2), -1)
+      } else{
+        TRUE
+      }}
+    , logical(1))
+
+  keep2  <- !names2 %in% names1 | !keep1
+  names_final <- c(names1[keep1], names2[keep2])
+  version_final <- c(version1[keep1], version2[keep2])[order(names_final)]
+  names_final <- names_final[order(names_final)]
+  Map(function(n,v) list(name = n, version = v), names_final, version_final)
 }
 
 get_dependencies <- function(locked_package) {
@@ -225,9 +299,9 @@ get_dependencies <- function(locked_package) {
       version_match <- gsub("[>=]=", "", version_match, perl = TRUE)
       version_match <- gsub(" ", "", version_match, perl = TRUE)
       name_match <- regmatches(dep, gregexpr(reg_expr_name, dep, perl = TRUE))[[1]][1]
-      list(packageName = name_match, version = version_match)
+      list(name = name_match, version = version_match)
     } else {
-      list(packageName = dep, version = NULL)
+      list(name = dep, version = NA)
     }})
 }
 
@@ -350,8 +424,8 @@ get_remote_dependencies <- function(locked_package) {
     if (length(version_match) > 0) {
       version_match <- gsub("[>=]=", "", version_match, perl = TRUE)
       name_match <- regmatches(dep, gregexpr(reg_expr_name, dep, perl = TRUE))[[1]][1]
-      list(packageName = name_match, version = version_match)
+      list(name = name_match, version = version_match)
     } else {
-      list(packageName = dep, version = NULL)
+      list(name = dep, version = NA)
     }})
 }

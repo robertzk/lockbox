@@ -89,6 +89,13 @@ as.locked_package <- function(list) {
 
 is.locked_package <- function(obj) is(obj, "locked_package")
 
+as.dependency_package <- function(list) {
+  stopifnot(is.element("name", names(list)))
+  structure(list, class = "dependency_package")
+}
+
+is.dependency_package <- function(obj) is(obj, "dependency_package")
+
 #' The secret lockbox library path.
 lockbox_library <- function() {
   getOption("lockbox.directory") %||% normalizePath("~/.R/lockbox", mustWork = FALSE)

@@ -198,29 +198,21 @@ description_file_for <- function(package_name) {
 
 get_ordered_dependencies <- function(lock) {
    is.cran <- vapply(lock, function(lp) is.null(lp$repo), logical(1))
-
    lock_cran <- lock[is.cran]
    lock_repo <- lock[!is.cran]
-    
-   unresolved_dependencies <- get_additional_dependencies()
-   
-   while(length(unresolved_dependencies) > 0) {
-     lapply(
-       lock_cran
-       , function(locked_package){
-       })
-   }
-   
-  get_dependencies(locked_package)
 }
 
 get_dependencies_for_list <- function(master_list, lock) {
   current_dependencies <- list()
   for (i in 1:length(master_list)) {
-    current_dependencies <- c(current_dependencies, get_dependencies(master_list[[i]]))
+    package <- master_list[[i]]
+    current_dependencies <- combine_dependencies(
+      current_dependencies
+      , get_remote_dependencies(
+        structure(package, class = c(package$remote %||% "CRAN", class(master_list[[i]])))))
   }
   current_list <- add_details(combine_dependencies(master_list, current_dependencies), lock)
-  current_list <- lapply(current_list, as.locked_package)
+  current_list <- lapply(current_list, as.dependency_package)
   if (identical(master_list, current_list)) return(master_list)
   get_dependencies_for_list(current_list, lock)
 }
@@ -232,8 +224,12 @@ add_details <- function(current_list, lock) {
       print(el)
       if (el$name %in% lock_names) {
         locked_package <- lock[[which(lock_names == el$name)[1]]]
-        if (is.na(el$version) || identical(compareVersion(el$version, as.character(locked_package$version)), -1L)) {
-          el$version <- locked_package$version
+        if (is.na(el$version) || identical(compareVersion(as.character(el$version), as.character(locked_package$version)), -1L)) {
+          el$version <- as.character(locked_package$version)
+        }
+        if (identical(compareVersion(as.character(el$version), as.character(locked_package$version)), 1L)) {
+          stop(paste0("Dependency: \'", el$name, ", Version: ", el$version
+            , " is required, but lockbox is locked at version: ", as.character(locked_package$version)))
         }
         if ("ref" %in% names(locked_package)) {
           el$ref <- locked_package$ref
@@ -244,6 +240,12 @@ add_details <- function(current_list, lock) {
         if ("remote" %in% names(locked_package)) {
           el$remote <- locked_package$remote
         }
+        if ("remote" %in% names(locked_package)) {
+          el$subdir <- locked_package$subdir
+        }
+      }
+      if (!"remote" %in% names(el)) {
+         el$remote <- "CRAN"
       }
       el})
 }
@@ -266,170 +268,186 @@ combine_dependencies <- function(list1, list2) {
         v2 <- version2[[n]]
         if (is.na(v2)) return(TRUE)
         if (is.na(v1)) return(FALSE)
-        !identical(compareVersion(v1, v2), -1)
+        tryCatch({!identical(compareVersion(as.character(v1), as.character(v2)), -1)}, error = function(e) browser())
       } else{
         TRUE
       }}
     , logical(1))
 
-  keep2  <- !names2 %in% names1 | !keep1
+  keep2  <- !names2 %in% names1 | names2 %in% names1[!keep1]
   names_final <- c(names1[keep1], names2[keep2])
-  version_final <- c(version1[keep1], version2[keep2])[order(names_final)]
-  names_final <- names_final[order(names_final)]
+  version_final <- c(version1[keep1], version2[keep2])[order(c(recursive = TRUE, names_final))]
+  names_final <- names_final[order(c(recursive = TRUE, names_final))]
   Map(function(n,v) list(name = n, version = v), names_final, version_final)
 }
 
-get_dependencies <- function(locked_package) {
-  remote <- locked_package$remote
-  filepath <- download_package(structure(
-    locked_package,
-    class = c(remote, class(locked_package))))
-  remote <- get_remote(locked_package)
-  dirname <- paste0(remote$username,"-",remote$repo,"-",remote$auth_token)
-  file_list <- unzip(filepath, list = TRUE)
-  description_name <- file_list$Name[grepl("^[^/]+/DESCRIPTION",file_list$Name)]
-  extracted_description_path <- unzip(filepath, description_name)
-  dcf <- strsplit(read.dcf(file = extracted_description_path), "\n")
-  depends_list <- dcf[[6]][-1]
-  depends_list <- depends_list[!(grepl("^R[ ,]", depends_list)
-    | vapply(depends_list, function(x) identical(x, "R"), logical(1)))]
-  imports_list <- dcf[[7]][-1]
-  all_dependencies <- gsub(",", "", c(depends_list, imports_list))
-  reg_expr_ver <- ">=.*[0-9\\.\\-]+(?=\\))"
-  reg_expr_name <- ".*(?= \\()"
-  lapply(all_dependencies, function(dep) {
-    version_match <- regmatches(dep, gregexpr(reg_expr_ver, dep, perl = TRUE))[[1]]
-    if (length(version_match) > 0) {
-      version_match <- gsub("[>=]=", "", version_match, perl = TRUE)
-      version_match <- gsub(" ", "", version_match, perl = TRUE)
-      name_match <- regmatches(dep, gregexpr(reg_expr_name, dep, perl = TRUE))[[1]][1]
-      list(name = name_match, version = version_match)
-    } else {
-      list(name = dep, version = NA)
-    }})
+get_remote_dependencies <- function(package) {
+  UseMethod("get_remote_dependencies")
 }
 
-merge_dependencies <- function(dependencies) {
-
+#' If a package is on CRAN dependency installation should go without a hitch
+get_remote_dependencies.CRAN <- function(package) {
+  list()
 }
 
-download_package <- function(locked_package) {
+#' For packages on github we will either use the current library DESCRIPTION
+#' file or download the accurate remote DESCRIPTION file.
+get_remote_dependencies.github <- function(package) {
+  is_local_dependency <- is.dependency_package(package) &&
+     compareVersion(as.character(current_version(package$name)) , as.character(package$version)) == 1
+  is_local_locked <- is.locked_package(package) && !version_mismatch(package)
+  if (is_local_locked || is_local_dependency) {
+    dcf <- description_file_for(package$name)
+  } else{
+    remote <- package$remote
+    filepath <- download_package(structure(
+      package,
+      class = c(remote, class(package))))
+    remote <- get_remote(package)
+    dirname <- paste0(remote$username,"-",remote$repo,"-",remote$auth_token)
+    file_list <- unzip(filepath, list = TRUE)
+    subdir <- ""
+    if (!is.null(package$subdir)){
+      subdir <- paste0("/",package$subdir)
+    }
+    description_name <- file_list$Name[grepl(paste0("^[^/]+", subdir,"/DESCRIPTION"),file_list$Name)]
+    extracted_description_path <- unzip(filepath, description_name)
+    dcf <- read.dcf(file = extracted_description_path)
+  }
+
+  dependency_levels <- c("Depends", "Imports")
+  dependency_levels %in% colnames(dcf)
+
+  if (!any(dependency_levels %in% colnames(dcf))) return(list())
+
+  if (all(dependency_levels %in% colnames(dcf))) {
+    dependencies_parsed <- rbind(tools::package.dependencies(dcf, depLevel = c("Imports"))[[package$name]]
+    , tools::package.dependencies(dcf, depLevel = c("Depends"))[[package$name]])
+  } else{
+    dependencies_parsed <- tools::package.dependencies(dcf
+      , depLevel = dependency_levels[dependency_levels %in% colnames(dcf)])[[package$name]]
+  }
+  dependencies_parsed <- dependencies_parsed[!grepl("^[rR]$", dependencies_parsed[,1]), , drop = FALSE]
+  if (identical(nrow(dcf),0L)) return(list())
+  lapply(seq_along(dependencies_parsed[,1])
+    , function(i) {
+      list(name = as.character(dependencies_parsed[i,1]), version = as.character(dependencies_parsed[i,3]))
+    })
+}
+
+download_package <- function(package) {
   UseMethod("download_package")
 }
 
-download_package.github <- function(locked_package) {
-  remote <- get_remote(locked_package)
+download_package.github <- function(package) {
+  remote <- get_remote(package)
   quiet <- !isTRUE(getOption('lockbox.verbose'))
-  remote_download_description(remote)
-  devtools:::remote_download.github_remote(remote)
+  devtools:::remote_download.github_remote(remote, quiet = quiet)
 }
 
-download <- function(path, url, ...) {
-  request <- httr::GET(url, ...)
-  httr::stop_for_status(request)
-  writeBin(httr::content(request, "raw"), path)
-  path
-}
-
-get_remote <- function(locked_package) {
-  ref <- locked_package$ref %||% locked_package$version
+get_remote <- function(package) {
+  ref <- package$ref %||% package$version
   arguments <- list(
-    paste(locked_package$repo, ref, sep = "@"))
+    paste(package$repo, ref, sep = "@"))
   if (nzchar(token <- Sys.getenv("GITHUB_PAT"))) {
     arguments$auth_token <- token
   }
-  if (!is.null(locked_package$subdir)) {
-    arguments$subdir <- locked_package$subdir
+  if (!is.null(package$subdir)) {
+    arguments$subdir <- package$subdir
   }
   remote <- do.call(devtools:::github_remote, arguments)
 }
 
-github_auth <- function(appname = getOption("gh_appname"), key = getOption("gh_id"),
-                        secret = getOption("gh_secret")) {
-  if (is.null(getOption("gh_token"))) {
-    myapp <- oauth_app(appname, key, secret)
-    token <- oauth2.0_token(oauth_endpoints("github"), myapp)
-    options(gh_token = token)
-  } else {
-    token <- getOption("gh_token")
-  }
-  return(token)
-}
+# download <- function(path, url, ...) {
+#   request <- httr::GET(url, ...)
+#   httr::stop_for_status(request)
+#   writeBin(httr::content(request, "raw"), path)
+#   path
+# }
 
-make_url <- function(x, y, z) {
-  sprintf("https://api.github.com/repos/%s/%s/%s", x, y, z)
-}
+# github_auth <- function(appname = getOption("gh_appname"), key = getOption("gh_id"),
+#                         secret = getOption("gh_secret")) {
+#   if (is.null(getOption("gh_token"))) {
+#     myapp <- oauth_app(appname, key, secret)
+#     token <- oauth2.0_token(oauth_endpoints("github"), myapp)
+#     options(gh_token = token)
+#   } else {
+#     token <- getOption("gh_token")
+#   }
+#   return(token)
+# }
 
-process_result <- function(x) {
-  httr::stop_for_status(x)
-  if (!x$headers$`content-type` == "application/json; charset=utf-8")
-    stop("content type mismatch")
-  tmp <- httr::content(x, as = "text")
-  jsonlite::fromJSON(tmp, flatten = TRUE)
-}
+# make_url <- function(x, y, z) {
+#   sprintf("https://api.github.com/repos/%s/%s/%s", x, y, z)
+# }
 
-parse_file <- function(x) {
-  tmp <- gsub("\n\\s+", "\n", 
-              paste(vapply(strsplit(x, "\n")[[1]], RCurl::base64Decode,
-                           character(1), USE.NAMES = FALSE), collapse = " "))
-  lines <- readLines(textConnection(tmp))
-  vapply(lines, gsub, character(1), pattern = "\\s", replacement = "",
-         USE.NAMES = FALSE)
-}
+# process_result <- function(x) {
+#   httr::stop_for_status(x)
+#   if (!x$headers$`content-type` == "application/json; charset=utf-8")
+#     stop("content type mismatch")
+#   tmp <- httr::content(x, as = "text")
+#   jsonlite::fromJSON(tmp, flatten = TRUE)
+# }
 
-request <- function(owner = "avantcredit", repo, ref = NULL, file="DESCRIPTION", auth, ...) {
-  if (is.null(ref)) sep <- ""
-  else sep <- "@"
-  req <- httr::GET(make_url(owner, paste(repo, ref, sep = sep), paste0("contents/", file)), 
-             config = c(token = auth, ...))
-  if(req$status_code != 200) { NA } else {
-    cts <- process_result(req)$content
-    parse_file(cts)
-  }
-}
+# parse_file <- function(x) {
+#   tmp <- gsub("\n\\s+", "\n", 
+#               paste(vapply(strsplit(x, "\n")[[1]], RCurl::base64Decode,
+#                            character(1), USE.NAMES = FALSE), collapse = " "))
+#   lines <- readLines(textConnection(tmp))
+#   vapply(lines, gsub, character(1), pattern = "\\s", replacement = "",
+#          USE.NAMES = FALSE)
+# }
 
-remote_download_description <- function(x, quiet = TRUE) {
-  if (!quiet) {
-    message("Downloading GitHub description ", x$username, "/", x$repo
-            , "@", x$ref, "\nfrom URL ", description_url)
-  }
+# request <- function(owner = "avantcredit", repo, ref = NULL, file="DESCRIPTION", auth, ...) {
+#   if (is.null(ref)) sep <- ""
+#   else sep <- "@"
+#   req <- httr::GET(make_url(owner, paste(repo, ref, sep = sep), paste0("contents/", file)), 
+#              config = c(token = auth, ...))
+#   if(req$status_code != 200) { NA } else {
+#     cts <- process_result(req)$content
+#     parse_file(cts)
+#   }
+# }
 
-  dest <- tempfile()
-  description_url <- paste0("https://", x$host, "/repos/", x$username
-    , "/", x$repo, "/contents/DESCRIPTION")#,"@",x$ref)
+# remote_download_description <- function(x, quiet = TRUE) {
+#   if (!quiet) {
+#     message("Downloading GitHub description ", x$username, "/", x$repo
+#             , "@", x$ref, "\nfrom URL ", description_url)
+#   }
+#   dest <- tempfile()
+#   description_url <- paste0("https://", x$host, "/repos/", x$username
+#     , "/", x$repo, "/contents/DESCRIPTION")#,"@",x$ref)
+#   if (!is.null(x$auth_token)) {
+#     auth <- httr::authenticate(
+#       user = x$auth_token,
+#       password = "x-oauth-basic",
+#       type = "basic"
+#   )} else {
+#     auth <- NULL
+#   }
+#   request(owner = x$username, repo = x$rep, auth = auth, ref = NULL)
+# }
 
-  if (!is.null(x$auth_token)) {
-    auth <- httr::authenticate(
-      user = x$auth_token,
-      password = "x-oauth-basic",
-      type = "basic"
-  )} else {
-    auth <- NULL
-  }
-
-  request(owner = x$username, repo = x$rep, auth = auth, ref = NULL)
-}
-
-get_remote_dependencies <- function(locked_package) {
-  parsed_desc <- remote_download_description(get_remote(locked_package))
-  depends_slot <- which(grepl("Depends:",parsed_desc))[1]
-  imports_slot <- which(grepl("Imports:",parsed_desc))[1]
-  license_slot <- which(grepl("License:",parsed_desc)
-    | grepl("LinkingTo:",parsed_desc))[1]
-  depends_list <- parsed_desc[(depends_slot + 1):(imports_slot - 1)]
-  imports_list <- parsed_desc[(imports_slot + 1):(license_slot - 1)]
-  depends_list <- depends_list[!(grepl("^R[ ,(]*", depends_list)
-    | vapply(depends_list, function(x) identical(x, "R"), logical(1)))]
-  all_dependencies <- gsub(",", "", c(depends_list, imports_list))
-  reg_expr_ver <- ">=.*[0-9\\.\\-]+(?=\\))"
-  reg_expr_name <- ".*(?=\\()"
-  lapply(all_dependencies, function(dep) {
-    version_match <- regmatches(dep, gregexpr(reg_expr_ver, dep, perl = TRUE))[[1]]
-    if (length(version_match) > 0) {
-      version_match <- gsub("[>=]=", "", version_match, perl = TRUE)
-      name_match <- regmatches(dep, gregexpr(reg_expr_name, dep, perl = TRUE))[[1]][1]
-      list(name = name_match, version = version_match)
-    } else {
-      list(name = dep, version = NA)
-    }})
-}
+# get_remote_dependencies <- function(package) {
+#   parsed_desc <- remote_download_description(get_remote(package))
+#   depends_slot <- which(grepl("Depends:",parsed_desc))[1]
+#   imports_slot <- which(grepl("Imports:",parsed_desc))[1]
+#   license_slot <- which(grepl("License:",parsed_desc)
+#     | grepl("LinkingTo:",parsed_desc))[1]
+#   depends_list <- parsed_desc[(depends_slot + 1):(imports_slot - 1)]
+#   imports_list <- parsed_desc[(imports_slot + 1):(license_slot - 1)]
+#   depends_list <- depends_list[!(grepl("^R[ ,(]*", depends_list)
+#     | vapply(depends_list, function(x) identical(x, "R"), logical(1)))]
+#   all_dependencies <- gsub(",", "", c(depends_list, imports_list))
+#   reg_expr_ver <- ">=.*[0-9\\.\\-]+(?=\\))"
+#   reg_expr_name <- ".*(?=\\()"
+#   lapply(all_dependencies, function(dep) {
+#     version_match <- regmatches(dep, gregexpr(reg_expr_ver, dep, perl = TRUE))[[1]]
+#     if (length(version_match) > 0) {
+#       version_match <- gsub("[>=]=", "", version_match, perl = TRUE)
+#       name_match <- regmatches(dep, gregexpr(reg_expr_name, dep, perl = TRUE))[[1]][1]
+#       list(name = name_match, version = version_match)
+#     } else {
+#       list(name = dep, version = NA)
+#     }})
+# }

@@ -195,3 +195,195 @@ description_file_for <- function(package_name) {
     NULL
   }
 }
+
+recursively_get_dependencies <- function() {
+   
+  get_dependencies(locked_package)
+}
+
+get_dependencies <- function(locked_package) {
+  remote <- locked_package$remote
+  filepath <- download_package(structure(
+    locked_package,
+    class = c(remote, class(locked_package))))
+
+  remote <- get_remote(locked_package)
+  dirname <- paste0(remote$username,"-",remote$repo,"-",remote$auth_token)
+
+  file_list <- unzip(filepath, list = TRUE)
+  description_name <- file_list$Name[grepl("^[^/]+/DESCRIPTION",file_list$Name)]
+  extracted_description_path <- unzip(filepath, description_name)
+
+  dcf <- strsplit(read.dcf(file = extracted_description_path), "\n")
+
+  depends_list <- dcf[[6]][-1]
+  depends_list <- depends_list[!(grepl("^R[ ,]", depends_list)
+    | vapply(depends_list, function(x) identical(x, "R"), logical(1)))]
+  imports_list <- dcf[[7]][-1]
+
+  all_dependencies <- gsub(",", "", c(depends_list, imports_list))
+  reg_expr_ver <- ">=.*[0-9\\.\\-]+(?=\\))"
+  reg_expr_name <- ".*(?= \\()"
+
+  lapply(all_dependencies, function(dep) {
+    version_match <- regmatches(dep, gregexpr(reg_expr_ver, dep, perl = TRUE))[[1]]
+    if (length(version_match) > 0) {
+      version_match <- gsub("[>=]=", "", version_match, perl = TRUE)
+      version_match <- gsub(" ", "", version_match, perl = TRUE)
+      name_match <- regmatches(dep, gregexpr(reg_expr_name, dep, perl = TRUE))[[1]][1]
+      list(packageName = name_match, version = version_match)
+    } else {
+      list(packageName = dep, version = NULL)
+    }})
+}
+
+merge_dependencies <- function(dependencies) {
+
+}
+
+download_package <- function(locked_package) {
+  UseMethod("download_package")
+}
+
+download_package.github <- function(locked_package) {
+  remote <- get_remote(locked_package)
+  quiet <- !isTRUE(getOption('lockbox.verbose'))
+  remote_download_description(remote)
+  devtools:::remote_download.github_remote(remote)
+}
+
+download <- function(path, url, ...) {
+  request <- httr::GET(url, ...)
+  httr::stop_for_status(request)
+  writeBin(httr::content(request, "raw"), path)
+  path
+}
+
+get_remote <- function(locked_package) {
+  ref <- locked_package$ref %||% locked_package$version
+  arguments <- list(
+    paste(locked_package$repo, ref, sep = "@"))
+  if (nzchar(token <- Sys.getenv("GITHUB_PAT"))) {
+    arguments$auth_token <- token
+  }
+  if (!is.null(locked_package$subdir)) {
+    arguments$subdir <- locked_package$subdir
+  }
+  remote <- do.call(devtools:::github_remote, arguments)
+}
+
+github_auth <- function(appname = getOption("gh_appname"), key = getOption("gh_id"),
+                        secret = getOption("gh_secret")) {
+  if (is.null(getOption("gh_token"))) {
+    myapp <- oauth_app(appname, key, secret)
+    token <- oauth2.0_token(oauth_endpoints("github"), myapp)
+    options(gh_token = token)
+  } else {
+    token <- getOption("gh_token")
+  }
+  return(token)
+}
+
+make_url <- function(x, y, z) {
+  sprintf("https://api.github.com/repos/%s/%s/%s", x, y, z)
+}
+
+process_result <- function(x) {
+  httr::stop_for_status(x)
+  if (!x$headers$`content-type` == "application/json; charset=utf-8")
+    stop("content type mismatch")
+  tmp <- httr::content(x, as = "text")
+  jsonlite::fromJSON(tmp, flatten = TRUE)
+}
+
+parse_file <- function(x) {
+  tmp <- gsub("\n\\s+", "\n", 
+              paste(vapply(strsplit(x, "\n")[[1]], RCurl::base64Decode,
+                           character(1), USE.NAMES = FALSE), collapse = " "))
+  lines <- readLines(textConnection(tmp))
+  vapply(lines, gsub, character(1), pattern = "\\s", replacement = "",
+         USE.NAMES = FALSE)
+}
+
+request <- function(owner = "avantcredit", repo, ref = NULL, file="DESCRIPTION", auth, ...) {
+  if (is.null(ref)) sep <- ""
+  else sep <- "@"
+  req <- httr::GET(make_url(owner, paste(repo, ref, sep = sep), paste0("contents/", file)), 
+             config = c(token = auth, ...))
+  if(req$status_code != 200) { NA } else {
+    cts <- process_result(req)$content
+    parse_file(cts)
+  }
+}
+
+remote_download_description <- function(x, quiet = TRUE) {
+  dest <- tempfile()
+  description_url <- paste0("https://", x$host, "/repos/", x$username
+    , "/", x$repo, "/contents/DESCRIPTION")
+
+  header <- list(Authorization =  paste0("token ", x$auth_token)
+    , Accept = dest
+    , ref = x$ref)
+  RCurl::getURLContent(description_url, header = header)
+
+  config(token = github_token)
+  description_url <- paste0("https://", x$host, "/repos/", x$username, "/", x$repo, "/zipball/",x$ref)
+  httr::GET(description_url, 
+               httr::add_headers(auth_appkey = x$token))
+
+  src_root <- paste0("https://", x$host, "/repos/", x$username, "/", x$repo)
+  src <- paste0(src_root, "/zipball/", x$ref)
+  if (!quiet) {
+    message("Downloading GitHub repo ", x$username, "/", x$repo, "@", x$ref,
+            "\nfrom URL ", src)
+  }
+
+  if (!quiet) {
+    message("Downloading GitHub description ", x$username, "/", x$repo, "@", x$ref,
+            "\nfrom URL ", description_url)
+  }
+
+  dest <- tempfile()
+  description_url <- paste0("https://", x$host, "/repos/", x$username, "/", x$repo, "/contents/DESCRIPTION","@",x$ref)
+
+  if (!is.null(x$auth_token)) {
+    auth <- httr::authenticate(
+      user = x$auth_token,
+      password = "x-oauth-basic",
+      type = "basic"
+  )} else {
+    auth <- NULL
+  }
+
+  request <- httr::GET(description_url, auth)
+  stuff <-httr::stop_for_status(request)
+  httr::content(request, "parsed")$content
+  writeBin(httr::content(request, "text")$content, dest)
+  path
+
+  parsed_desc <- request(owner = x$username, repo = x$rep, auth = auth, ref = NULL)
+  depends_slot <- which(grepl("Depends:",parsed_desc))[1]
+  imports_slot <- which(grepl("Imports:",parsed_desc))[1]
+  license_slot <- which(grepl("License:",parsed_desc) | grepl("LinkingTo:",parsed_desc))[1]
+
+  depends_list <- parsed_desc[(depends_slot + 1):(imports_slot - 1)]
+  imports_list <- parsed_desc[(imports_slot + 1):(license_slot - 1)]
+
+  depends_list <- depends_list[!(grepl("^R[ ,(]*", depends_list)
+    | vapply(depends_list, function(x) identical(x, "R"), logical(1)))]
+
+  all_dependencies <- gsub(",", "", c(depends_list, imports_list))
+  reg_expr_ver <- ">=.*[0-9\\.\\-]+(?=\\))"
+  reg_expr_name <- ".*(?=\\()"
+
+  lapply(all_dependencies, function(dep) {
+    version_match <- regmatches(dep, gregexpr(reg_expr_ver, dep, perl = TRUE))[[1]]
+    if (length(version_match) > 0) {
+      version_match <- gsub("[>=]=", "", version_match, perl = TRUE)
+      name_match <- regmatches(dep, gregexpr(reg_expr_name, dep, perl = TRUE))[[1]][1]
+      list(packageName = name_match, version = version_match)
+    } else {
+      list(packageName = dep, version = NULL)
+    }})
+}
+

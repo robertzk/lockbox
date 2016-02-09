@@ -206,25 +206,19 @@ get_dependencies <- function(locked_package) {
   filepath <- download_package(structure(
     locked_package,
     class = c(remote, class(locked_package))))
-
   remote <- get_remote(locked_package)
   dirname <- paste0(remote$username,"-",remote$repo,"-",remote$auth_token)
-
   file_list <- unzip(filepath, list = TRUE)
   description_name <- file_list$Name[grepl("^[^/]+/DESCRIPTION",file_list$Name)]
   extracted_description_path <- unzip(filepath, description_name)
-
   dcf <- strsplit(read.dcf(file = extracted_description_path), "\n")
-
   depends_list <- dcf[[6]][-1]
   depends_list <- depends_list[!(grepl("^R[ ,]", depends_list)
     | vapply(depends_list, function(x) identical(x, "R"), logical(1)))]
   imports_list <- dcf[[7]][-1]
-
   all_dependencies <- gsub(",", "", c(depends_list, imports_list))
   reg_expr_ver <- ">=.*[0-9\\.\\-]+(?=\\))"
   reg_expr_name <- ".*(?= \\()"
-
   lapply(all_dependencies, function(dep) {
     version_match <- regmatches(dep, gregexpr(reg_expr_ver, dep, perl = TRUE))[[1]]
     if (length(version_match) > 0) {
@@ -317,34 +311,14 @@ request <- function(owner = "avantcredit", repo, ref = NULL, file="DESCRIPTION",
 }
 
 remote_download_description <- function(x, quiet = TRUE) {
+  if (!quiet) {
+    message("Downloading GitHub description ", x$username, "/", x$repo
+            , "@", x$ref, "\nfrom URL ", description_url)
+  }
+
   dest <- tempfile()
   description_url <- paste0("https://", x$host, "/repos/", x$username
-    , "/", x$repo, "/contents/DESCRIPTION")
-
-  header <- list(Authorization =  paste0("token ", x$auth_token)
-    , Accept = dest
-    , ref = x$ref)
-  RCurl::getURLContent(description_url, header = header)
-
-  config(token = github_token)
-  description_url <- paste0("https://", x$host, "/repos/", x$username, "/", x$repo, "/zipball/",x$ref)
-  httr::GET(description_url, 
-               httr::add_headers(auth_appkey = x$token))
-
-  src_root <- paste0("https://", x$host, "/repos/", x$username, "/", x$repo)
-  src <- paste0(src_root, "/zipball/", x$ref)
-  if (!quiet) {
-    message("Downloading GitHub repo ", x$username, "/", x$repo, "@", x$ref,
-            "\nfrom URL ", src)
-  }
-
-  if (!quiet) {
-    message("Downloading GitHub description ", x$username, "/", x$repo, "@", x$ref,
-            "\nfrom URL ", description_url)
-  }
-
-  dest <- tempfile()
-  description_url <- paste0("https://", x$host, "/repos/", x$username, "/", x$repo, "/contents/DESCRIPTION","@",x$ref)
+    , "/", x$repo, "/contents/DESCRIPTION")#,"@",x$ref)
 
   if (!is.null(x$auth_token)) {
     auth <- httr::authenticate(
@@ -355,27 +329,22 @@ remote_download_description <- function(x, quiet = TRUE) {
     auth <- NULL
   }
 
-  request <- httr::GET(description_url, auth)
-  stuff <-httr::stop_for_status(request)
-  httr::content(request, "parsed")$content
-  writeBin(httr::content(request, "text")$content, dest)
-  path
+  request(owner = x$username, repo = x$rep, auth = auth, ref = NULL)
+}
 
-  parsed_desc <- request(owner = x$username, repo = x$rep, auth = auth, ref = NULL)
+get_remote_dependencies <- function(locked_package) {
+  parsed_desc <- remote_download_description(get_remote(locked_package))
   depends_slot <- which(grepl("Depends:",parsed_desc))[1]
   imports_slot <- which(grepl("Imports:",parsed_desc))[1]
-  license_slot <- which(grepl("License:",parsed_desc) | grepl("LinkingTo:",parsed_desc))[1]
-
+  license_slot <- which(grepl("License:",parsed_desc)
+    | grepl("LinkingTo:",parsed_desc))[1]
   depends_list <- parsed_desc[(depends_slot + 1):(imports_slot - 1)]
   imports_list <- parsed_desc[(imports_slot + 1):(license_slot - 1)]
-
   depends_list <- depends_list[!(grepl("^R[ ,(]*", depends_list)
     | vapply(depends_list, function(x) identical(x, "R"), logical(1)))]
-
   all_dependencies <- gsub(",", "", c(depends_list, imports_list))
   reg_expr_ver <- ">=.*[0-9\\.\\-]+(?=\\))"
   reg_expr_name <- ".*(?=\\()"
-
   lapply(all_dependencies, function(dep) {
     version_match <- regmatches(dep, gregexpr(reg_expr_ver, dep, perl = TRUE))[[1]]
     if (length(version_match) > 0) {
@@ -386,4 +355,3 @@ remote_download_description <- function(x, quiet = TRUE) {
       list(packageName = dep, version = NULL)
     }})
 }
-

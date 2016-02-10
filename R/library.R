@@ -254,6 +254,8 @@ get_dependencies_for_list <- function(master_list, lock) {
   get_dependencies_for_list(current_list, lock)
 }
 
+#' Check a dependency list for inclusion in the lockfile and add those additional
+#' details (repo, remote, version, subdir) if it does appear there
 add_details <- function(current_list, lock) {
   lock_names <- vapply(lock, function(l) l$name, character(1))
   list_names <- vapply(current_list, function(l) l$name, character(1))
@@ -287,6 +289,9 @@ add_details <- function(current_list, lock) {
       el})
 }
 
+#' Combine two lists of dependencies via version comparisons, but keep packages
+#' found in list1 on the left side (updating versions with corresponding list2
+#' values if necessary) in order to preserve dependency order.
 combine_dependencies <- function(list1, list2) {
   if (length(list1) == 0) return(list2)
   if (length(list2) == 0) return(list1)
@@ -305,15 +310,19 @@ combine_dependencies <- function(list1, list2) {
         v2 <- version2[[n]]
         if (is.na(v2)) return(TRUE)
         if (is.na(v1)) return(FALSE)
-        tryCatch({!identical(compareVersion(as.character(v1), as.character(v2)), -1)}, error = function(e) browser())
+        !identical(compareVersion(as.character(v1), as.character(v2)), -1)
       } else{
         TRUE
       }}
     , logical(1))
 
-  keep2  <- !names2 %in% names1 | names2 %in% names1[!keep1]
-  names_final <- c(names1[keep1], names2[keep2])
-  version_final <- c(version1[keep1], version2[keep2])
+  swap_versions1  <- names1 %in% names2 & !keep1
+  swap_versions2 <- vapply(names1[swap_versions1], function(n) which(names2 == n), integer(1))
+  version1[swap_versions1] <- version2[swap_versions2]
+
+  keep2  <- !names2 %in% names1
+  names_final <- c(names1, names2[keep2])
+  version_final <- c(version1, version2[keep2])
   Map(function(n,v) list(name = n, version = v), names_final, version_final)
 }
 

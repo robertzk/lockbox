@@ -356,7 +356,8 @@ get_remote_dependencies.github <- function(package) {
       subdir <- paste0("/",package$subdir)
     }
     description_name <- file_list$Name[grepl(paste0("^[^/]+", subdir,"/DESCRIPTION"),file_list$Name)]
-    extracted_description_path <- unzip(filepath, description_name)
+    browser()
+    extracted_description_path <- unz(filepath, description_name)
     dcf <- read.dcf(file = extracted_description_path)
   }
 

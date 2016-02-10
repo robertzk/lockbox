@@ -181,14 +181,14 @@ version_mismatch <- function(locked_package) {
   !identical(current_version(locked_package), locked_package$version)
 }
 
-#' For installations that include dependencies not in lockbox, take care to 
+#' For installations that include dependencies not in lockbox, take care to
 #' allow for unspecified versions
 all_package_version_mismatch <- function(package) {
   if (is.na(package$version)) {
     if (is.na(current_version(package$name))) {
       TRUE
     } else{
-      current_version(package$name)
+      FALSE
     }
   } else{
     !identical(current_version(package), package$version)
@@ -234,7 +234,7 @@ get_ordered_dependencies <- function(lock, mismatches) {
    is.cran <- vapply(lock, function(lp) is.null(lp$repo), logical(1))
    lock_cran <- lock[is.cran]
    lock_repo <- lock[!is.cran]
-   cat(paste("Retrieving dependencies for "))
+   cat(paste("Retrieving dependencies..."))
    get_dependencies_for_list(lock[!is.cran & mismatches], lock)
 }
 
@@ -242,7 +242,6 @@ get_dependencies_for_list <- function(master_list, lock) {
   current_dependencies <- list()
   for (i in 1:length(master_list)) {
     package <- master_list[[i]]
-    cat(paste0(package$name, "..."))
     current_dependencies <- combine_dependencies(
       current_dependencies
       , get_remote_dependencies(
@@ -356,9 +355,7 @@ get_remote_dependencies.github <- function(package) {
       subdir <- paste0("/",package$subdir)
     }
     description_name <- file_list$Name[grepl(paste0("^[^/]+", subdir,"/DESCRIPTION"),file_list$Name)]
-    browser()
-    extracted_description_path <- unz(filepath, description_name)
-    dcf <- read.dcf(file = extracted_description_path)
+    dcf <- read.dcf(file = unz(filepath, description_name))
   }
 
   dependency_levels <- c("Depends", "Imports")

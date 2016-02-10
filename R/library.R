@@ -241,6 +241,7 @@ get_ordered_dependencies <- function(lock, mismatches) {
 get_dependencies_for_list <- function(master_list, lock) {
   current_dependencies <- list()
   for (i in 1:length(master_list)) {
+    cat(".")
     package <- master_list[[i]]
     current_dependencies <- combine_dependencies(
       current_dependencies

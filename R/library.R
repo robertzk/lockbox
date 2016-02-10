@@ -258,7 +258,6 @@ get_dependencies_for_list <- function(master_list, lock) {
 #' details (repo, remote, version, subdir) if it does appear there
 add_details <- function(current_list, lock) {
   lock_names <- vapply(lock, function(l) l$name, character(1))
-  list_names <- vapply(current_list, function(l) l$name, character(1))
   lapply(current_list
     , function(el) {
       if (el$name %in% lock_names) {

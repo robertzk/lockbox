@@ -41,6 +41,22 @@ lockbox_package_path <- function(locked_package, library = lockbox_library()) {
   ))
 }
 
+install_dependency <- function(dependency_package) {
+  remote <- locked_package$remote %||% "CRAN"
+  install_package(structure(
+    locked_package,
+    class = c(remote, class(locked_package))
+  ))
+}
+
+#' Install CRAN dependencies first to minimize change of unresolved dependencies
+install_dependencies <- function(dependency_packages) {
+   is.cran <- vapply(dependency_packages, function(pack) is.null(pack$repo) ||
+     identical(pack$repo, "CRAN"), logical(1))
+   lapply(lock[is.cran], install_dependency)
+   lapply(lock[!is.cran], install_dependency)
+}
+
 install_package <- function(locked_package) {
   cat("Installing", crayon::green(locked_package$name),
       as.character(locked_package$version), "from", class(locked_package)[1], "\n")
@@ -187,6 +203,10 @@ current_version.locked_package <- function(package) {
   current_version(package$name)
 }
 
+current_version.dependency_package <- function(package) {
+  current_version(package$name)
+}
+
 description_file_for <- function(package_name) {
   dcf_file <- file.path(libPath(), package_name, "DESCRIPTION")
   if (file.exists(dcf_file)) {
@@ -196,22 +216,25 @@ description_file_for <- function(package_name) {
   }
 }
 
-get_ordered_dependencies <- function(lock) {
+get_ordered_dependencies <- function(lock, mismatches) {
    is.cran <- vapply(lock, function(lp) is.null(lp$repo), logical(1))
    lock_cran <- lock[is.cran]
    lock_repo <- lock[!is.cran]
+   cat(paste("Retrieving dependencies for "))
+   get_dependencies_for_list(lock[!is.cran & mismatches], lock)
 }
 
 get_dependencies_for_list <- function(master_list, lock) {
   current_dependencies <- list()
   for (i in 1:length(master_list)) {
     package <- master_list[[i]]
+    cat(paste0(package$name, "..."))
     current_dependencies <- combine_dependencies(
       current_dependencies
       , get_remote_dependencies(
         structure(package, class = c(package$remote %||% "CRAN", class(master_list[[i]])))))
   }
-  current_list <- add_details(combine_dependencies(master_list, current_dependencies), lock)
+  current_list <- add_details(combine_dependencies(current_dependencies, master_list), lock)
   current_list <- lapply(current_list, as.dependency_package)
   if (identical(master_list, current_list)) return(master_list)
   get_dependencies_for_list(current_list, lock)
@@ -219,9 +242,9 @@ get_dependencies_for_list <- function(master_list, lock) {
 
 add_details <- function(current_list, lock) {
   lock_names <- vapply(lock, function(l) l$name, character(1))
+  list_names <- vapply(current_list, function(l) l$name, character(1))
   lapply(current_list
     , function(el) {
-      print(el)
       if (el$name %in% lock_names) {
         locked_package <- lock[[which(lock_names == el$name)[1]]]
         if (is.na(el$version) || identical(compareVersion(as.character(el$version), as.character(locked_package$version)), -1L)) {
@@ -276,8 +299,7 @@ combine_dependencies <- function(list1, list2) {
 
   keep2  <- !names2 %in% names1 | names2 %in% names1[!keep1]
   names_final <- c(names1[keep1], names2[keep2])
-  version_final <- c(version1[keep1], version2[keep2])[order(c(recursive = TRUE, names_final))]
-  names_final <- names_final[order(c(recursive = TRUE, names_final))]
+  version_final <- c(version1[keep1], version2[keep2])
   Map(function(n,v) list(name = n, version = v), names_final, version_final)
 }
 
@@ -356,6 +378,18 @@ get_remote <- function(package) {
     arguments$subdir <- package$subdir
   }
   remote <- do.call(devtools:::github_remote, arguments)
+}
+
+all_package_version_mismatch <- function(package) {
+  if (is.na(package$version)) {
+    if (is.na(current_version(package$name))) {
+      TRUE
+    } else{
+      current_version(package$name)
+    }
+  } else{
+    !identical(current_version(package), package$version)
+  }
 }
 
 # download <- function(path, url, ...) {

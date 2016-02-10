@@ -50,13 +50,45 @@ lockbox.list <- function(lock, env) {
     cat('Using', crayon::green(locked_package$name), as.character(locked_package$version), '\n')
   })
 
+  if (any(mismatches)) {
+    all_packages <- get_ordered_dependencies(lock, mismatches)
+    all_packages <- all_packages[vapply(all_packages, all_package_version_mismatch, logical(1))]
+    all_packages <- reset_to_locked(all_packages, lock)
+  } else{
+    all_packages <- lock
+  }
+
   quietly({
     ## Replace our library so that it has these packages instead.
-    align(lock[mismatches])
+    align(all_packages)
 
     ## And re-build our search path.
     rebuild(lock)
   })
+}
+
+# order_by_dependencies <- function(lock, dependencies) {
+#   lock_names <- vapply(lock, function(l) l$name, character(1))
+#   dep_names <- vapply(dependencies, function(l) l$name, character(1))
+#   in_lock <- which(dep_names %in% lock_names)
+#   new_order <- vapply(
+#     dependencies[in_lock]
+#     , function(dep) which(lock_names == dep$name)
+#     , integer(1))
+#   lock[c(new_order, setdiff(new_order, seq_along(lock)))]
+# }
+
+reset_to_locked <- function(packages, lock) {
+  lock_names <- vapply(lock, function(l) l$name, character(1))
+  lapply(
+    packages
+    , function(pack){
+      if (pack$name %in% lock_names) {
+        as.locked_package(pack)
+      } else {
+        pack
+      }
+    })
 }
 
 #' @export

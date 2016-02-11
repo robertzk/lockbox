@@ -240,31 +240,35 @@ get_ordered_dependencies <- function(lock, mismatches) {
    }
 }
 
-get_dependencies_for_list <- function(master_list, lock, previously_parsed_dependencies) {
+get_dependencies_for_list <- function(master_list, lock, previously_parsed_deps) {
   current_dependencies <- list()
   for (i in 1:length(master_list)) {
     cat(".")
     package <- master_list[[i]]
-    if (!is_previously_parsed(package, previously_parsed_dependencies)) {
+    if (!is_previously_parsed(package, previously_parsed_deps)) {
       current_dependencies <- combine_dependencies(
         current_dependencies
         , get_remote_dependencies(
-          structure(package, class = c(package$remote %||% "CRAN", class(master_list[[i]])))))
-      previously_parsed_dependencies[[length(previously_parsed_dependencies) + 1]] <- package
+          structure(package
+            , class = c(package$remote %||% "CRAN"
+              , class(master_list[[i]])))))
+      previously_parsed_deps[[length(previously_parsed_deps) + 1]] <- package
     }
   }
-  current_list <- add_details(combine_dependencies(current_dependencies, master_list), lock)
+  current_list <- add_details(combine_dependencies(current_dependencies
+    , master_list), lock)
   current_list <- lapply(current_list, as.dependency_package)
   if (identical(master_list, current_list)) return(master_list)
-  get_dependencies_for_list(current_list, lock, previously_parsed_dependencies)
+  get_dependencies_for_list(current_list, lock, previously_parsed_deps)
 }
 
-is_previously_parsed <- function(package, previously_parsed_dependencies) {
-  if (length(previously_parsed_dependencies) == 0) return(FALSE)
-  previously_parsed_names <- vapply(previously_parsed_dependencies, function(p) p$name, character(1))
+is_previously_parsed <- function(package, previously_parsed_deps) {
+  if (length(previously_parsed_deps) == 0) return(FALSE)
+  previously_parsed_names <- vapply(previously_parsed_deps
+    , function(p) p$name, character(1))
   if (package$name %in% previously_parsed_names) {
     sel <- which(previously_parsed_names == package$name)
-    if (any(vapply(previously_parsed_dependencies[sel]
+    if (any(vapply(previously_parsed_deps[sel]
       , function(p) identical(p$version, package$version)
       , logical(1)))) {
       return(TRUE)
@@ -281,25 +285,22 @@ add_details <- function(current_list, lock) {
     , function(el) {
       if (el$name %in% lock_names) {
         locked_package <- lock[[which(lock_names == el$name)[1]]]
-        if (is.na(el$version) || identical(compareVersion(as.character(el$version), as.character(locked_package$version)), -1L)) {
-          el$version <- as.character(locked_package$version)
+        if (is.na(el$version) || identical(compareVersion(as.character(el$version)
+            , as.character(locked_package$version)), -1L)) {
+            el$version <- as.character(locked_package$version)
         }
-        if (identical(compareVersion(as.character(el$version), as.character(locked_package$version)), 1L)) {
-          stop(paste0("Dependency: \'", el$name, ", Version: ", el$version
-            , " is required, but lockbox is locked at version: ", as.character(locked_package$version)))
+        if (identical(compareVersion(as.character(el$version)
+          , as.character(locked_package$version)), 1L)) {
+            stop(paste0("Dependency: \'", el$name, ", Version: ", el$version
+              , " is required, but lockbox is locked at version: "
+              , as.character(locked_package$version)))
         }
-        if ("ref" %in% names(locked_package)) {
-          el$ref <- locked_package$ref
-        }
-        if ("repo" %in% names(locked_package)) {
-          el$repo <- locked_package$repo
-        }
-        if ("remote" %in% names(locked_package)) {
-          el$remote <- locked_package$remote
-        }
-        if ("subdir" %in% names(locked_package)) {
-          el$subdir <- locked_package$subdir
-        }
+        fields_to_replace <- c("ref", "repo", "remote", "subdir", "dir", "load")
+        invisible(lapply(fields_to_replace, function(field) {
+          if (field %in% names(locked_package)) {
+            el[[field]] <<- locked_package[[field]]
+          }}))
+
       }
       if (!"remote" %in% names(el)) {
          el$remote <- "CRAN"
@@ -353,15 +354,24 @@ get_remote_dependencies.CRAN <- function(package) {
   list()
 }
 
+#' If a package is local we just read from the directory given
+get_remote_dependencies.local <- function(package) {
+  description_name <- file_list$Name[grepl(paste0("^[^/]+"
+    ,"/DESCRIPTION"), file_list$Name)]
+  dcf <- read.dcf(description_name)
+  dependencies_from_description(dcf)
+}
+
 #' For packages on github we will either use the current library DESCRIPTION
 #' file or download the accurate remote DESCRIPTION file.
 get_remote_dependencies.github <- function(package) {
   is_local_dependency <- is.dependency_package(package) &&
-     compareVersion(as.character(current_version(package$name)) , as.character(package$version)) == 1
+     compareVersion(as.character(current_version(package$name))
+       , as.character(package$version)) >= 0
   is_local_locked <- is.locked_package(package) && !version_mismatch(package)
   if (is_local_locked || is_local_dependency) {
     dcf <- description_file_for(package$name)
-  } else{
+  } else {
     remote <- package$remote
     filepath <- download_package(structure(
       package,
@@ -373,29 +383,36 @@ get_remote_dependencies.github <- function(package) {
     if (!is.null(package$subdir)){
       subdir <- paste0("/",package$subdir)
     }
-    description_name <- file_list$Name[grepl(paste0("^[^/]+", subdir,"/DESCRIPTION"),file_list$Name)]
+    description_name <- file_list$Name[grepl(paste0("^[^/]+"
+      , subdir
+      ,"/DESCRIPTION"), file_list$Name)]
     file_con <- unz(filepath, description_name)
     dcf <- read.dcf(file = file_con)
     close(file_con)
   }
 
+  dependencies_from_description(dcf)
+}
+
+dependencies_from_description(dcf) {
   dependency_levels <- c("Depends", "Imports")
   dependency_levels %in% colnames(dcf)
-
   if (!any(dependency_levels %in% colnames(dcf))) return(list())
-
   if (all(dependency_levels %in% colnames(dcf))) {
-    dependencies_parsed <- rbind(tools::package.dependencies(dcf, depLevel = c("Imports"))[[package$name]]
-    , tools::package.dependencies(dcf, depLevel = c("Depends"))[[package$name]])
+    dependencies_parsed <- rbind(
+      tools::package.dependencies(dcf, depLevel = c("Imports"))[[package$name]]
+      , tools::package.dependencies(dcf, depLevel = c("Depends"))[[package$name]])
   } else{
     dependencies_parsed <- tools::package.dependencies(dcf
       , depLevel = dependency_levels[dependency_levels %in% colnames(dcf)])[[package$name]]
   }
-  dependencies_parsed <- dependencies_parsed[!grepl("^[rR]$", dependencies_parsed[,1]), , drop = FALSE]
+  dependencies_parsed <- dependencies_parsed[!grepl("^[rR]$"
+    , dependencies_parsed[,1]), , drop = FALSE]
   if (identical(nrow(dcf),0L)) return(list())
   lapply(seq_along(dependencies_parsed[,1])
     , function(i) {
-      list(name = as.character(dependencies_parsed[i,1]), version = as.character(dependencies_parsed[i,3]))
+      list(name = as.character(dependencies_parsed[i,1])
+        , version = as.character(dependencies_parsed[i,3]))
     })
 }
 

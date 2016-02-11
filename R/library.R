@@ -337,7 +337,8 @@ combine_dependencies <- function(list1, list2) {
     , logical(1))
 
   swap_versions1  <- names1 %in% names2 & !keep1
-  swap_versions2 <- vapply(names1[swap_versions1], function(n) which(names2 == n), integer(1))
+  swap_versions2 <- vapply(names1[swap_versions1]
+    , function(n) which(names2 == n), integer(1))
   version1[swap_versions1] <- version2[swap_versions2]
 
   keep2  <- !names2 %in% names1
@@ -405,7 +406,8 @@ dependencies_from_description(dcf) {
       , tools::package.dependencies(dcf, depLevel = c("Depends"))[[package$name]])
   } else{
     dependencies_parsed <- tools::package.dependencies(dcf
-      , depLevel = dependency_levels[dependency_levels %in% colnames(dcf)])[[package$name]]
+      , depLevel = dependency_levels[dependency_levels %in%
+        colnames(dcf)])[[package$name]]
   }
   dependencies_parsed <- dependencies_parsed[!grepl("^[rR]$"
     , dependencies_parsed[,1]), , drop = FALSE]

@@ -278,19 +278,21 @@ is_previously_parsed <- function(package, previously_parsed_deps) {
 }
 
 #' Check a dependency list for inclusion in the lockfile and add those additional
-#' details (repo, remote, version, subdir) if it does appear there
+#' details (repo, remote, version, subdir) if it does appear there.  Also throw
+#' an error if we require a dependency version greater than that specified by
+#' the lockfile.
 add_details <- function(current_list, lock) {
   lock_names <- vapply(lock, function(l) l$name, character(1))
   lapply(current_list
     , function(el) {
       if (el$name %in% lock_names) {
         locked_package <- lock[[which(lock_names == el$name)[1]]]
-        if (is.na(el$version) || identical(compareVersion(as.character(el$version)
-            , as.character(locked_package$version)), -1L)) {
+        if (is.na(el$version) || package_version(as.character(el$version)) <
+          package_version(as.character(locked_package$version))) {
             el$version <- as.character(locked_package$version)
         }
-        if (identical(compareVersion(as.character(el$version)
-          , as.character(locked_package$version)), 1L)) {
+        if (package_version(as.character(el$version)) >
+          package_version(as.character(locked_package$version))) {
             stop(paste0("Dependency: \'", el$name, ", Version: ", el$version
               , " is required, but lockbox is locked at version: "
               , as.character(locked_package$version)))
@@ -300,7 +302,6 @@ add_details <- function(current_list, lock) {
           if (field %in% names(locked_package)) {
             el[[field]] <<- locked_package[[field]]
           }}))
-
       }
       if (!"remote" %in% names(el)) {
          el$remote <- "CRAN"
@@ -329,7 +330,7 @@ combine_dependencies <- function(list1, list2) {
         v2 <- version2[[n]]
         if (is.na(v2)) return(TRUE)
         if (is.na(v1)) return(FALSE)
-        !identical(compareVersion(as.character(v1), as.character(v2)), -1)
+        package_version(as.character(v1)) >= package_version(as.character(v2))
       } else{
         TRUE
       }}
@@ -366,8 +367,8 @@ get_remote_dependencies.local <- function(package) {
 #' file or download the accurate remote DESCRIPTION file.
 get_remote_dependencies.github <- function(package) {
   is_local_dependency <- is.dependency_package(package) &&
-     compareVersion(as.character(current_version(package$name))
-       , as.character(package$version)) >= 0
+     package_version(as.character(current_version(package$name))) <=
+     package_version(as.character(package$version))
   is_local_locked <- is.locked_package(package) && !version_mismatch(package)
   if (is_local_locked || is_local_dependency) {
     dcf <- description_file_for(package$name)

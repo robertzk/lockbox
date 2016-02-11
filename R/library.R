@@ -51,10 +51,10 @@ install_dependency <- function(dependency_package) {
 
 #' Install CRAN dependencies first to minimize change of unresolved dependencies
 install_dependencies <- function(dependency_packages) {
-   is.cran <- vapply(dependency_packages, function(pack) is.null(pack$repo) ||
+   is_cran <- vapply(dependency_packages, function(pack) is.null(pack$repo) ||
      identical(pack$repo, "CRAN"), logical(1))
-   lapply(lock[is.cran], install_dependency)
-   lapply(lock[!is.cran], install_dependency)
+   lapply(lock[is_cran], install_dependency)
+   lapply(lock[!is_cran], install_dependency)
 }
 
 install_package <- function(locked_package) {
@@ -231,27 +231,46 @@ description_file_for <- function(package_name) {
 }
 
 get_ordered_dependencies <- function(lock, mismatches) {
-   is.cran <- vapply(lock, function(lp) is.null(lp$repo), logical(1))
-   lock_cran <- lock[is.cran]
-   lock_repo <- lock[!is.cran]
-   cat(paste("Retrieving dependencies..."))
-   get_dependencies_for_list(lock[!is.cran & mismatches], lock)
+   is_cran <- vapply(lock, function(lp) is.null(lp$repo), logical(1))
+   lock_cran <- lock[is_cran]
+   lock_repo <- lock[!is_cran]
+   if (any(!is_cran & mismatches)){
+     cat(paste("Retrieving dependencies..."))
+     get_dependencies_for_list(lock[!is_cran & mismatches], lock, list())
+   }
 }
 
-get_dependencies_for_list <- function(master_list, lock) {
+get_dependencies_for_list <- function(master_list, lock, previously_parsed_dependencies) {
   current_dependencies <- list()
   for (i in 1:length(master_list)) {
     cat(".")
     package <- master_list[[i]]
-    current_dependencies <- combine_dependencies(
-      current_dependencies
-      , get_remote_dependencies(
-        structure(package, class = c(package$remote %||% "CRAN", class(master_list[[i]])))))
+    if (!is_previously_parsed(package, previously_parsed_dependencies)) {
+      current_dependencies <- combine_dependencies(
+        current_dependencies
+        , get_remote_dependencies(
+          structure(package, class = c(package$remote %||% "CRAN", class(master_list[[i]])))))
+      previously_parsed_dependencies[[length(previously_parsed_dependencies) + 1]] <- package
+    }
   }
   current_list <- add_details(combine_dependencies(current_dependencies, master_list), lock)
   current_list <- lapply(current_list, as.dependency_package)
   if (identical(master_list, current_list)) return(master_list)
-  get_dependencies_for_list(current_list, lock)
+  get_dependencies_for_list(current_list, lock, previously_parsed_dependencies)
+}
+
+is_previously_parsed <- function(package, previously_parsed_dependencies) {
+  if (length(previously_parsed_dependencies) == 0) return(FALSE)
+  previously_parsed_names <- vapply(previously_parsed_dependencies, function(p) p$name, character(1))
+  if (package$name %in% previously_parsed_names) {
+    sel <- which(previously_parsed_names == package$name)
+    if (any(vapply(previously_parsed_dependencies[sel]
+      , function(p) identical(p$version, package$version)
+      , logical(1)))) {
+      return(TRUE)
+    }
+  }
+  FALSE
 }
 
 #' Check a dependency list for inclusion in the lockfile and add those additional
@@ -355,7 +374,9 @@ get_remote_dependencies.github <- function(package) {
       subdir <- paste0("/",package$subdir)
     }
     description_name <- file_list$Name[grepl(paste0("^[^/]+", subdir,"/DESCRIPTION"),file_list$Name)]
-    dcf <- read.dcf(file = unz(filepath, description_name))
+    file_con <- unz(filepath, description_name)
+    dcf <- read.dcf(file = file_con)
+    close(file_con)
   }
 
   dependency_levels <- c("Depends", "Imports")

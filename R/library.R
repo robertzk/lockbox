@@ -325,9 +325,10 @@ add_details <- function(current_list, lock) {
       el})
 }
 
-#' Combine two lists of dependencies via version comparisons, but keep packages
-#' found in list1 on the left side of the parent package(updating versions with 
-#' corresponding list2 values if necessary) in order to preserve dependency order.
+#' Combine two lists of dependencies via version comparisons.  Keep packages
+#' found in list1 on the left side of the entirety of list2, while moving
+#' the parent package to the space after it's leftmost dependency found in list2.
+#' Update versions with greatest values if necessary.
 combine_dependencies <- function(list1, list2, current_parent) {
   if (length(list1) == 0) return(list2)
   if (length(list2) == 0) return(list1)
@@ -423,6 +424,7 @@ get_remote_dependencies.github <- function(package) {
   dependencies_from_description(package, dcf)
 }
 
+#' Parse dependencies from description using the tools package
 dependencies_from_description <- function(package, dcf) {
   dependency_levels <- c("Depends", "Imports")
   dependency_levels %in% colnames(dcf)
@@ -450,6 +452,7 @@ download_package <- function(package) {
   UseMethod("download_package")
 }
 
+#' Download a package from github using devtools' remote_download function
 download_package.github <- function(package) {
   remote <- get_remote(package)
   quiet <- !isTRUE(getOption('lockbox.verbose'))

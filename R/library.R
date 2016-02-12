@@ -361,7 +361,7 @@ get_remote_dependencies.local <- function(package) {
   description_name <- file_list$Name[grepl(paste0("^[^/]+"
     ,"/DESCRIPTION"), file_list$Name)]
   dcf <- read.dcf(description_name)
-  dependencies_from_description(dcf)
+  dependencies_from_description(package, dcf)
 }
 
 #' For packages on github we will either use the current library DESCRIPTION
@@ -393,10 +393,10 @@ get_remote_dependencies.github <- function(package) {
     close(file_con)
   }
 
-  dependencies_from_description(dcf)
+  dependencies_from_description(package, dcf)
 }
 
-dependencies_from_description <- function(dcf) {
+dependencies_from_description <- function(package, dcf) {
   dependency_levels <- c("Depends", "Imports")
   dependency_levels %in% colnames(dcf)
   if (!any(dependency_levels %in% colnames(dcf))) return(list())

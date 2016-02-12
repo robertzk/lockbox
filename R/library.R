@@ -41,22 +41,17 @@ lockbox_package_path <- function(locked_package, library = lockbox_library()) {
   ))
 }
 
-install_dependency <- function(dependency_package) {
-  remote <- locked_package$remote %||% "CRAN"
+install_dependency_package <- function(dependency_package) {
+  remote <- dependency_package$remote %||% "CRAN"
   cat("Installing dependency ", crayon::blue(dependency_package$name),
-      as.character(dependency_package$version), "from", class(dependency_package)[1], "\n")
-  install_package(structure(
-    locked_package,
-    class = c(remote, class(locked_package))
-  ))
-}
-
-#' Install CRAN dependencies first to minimize change of unresolved dependencies
-install_dependencies <- function(dependency_packages) {
-   is_cran <- vapply(dependency_packages, function(pack) is.null(pack$repo) ||
-     identical(pack$repo, "CRAN"), logical(1))
-   lapply(lock[is_cran], install_dependency)
-   lapply(lock[!is_cran], install_dependency)
+    "from", remote, "\n")
+  if (identical(remote, "CRAN")) {
+      install.packages(dependency_package$name, quiet = notTRUE(getOption("lockbox.verbose")))
+  } else{
+    install_package(structure(
+      dependency_package,
+      class = c(dependency_package$remote, class(dependency_package))))
+  }
 }
 
 install_package <- function(locked_package) {
@@ -239,9 +234,10 @@ get_ordered_dependencies <- function(lock, mismatches) {
    lock_cran <- lock[is_cran]
    lock_repo <- lock[!is_cran]
    if (any(!is_cran & mismatches)){
-     cat(paste("Retrieving dependencies..."))
+     cat(crayon::cyan(paste("Retrieving dependencies...")))
      get_dependencies_for_list(lock[!is_cran & mismatches], lock, list(), "")
    }
+   cat("\n")
 }
 
 #' Recursive function to take a list and lock and extract dependencies, sorting
@@ -249,7 +245,7 @@ get_ordered_dependencies <- function(lock, mismatches) {
 get_dependencies_for_list <- function(master_list, lock, previously_parsed_deps, current_parent) {
   current_dependencies <- master_list
   for (i in 1:length(master_list)) {
-    cat(".")
+    cat(crayon::cyan("."))
     package <- master_list[[i]]
     if (!is_previously_parsed(package, previously_parsed_deps)) {
       single_package_dependencies <- get_dependencies(

@@ -8,13 +8,7 @@ align <- function(locked_package) {
     return(lapply(locked_package, align))
   }
   if (is.dependency_package(locked_package)) {
-    if (identical(locked_package$remote, "CRAN")) {
-      install.packages(locked_package$name)
-    } else{
-      install_package(structure(
-        locked_package,
-        class = c(locked_package$remote, class(locked_package))))
-    }
+    install_dependency_package(locked_package)
   } else {
     stopifnot(is.locked_package(locked_package))
 

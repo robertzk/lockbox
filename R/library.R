@@ -282,7 +282,8 @@ is_previously_parsed <- function(package, previously_parsed_deps) {
   }
 }
 
-#' Where, if anywhere, have I stored this packages parsed dependencies?
+#' Where, if anywhere, have I stored this packages/version combinations'
+#' previously parsed dependencies?
 which_previously_parsed <- function(package, previously_parsed_deps) {
   if (length(previously_parsed_deps) == 0) return(0L)
   previously_parsed_names <- vapply(previously_parsed_deps

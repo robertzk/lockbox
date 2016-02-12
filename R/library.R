@@ -230,6 +230,8 @@ description_file_for <- function(package_name) {
   }
 }
 
+#' Get dependencies for all elements with lock, but only do so for current
+#' version mismatches and non-cran installations
 get_ordered_dependencies <- function(lock, mismatches) {
    is_cran <- vapply(lock, function(lp) is.null(lp$repo), logical(1))
    lock_cran <- lock[is_cran]
@@ -240,6 +242,8 @@ get_ordered_dependencies <- function(lock, mismatches) {
    }
 }
 
+#' Recursive function to take a list and lock and extract dependencies, sorting
+#' along the way using the combine_dependencies function.
 get_dependencies_for_list <- function(master_list, lock, previously_parsed_deps, current_parent) {
   current_dependencies <- master_list
   for (i in 1:length(master_list)) {
@@ -268,6 +272,7 @@ get_dependencies_for_list <- function(master_list, lock, previously_parsed_deps,
   get_dependencies_for_list(current_list, lock, previously_parsed_deps, current_parent)
 }
 
+#' Have we previously gotten this packages dependencies?
 is_previously_parsed <- function(package, previously_parsed_deps) {
   location <- which_previously_parsed(package, previously_parsed_deps)
   if (identical(location, 0L)) {
@@ -277,6 +282,7 @@ is_previously_parsed <- function(package, previously_parsed_deps) {
   }
 }
 
+#' Where, if anywhere, have I stored this packages parsed dependencies?
 which_previously_parsed <- function(package, previously_parsed_deps) {
   if (length(previously_parsed_deps) == 0) return(0L)
   previously_parsed_names <- vapply(previously_parsed_deps
@@ -327,7 +333,7 @@ add_details <- function(current_list, lock) {
 
 #' Combine two lists of dependencies via version comparisons.  Keep packages
 #' found in list1 on the left side of the entirety of list2, while moving
-#' the parent package to the space after it's leftmost dependency found in list2.
+#' the parent package to the space after it's rightmost dependency found in list2.
 #' Update versions with greatest values if necessary.
 combine_dependencies <- function(list1, list2, current_parent) {
   if (length(list1) == 0) return(list2)
@@ -352,6 +358,15 @@ combine_dependencies <- function(list1, list2, current_parent) {
     }
   }
 
+  version2 <- swap_versions(names1, names2, version1, version2)
+
+  names_final <- c(names1[keep1], names2)
+  version_final <- c(version1[keep1], version2)
+  Map(function(n,v) list(name = n, version = v), names_final, version_final)
+}
+
+#' Swap versions information when side1 is greater than side2
+swap_versions <- function(names1, names2, version1, version2) {
   swap_version2for1 <- vapply(
     names1
     , function(n) {
@@ -363,15 +378,12 @@ combine_dependencies <- function(list1, list2, current_parent) {
         FALSE
       }}
     , logical(1))
-
   swap_versions1  <- names1 %in% names2 & swap_version2for1
   swap_versions2 <- vapply(names1[swap_versions1]
     , function(n) which(names2 == n)
     , integer(1))
   version2[swap_versions2] <- version1[swap_versions1]
-  names_final <- c(names1[keep1], names2)
-  version_final <- c(version1[keep1], version2)
-  Map(function(n,v) list(name = n, version = v), names_final, version_final)
+  version2
 }
 
 get_remote_dependencies <- function(package) {
@@ -459,6 +471,7 @@ download_package.github <- function(package) {
   devtools:::remote_download.github_remote(remote, quiet = quiet)
 }
 
+#' Create remote in form devtools' remote_download likes.
 get_remote <- function(package) {
   ref <- package$ref %||% package$version
   arguments <- list(

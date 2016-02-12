@@ -246,18 +246,21 @@ get_dependencies_for_list <- function(master_list, lock, previously_parsed_deps,
     cat(".")
     package <- master_list[[i]]
     if (!is_previously_parsed(package, previously_parsed_deps)) {
-      dependencies <- get_remote_dependencies(
+      single_package_dependencies <- get_remote_dependencies(
        structure(package
          , class = c(package$remote %||% "CRAN"
            , class(master_list[[i]]))))
-      current_dependencies <- combine_dependencies(
-        dependencies
-        , current_dependencies
-        , package$name)
       previously_parsed_deps[[length(previously_parsed_deps) + 1]] <- list(
         package = package
-        , dependencies = dependencies)
+        , dependencies = single_package_dependencies)
+    } else{
+      single_package_dependencies <- previously_parsed_deps[[which_previously_parsed(
+        package, previously_parsed_deps)]][["dependencies"]]
     }
+    current_dependencies <- combine_dependencies(
+      single_package_dependencies
+      , current_dependencies
+      , package$name)
   }
   current_list <- add_details(current_dependencies, lock)
   current_list <- lapply(current_list, as.dependency_package)
@@ -266,18 +269,28 @@ get_dependencies_for_list <- function(master_list, lock, previously_parsed_deps,
 }
 
 is_previously_parsed <- function(package, previously_parsed_deps) {
-  if (length(previously_parsed_deps) == 0) return(FALSE)
+  location <- which_previously_parsed(package, previously_parsed_deps)
+  if (identical(location, 0L)) {
+    FALSE
+  } else{
+    TRUE
+  }
+}
+
+which_previously_parsed <- function(package, previously_parsed_deps) {
+  if (length(previously_parsed_deps) == 0) return(0L)
   previously_parsed_names <- vapply(previously_parsed_deps
     , function(p) p[["package"]]$name, character(1))
   if (package$name %in% previously_parsed_names) {
     sel <- which(previously_parsed_names == package$name)
-    if (any(vapply(previously_parsed_deps[sel]
+    subsel <- vapply(previously_parsed_deps[sel]
       , function(p) identical(p[["package"]]$version, package$version)
-      , logical(1)))) {
-      return(TRUE)
+      , logical(1))
+    if (any(subsel)) {
+      return(sel[subsel])
     }
   }
-  FALSE
+  0L
 }
 
 #' Check a dependency list for inclusion in the lockfile and add those additional
@@ -324,57 +337,39 @@ combine_dependencies <- function(list1, list2, current_parent) {
   version2 <- vapply(list2, function(obj) as.character(obj$version), character(1))
   names(version1) <- names1
   names(version2) <- names2
+  keep1 <- !names1 %in% names2
 
-  order1 <- vapply(names1[names1 %in% names2]
-    , function(n1) which(names2[names2 %in% names1] == n)
-    , numeric(1))
-  version1[names1 %in% names2][order1] <- version1[names1 %in% names2]
-  names1[names1 %in% names2][order1] <- names1[names1 %in% names2]
-
-  if (!current_parent %in% names2) {
-    above_parent2 <- rep(FALSE, length(names2))
-    above_parent1 <- rep(FALSE, length(names1))
-  } else{
-    above_parent2 <- seq_along(names2) >= which(names2 == current_parent)
-    above_parent1 <- vapply(seq_along(names1)
-      , function(n) {
-        if (!n %in% names2) {
-          FALSE
-        } else{
-          which(names2 == n) > which(names2 == current_parent)
-        }}
-      , logical(1))
+  if (current_parent %in% names2 && any(names2 %in% names1)) {
+    new_selection <- !names1 %in% names2
+    init_parent_slot <- which(names2 == current_parent)
+    final_parent_slot <- max(which(names2 %in% names1))
+    if (final_parent_slot > init_parent_slot) {
+      sel1 <- seq_along(names2) != init_parent_slot & seq_along(names2) <= final_parent_slot
+      sel2 <- seq_along(names2) > final_parent_slot
+      version2 <- c(version2[sel1], version2[init_parent_slot], version2[sel2])
+      names2 <- c(names2[sel1], names2[init_parent_slot], names2[sel2])
+    }
   }
 
-  keep1 <- vapply(
+  swap_version2for1 <- vapply(
     names1
     , function(n) {
       if (n %in% names2) {
-        v1 <- version1[[n]]
-        v2 <- version2[[n]]
-        if (is.na(v2)) return(TRUE)
-        if (is.na(v1)) return(FALSE)
-        package_version(as.character(v1)) >= package_version(as.character(v2))
+        if (is.na(version2[[n]])) return(TRUE)
+        if (is.na(version1[[n]])) return(FALSE)
+        package_version(version1[[n]]) >= package_version(version2[[n]])
       } else{
-        TRUE
+        FALSE
       }}
     , logical(1))
 
-  swap_versions1  <- names1 %in% names2 & !keep1
+  swap_versions1  <- names1 %in% names2 & swap_version2for1
   swap_versions2 <- vapply(names1[swap_versions1]
     , function(n) which(names2 == n)
     , integer(1))
-  version1[swap_versions1] <- version2[swap_versions2]
-
-  left_keep1 <- !above_parent1
-  right_keep1  <- above_parent1
-  left_keep2  <- !names2 %in% names1 & !above_parent2
-  right_keep2  <- !names2 %in% names1 & above_parent2
-  names_final <- c(names1[left_keep1], names2[left_keep2], names1[right_keep1], names2[right_keep2])
-  version_final <- c(version1[left_keep1]
-    , version2[left_keep2]
-    , version1[right_keep1]
-    , version2[right_keep2])
+  version2[swap_versions2] <- version1[swap_versions1]
+  names_final <- c(names1[keep1], names2)
+  version_final <- c(version1[keep1], version2)
   Map(function(n,v) list(name = n, version = v), names_final, version_final)
 }
 

@@ -396,7 +396,7 @@ get_remote_dependencies.github <- function(package) {
   dependencies_from_description(dcf)
 }
 
-dependencies_from_description(dcf) {
+dependencies_from_description <- function(dcf) {
   dependency_levels <- c("Depends", "Imports")
   dependency_levels %in% colnames(dcf)
   if (!any(dependency_levels %in% colnames(dcf))) return(list())

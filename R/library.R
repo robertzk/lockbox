@@ -367,9 +367,11 @@ get_remote_dependencies.local <- function(package) {
 #' For packages on github we will either use the current library DESCRIPTION
 #' file or download the accurate remote DESCRIPTION file.
 get_remote_dependencies.github <- function(package) {
+  if (is.na(package$version)) browser()
   is_local_dependency <- is.dependency_package(package) &&
-     package_version(as.character(current_version(package$name))) <=
-     package_version(as.character(package$version))
+    !is.na(current_version(package$name)) &&
+    package_version(as.character(current_version(package$name))) <=
+    package_version(as.character(package$version))
   is_local_locked <- is.locked_package(package) && !version_mismatch(package)
   if (is_local_locked || is_local_dependency) {
     dcf <- description_file_for(package$name)

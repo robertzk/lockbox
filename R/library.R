@@ -43,6 +43,8 @@ lockbox_package_path <- function(locked_package, library = lockbox_library()) {
 
 install_dependency <- function(dependency_package) {
   remote <- locked_package$remote %||% "CRAN"
+  cat("Installing dependency ", crayon::blue(dependency_package$name),
+      as.character(dependency_package$version), "from", class(dependency_package)[1], "\n")
   install_package(structure(
     locked_package,
     class = c(remote, class(locked_package))
@@ -94,7 +96,7 @@ install_old_CRAN_package <- function(name, version, repo = "http://cran.r-projec
   # If we did not find the package on CRAN - try CRAN archive.
   from <- paste0(repo, "/src/contrib/Archive/", name, "/", name, "_", version, ".tar.gz")
   pkg.tarball <- tempfile(fileext = ".tar.gz")
-  download.file(url = from, destfile = pkg.tarball)
+  download.file(url = from, destfile = pkg.tarball, quiet = notTRUE(getOption('lockbox.verbose')))
 
   # We need to switch directories to ensure no infinite loop happens when
   # the .Rprofile calls lockbox::lockbox.
@@ -250,7 +252,7 @@ get_dependencies_for_list <- function(master_list, lock, previously_parsed_deps,
     cat(".")
     package <- master_list[[i]]
     if (!is_previously_parsed(package, previously_parsed_deps)) {
-      single_package_dependencies <- get_remote_dependencies(
+      single_package_dependencies <- get_dependencies(
        structure(package
          , class = c(package$remote %||% "CRAN"
            , class(master_list[[i]]))))
@@ -325,9 +327,15 @@ add_details <- function(current_list, lock) {
           if (field %in% names(locked_package)) {
             el[[field]] <<- locked_package[[field]]
           }}))
+      } else{
+        # No remote specified defaults to CRAN. In which case, we want the latest
+        # version since this is not a locked package
+        if (!"remote" %in% names(el)) {
+           el$version <- NA
+        }
       }
       if (!"remote" %in% names(el)) {
-         el$remote <- "CRAN"
+       el$remote <- "CRAN"
       }
       el})
 }
@@ -337,12 +345,24 @@ add_details <- function(current_list, lock) {
 #' the parent package to the space after it's rightmost dependency found in list2.
 #' Update versions with greatest values if necessary.
 combine_dependencies <- function(list1, list2, current_parent) {
-  if (length(list1) == 0) return(list2)
-  if (length(list2) == 0) return(list1)
   names1 <- vapply(list1, function(obj) obj$name, character(1))
   names2 <- vapply(list2, function(obj) obj$name, character(1))
+
   version1 <- vapply(list1, function(obj) as.character(obj$version), character(1))
   version2 <- vapply(list2, function(obj) as.character(obj$version), character(1))
+
+  # Certain packages are no longer on cran but incorporated into R Core
+  core_pkgs <- as.character(installed.packages(priority = "base")[,1])
+  version1 <- version1[!names1 %in% core_pkgs]
+  list1 <- list1[!names1 %in% core_pkgs]
+  names1 <- names1[!names1 %in% core_pkgs]
+  version2 <- version2[!names2 %in% core_pkgs]
+  list2 <- list2[!names2 %in% core_pkgs]
+  names2 <- names2[!names2 %in% core_pkgs]
+
+  if (length(list1) == 0) return(list2)
+  if (length(list2) == 0) return(list1)
+
   names(version1) <- names1
   names(version2) <- names2
   keep1 <- !names1 %in% names2
@@ -387,53 +407,70 @@ swap_versions <- function(names1, names2, version1, version2) {
   version2
 }
 
-get_remote_dependencies <- function(package) {
-  UseMethod("get_remote_dependencies")
-}
-
-#' If a package is on CRAN dependency installation should go without a hitch
-get_remote_dependencies.CRAN <- function(package) {
-  list()
-}
-
-#' If a package is local we just read from the directory given
-get_remote_dependencies.local <- function(package) {
-  description_name <- file_list$Name[grepl(paste0("^[^/]+"
-    ,"/DESCRIPTION"), file_list$Name)]
-  dcf <- read.dcf(description_name)
-  dependencies_from_description(package, dcf)
-}
-
-#' For packages on github we will either use the current library DESCRIPTION
+#' Either use the current library DESCRIPTION
 #' file or download the accurate remote DESCRIPTION file.
-get_remote_dependencies.github <- function(package) {
+get_dependencies <- function(package) {
   is_local_dependency <- is.dependency_package(package) &&
     !is.na(current_version(package$name)) &&
     package_version(as.character(current_version(package$name))) <=
     package_version(as.character(package$version))
   is_local_locked <- is.locked_package(package) && !version_mismatch(package)
   if (is_local_locked || is_local_dependency) {
-    dcf <- description_file_for(package$name)
+    dependencies_from_description(package, description_file_for(package$name))
   } else {
-    remote <- package$remote
-    filepath <- download_package(structure(
-      package,
-      class = c(remote, class(package))))
-    remote <- get_remote(package)
-    dirname <- paste0(remote$username,"-",remote$repo,"-",remote$auth_token)
-    file_list <- unzip(filepath, list = TRUE)
-    subdir <- ""
-    if (!is.null(package$subdir)){
-      subdir <- paste0("/",package$subdir)
-    }
-    description_name <- file_list$Name[grepl(paste0("^[^/]+"
-      , subdir
-      ,"/DESCRIPTION"), file_list$Name)]
-    file_con <- unz(filepath, description_name)
-    dcf <- read.dcf(file = file_con)
-    close(file_con)
+    get_remote_dependencies(package)
   }
+}
 
+get_remote_dependencies <- function(package) {
+  UseMethod("get_remote_dependencies")
+}
+
+#' If a package is local we just read from the directory given
+get_remote_dependencies.local <- function(package) {
+  description_name <- file_list$Name[grepl(paste0("^[^/]+"
+    ,"/DESCRIPTION$"), file_list$Name)]
+  dcf <- read.dcf(description_name)
+  dependencies_from_description(package, dcf)
+}
+
+#' For packages on CRAN we will extract to a temporary directory when we
+#' download the accurate remote DESCRIPTION file.
+get_remote_dependencies.CRAN <- function(package) {
+  remote <- package$remote
+  filepath <- download_package(structure(
+    package,
+    class = c(remote, class(package))))
+  split_fp <- strsplit(filepath, "/")[[1]]
+  dirpath <- paste(split_fp[-length(split_fp)], collapse = "/")
+  file_list <- untar(filepath, list = TRUE)
+  description_name <- file_list[grepl(paste0("^[^/]+"
+    ,"/DESCRIPTION$"), file_list)]
+  untar(filepath, description_name, exdir = dirpath)
+  description_path <- paste0(dirpath, "/", description_name)
+  dcf <- read.dcf(file = description_path)
+  unlink(filepath)
+  dependencies_from_description(package, dcf)
+}
+
+#' Download the accurate remote DESCRIPTION file for a github repo.
+get_remote_dependencies.github <- function(package) {
+  remote <- package$remote
+  filepath <- download_package(structure(
+    package,
+    class = c(remote, class(package))))
+  file_list <- unzip(filepath, list = TRUE)
+  subdir <- ""
+  if (!is.null(package$subdir)){
+    subdir <- paste0("/",package$subdir)
+  }
+  description_name <- file_list$Name[grepl(paste0("^[^/]+"
+    , subdir
+    ,"/DESCRIPTION$"), file_list$Name)]
+  file_con <- unz(filepath, description_name)
+  dcf <- read.dcf(file = file_con)
+  close(file_con)
+  unlink(filepath)
   dependencies_from_description(package, dcf)
 }
 
@@ -463,6 +500,48 @@ dependencies_from_description <- function(package, dcf) {
 
 download_package <- function(package) {
   UseMethod("download_package")
+}
+
+#' Download CRAN package, either current or older version
+download_package.CRAN <- function(package) {
+  name <- package$name
+  version <- package$version
+  repo = "http://cran.r-project.org"
+
+  # List available packages on the repo
+  available <- available.packages(contriburl =
+    contrib.url(repos = "http://cran.us.r-project.org", type = "source"))
+  available <- data.frame(unique(available[, c("Package", "Version")]))
+  pkg <- available[available$Package == name, ]
+
+  ###Some packages are available in archive only
+  if (nrow(pkg) == 0) {
+    archive_addition <- paste0("Archive/", name, "/")
+    url <- paste0(repo, "/src/contrib/", archive_addition)
+    filenames <- getURL(url, ftp.use.epsv = FALSE, dirlistonly = TRUE)
+    filenames <- paste(url, strsplit(filenames, "\r*\n")[[1]], sep = "")
+    filenames <- filenames[grepl(paste0(name, "_[0-9\\.\\-]+\\.tar\\.gz"),filenames)]
+    expr <- gregexpr(paste0(name, "_([0-9\\.\\-]+)\\.tar\\.gz"), filenames)
+    filenames <- vapply(regmatches(filenames, expr), function(match) match[1], character(1))
+    archived_version <- gsub("(.*_)([0-9\\.\\-]+)(\\.tar\\.gz)", "\\2", filenames[length(filenames)])
+    if (is.na(version) || package_version(archived_version) > package_version(as.character(version))) {
+      version <- archived_version
+    }
+  } else{
+    # Simply download latest if version happens to be the latest available on CRAN.
+    remote_version <- as.character(pkg$Version)
+    if (is.na(version) || package_version(remote_version) == package_version(version)) {
+      version <- remote_version
+      archive_addition <- ""
+    } else{
+      archive_addition <- paste0("Archive/", name, "/")
+    }
+  }
+
+  from <- paste0(repo, "/src/contrib/", archive_addition, name, "_", version, ".tar.gz")
+  pkg_tarball <- tempfile(fileext = ".tar.gz")
+  download.file(url = from, destfile = pkg_tarball, quiet = notTRUE(getOption('lockbox.verbose')))
+  pkg_tarball
 }
 
 #' Download a package from github using devtools' remote_download function

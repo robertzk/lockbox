@@ -47,7 +47,8 @@ install_dependency_package <- function(dependency_package) {
     "from", remote, "\n")
   if (identical(remote, "CRAN")) {
       swap_libpaths()
-      install.packages(dependency_package$name
+      utils::install.packages(dependency_package$name
+        , INSTALL_opts = "--vanilla", type = "source"
         , quiet = notTRUE(getOption("lockbox.verbose")))
       swap_libpaths()
   } else {
@@ -141,7 +142,17 @@ install_package.github <- function(locked_package) {
       swap_libpaths()
     }
 
-    do.call(devtools::install_github, arguments)
+    repeat_count <- 0
+    while (repeat_count < 5) {
+      if (repeat_count == 4) {
+        warning("Could not download package: ", locked_package$name, ", version: "
+                , locked_package$version, "from github.", call. = FALSE)
+        break
+      }
+      result <- tryCatch(do.call(devtools::install_github, arguments), error = function(e)e)
+      if (!is(result, "error")) break
+      repeat_count <- repeat_count + 1
+    }
 
     if (is.dependency_package(locked_package)) {
       swap_libpaths()
@@ -252,7 +263,7 @@ description_file_for <- function(package_name, libP) {
 #' Get dependencies for all elements with lock, but only do so for current
 #' version mismatches and non-cran installations
 get_ordered_dependencies <- function(lock, mismatches) {
-   cat(crayon::cyan(paste("Retrieving dependencies...")))
+   cat(crayon::blue(paste("Retrieving dependencies...")))
    deps <- get_dependencies_for_list(lock[mismatches], lock, list(), "")
    cat("\n")
    deps
@@ -423,11 +434,10 @@ get_dependencies <- function(package) {
     (is.na(package$version) ||
       package_version(as.character(current_version(package))) <=
       package_version(as.character(package$version)))
-  is_local_locked <- is.locked_package(package) && !version_mismatch(package)
-  if (is_local_locked || is_local_dependency) {
+  if (is_local_dependency) {
     dependencies_from_description(package, description_file_for(package$name, .libPaths()[3L]))
   } else {
-    cat(crayon::cyan("."))
+    cat(crayon::blue("."))
     get_remote_dependencies(package)
   }
 }

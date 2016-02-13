@@ -52,12 +52,15 @@ lockbox.list <- function(lock, env) {
       , '\n')
   })
 
-  if (any(mismatches)) {
-    all_packages <- get_ordered_dependencies(lock, mismatches)
+  ## Find the packages that will need to be installed
+  already_in_lockbox <- vapply(lock, exists_in_lockbox, logical(1))
+
+  if (any(mismatches & !already_in_lockbox)) {
+    all_packages <- get_ordered_dependencies(lock, mismatches & !already_in_lockbox)
     all_packages <- all_packages[vapply(all_packages
       , version_mismatch
       , logical(1))]
-    all_packages <- c(lock[!mismatches], reset_to_locked(all_packages, lock))
+    all_packages <- c(lock[!(mismatches & !already_in_lockbox)], reset_to_locked(all_packages, lock))
   } else{
     all_packages <- lock
   }

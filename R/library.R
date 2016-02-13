@@ -202,6 +202,7 @@ install_locked_package <- function(locked_package, installing_expr) {
 version_mismatch <- function(package) {
   UseMethod("version_mismatch")
 }
+
 #' Find packages whose version does not match the current library's version.
 #'
 #' @param locked_package locked_package.
@@ -230,11 +231,11 @@ version_mismatch.dependency_package <- function(package) {
 #' @param pkg character or locked_package. The name of the package.
 #' @return a \code{\link{package_version}} object representing the version of
 #'   this package in the current library.
-current_version <- function(pkg, libP = libPath()) {
+current_version <- function(pkg) {
   UseMethod("current_version")
 }
 
-current_version.character <- function(package_name, libP = libPath()) {
+current_version_character <- function(package_name, libP = libPath()) {
   dcf <- description_file_for(package_name, libP)
   if (is.null(dcf)) {
     NA
@@ -243,12 +244,12 @@ current_version.character <- function(package_name, libP = libPath()) {
   }
 }
 
-current_version.locked_package <- function(package, libP = libPath()) {
-  current_version(package$name)
+current_version.locked_package <- function(package) {
+  current_version_character(package$name, libP = libPath())
 }
 
-current_version.dependency_package <- function(package, libP = .libPaths()[3L]) {
-  current_version(package$name, libP)
+current_version.dependency_package <- function(package) {
+  current_version_character(package$name, .libPaths()[3L])
 }
 
 description_file_for <- function(package_name, libP) {
@@ -263,7 +264,7 @@ description_file_for <- function(package_name, libP) {
 #' Get dependencies for all elements with lock, but only do so for current
 #' version mismatches and non-cran installations
 get_ordered_dependencies <- function(lock, mismatches) {
-   cat(crayon::blue(paste("Retrieving dependencies...")))
+   cat(crayon::blue(paste("Retrieving dependency info...")))
    deps <- get_dependencies_for_list(lock[mismatches], lock, list(), "")
    cat("\n")
    deps

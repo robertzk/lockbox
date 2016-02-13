@@ -55,9 +55,9 @@ lockbox.list <- function(lock, env) {
   if (any(mismatches)) {
     all_packages <- get_ordered_dependencies(lock, mismatches)
     all_packages <- all_packages[vapply(all_packages
-      , all_package_version_mismatch
+      , version_mismatch
       , logical(1))]
-    all_packages <- reset_to_locked(all_packages, lock)
+    all_packages <- c(lock[!mismatches], reset_to_locked(all_packages, lock))
   } else{
     all_packages <- lock
   }

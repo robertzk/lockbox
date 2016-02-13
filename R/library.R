@@ -43,14 +43,19 @@ lockbox_package_path <- function(locked_package, library = lockbox_library()) {
 
 install_dependency_package <- function(dependency_package) {
   remote <- dependency_package$remote %||% "CRAN"
-  cat("Installing dependency ", crayon::blue(dependency_package$name),
+  cat("Installing dependency", crayon::blue(dependency_package$name),
     "from", remote, "\n")
   if (identical(remote, "CRAN")) {
-      install.packages(dependency_package$name, quiet = notTRUE(getOption("lockbox.verbose")))
-  } else{
+      swap_libpaths()
+      install.packages(dependency_package$name
+        , quiet = notTRUE(getOption("lockbox.verbose")))
+      swap_libpaths()
+  } else {
     install_package(structure(
-      dependency_package,
-      class = c(dependency_package$remote, class(dependency_package))))
+      dependency_package
+      , class = c(dependency_package$remote, class(dependency_package))
+      , quiet = notTRUE(getOption("lockbox.verbose"))
+    ))
   }
 }
 
@@ -132,9 +137,23 @@ install_package.github <- function(locked_package) {
     if (!is.null(locked_package$subdir)) {
       arguments$subdir <- locked_package$subdir
     }
+    if (is.dependency_package(locked_package)) {
+      swap_libpaths()
+    }
 
     do.call(devtools::install_github, arguments)
+
+    if (is.dependency_package(locked_package)) {
+      swap_libpaths()
+    }
   })
+}
+
+swap_libpaths <- function() {
+  .libPaths(c(.libPaths()[3L]
+    , .libPaths()[2L]
+    , .libPaths()[1L]
+    , .libPaths()[seq_along(.libPaths()) > 3]))
 }
 
 install_locked_package <- function(locked_package, installing_expr) {
@@ -169,26 +188,29 @@ install_locked_package <- function(locked_package, installing_expr) {
   unlink(temp_library, TRUE, TRUE)
 }
 
+version_mismatch <- function(package) {
+  UseMethod("version_mismatch")
+}
 #' Find packages whose version does not match the current library's version.
 #'
 #' @param locked_package locked_package.
 #' @return TRUE or FALSE according as the current library's package version
 #'   is incorrect.
-version_mismatch <- function(locked_package) {
+version_mismatch.locked_package <- function(locked_package) {
   !identical(current_version(locked_package), locked_package$version)
 }
 
 #' For installations that include dependencies not in lockbox, take care to
 #' allow for unspecified versions
-all_package_version_mismatch <- function(package) {
-  if (is.na(package$version)) {
-    if (is.na(current_version(package$name))) {
-      TRUE
-    } else{
-      FALSE
-    }
+version_mismatch.dependency_package <- function(package) {
+  if (is.na(current_version(package))) {
+    TRUE
   } else{
-    !identical(current_version(package), package$version)
+    if (is.na(package$version)) {
+      FALSE
+    } else {
+      current_version(package) < package$version
+    }
   }
 }
 
@@ -197,12 +219,12 @@ all_package_version_mismatch <- function(package) {
 #' @param pkg character or locked_package. The name of the package.
 #' @return a \code{\link{package_version}} object representing the version of
 #'   this package in the current library.
-current_version <- function(pkg) {
+current_version <- function(pkg, libP = libPath()) {
   UseMethod("current_version")
 }
 
-current_version.character <- function(package_name) {
-  dcf <- description_file_for(package_name)
+current_version.character <- function(package_name, libP = libPath()) {
+  dcf <- description_file_for(package_name, libP)
   if (is.null(dcf)) {
     NA
   } else {
@@ -210,16 +232,16 @@ current_version.character <- function(package_name) {
   }
 }
 
-current_version.locked_package <- function(package) {
+current_version.locked_package <- function(package, libP = libPath()) {
   current_version(package$name)
 }
 
-current_version.dependency_package <- function(package) {
-  current_version(package$name)
+current_version.dependency_package <- function(package, libP = .libPaths()[3L]) {
+  current_version(package$name, libP)
 }
 
-description_file_for <- function(package_name) {
-  dcf_file <- file.path(libPath(), package_name, "DESCRIPTION")
+description_file_for <- function(package_name, libP) {
+  dcf_file <- file.path(libP, package_name, "DESCRIPTION")
   if (file.exists(dcf_file)) {
     read.dcf(dcf_file)
   } else {
@@ -230,14 +252,10 @@ description_file_for <- function(package_name) {
 #' Get dependencies for all elements with lock, but only do so for current
 #' version mismatches and non-cran installations
 get_ordered_dependencies <- function(lock, mismatches) {
-   is_cran <- vapply(lock, function(lp) is.null(lp$repo), logical(1))
-   lock_cran <- lock[is_cran]
-   lock_repo <- lock[!is_cran]
-   if (any(!is_cran & mismatches)){
-     cat(crayon::cyan(paste("Retrieving dependencies...")))
-     get_dependencies_for_list(lock[!is_cran & mismatches], lock, list(), "")
-   }
+   cat(crayon::cyan(paste("Retrieving dependencies...")))
+   deps <- get_dependencies_for_list(lock[mismatches], lock, list(), "")
    cat("\n")
+   deps
 }
 
 #' Recursive function to take a list and lock and extract dependencies, sorting
@@ -245,13 +263,12 @@ get_ordered_dependencies <- function(lock, mismatches) {
 get_dependencies_for_list <- function(master_list, lock, previously_parsed_deps, current_parent) {
   current_dependencies <- master_list
   for (i in 1:length(master_list)) {
-    cat(crayon::cyan("."))
     package <- master_list[[i]]
     if (!is_previously_parsed(package, previously_parsed_deps)) {
       single_package_dependencies <- get_dependencies(
        structure(package
          , class = c(package$remote %||% "CRAN"
-           , class(master_list[[i]]))))
+           , class(package))))
       previously_parsed_deps[[length(previously_parsed_deps) + 1]] <- list(
         package = package
         , dependencies = single_package_dependencies)
@@ -266,6 +283,7 @@ get_dependencies_for_list <- function(master_list, lock, previously_parsed_deps,
   }
   current_list <- add_details(current_dependencies, lock)
   current_list <- lapply(current_list, as.dependency_package)
+  current_list <- reset_to_locked(current_list, lock)
   if (identical(master_list, current_list)) return(master_list)
   get_dependencies_for_list(current_list, lock, previously_parsed_deps, current_parent)
 }
@@ -323,15 +341,9 @@ add_details <- function(current_list, lock) {
           if (field %in% names(locked_package)) {
             el[[field]] <<- locked_package[[field]]
           }}))
-      } else{
-        # No remote specified defaults to CRAN. In which case, we want the latest
-        # version since this is not a locked package
-        if (!"remote" %in% names(el)) {
-           el$version <- NA
-        }
       }
-      if (!"remote" %in% names(el)) {
-       el$remote <- "CRAN"
+      if (!"remote" %in% names(el) || is.na(el$remote)) {
+        el$remote <- "CRAN"
       }
       el})
 }
@@ -407,13 +419,15 @@ swap_versions <- function(names1, names2, version1, version2) {
 #' file or download the accurate remote DESCRIPTION file.
 get_dependencies <- function(package) {
   is_local_dependency <- is.dependency_package(package) &&
-    !is.na(current_version(package$name)) &&
-    package_version(as.character(current_version(package$name))) <=
-    package_version(as.character(package$version))
+    !is.na(current_version(package)) &&
+    (is.na(package$version) ||
+      package_version(as.character(current_version(package))) <=
+      package_version(as.character(package$version)))
   is_local_locked <- is.locked_package(package) && !version_mismatch(package)
   if (is_local_locked || is_local_dependency) {
-    dependencies_from_description(package, description_file_for(package$name))
+    dependencies_from_description(package, description_file_for(package$name, .libPaths()[3L]))
   } else {
+    cat(crayon::cyan("."))
     get_remote_dependencies(package)
   }
 }
@@ -500,18 +514,16 @@ download_package <- function(package) {
 
 #' Download CRAN package, either current or older version
 download_package.CRAN <- function(package) {
+  remote_version <- get_available_cran_version(package)
   name <- package$name
   version <- package$version
   repo = "http://cran.r-project.org"
-
-  # List available packages on the repo
-  available <- available.packages(contriburl =
-    contrib.url(repos = "http://cran.us.r-project.org", type = "source"))
-  available <- data.frame(unique(available[, c("Package", "Version")]))
-  pkg <- available[available$Package == name, ]
+  if (!is.locked_package(package)) {
+    version <- NA
+  }
 
   ###Some packages are available in archive only
-  if (nrow(pkg) == 0) {
+  if (is.na(remote_version)) {
     archive_addition <- paste0("Archive/", name, "/")
     url <- paste0(repo, "/src/contrib/", archive_addition)
     filenames <- getURL(url, ftp.use.epsv = FALSE, dirlistonly = TRUE)
@@ -525,7 +537,7 @@ download_package.CRAN <- function(package) {
     }
   } else{
     # Simply download latest if version happens to be the latest available on CRAN.
-    remote_version <- as.character(pkg$Version)
+    remote_version <- as.character(remote_version)
     if (is.na(version) || package_version(remote_version) == package_version(version)) {
       version <- remote_version
       archive_addition <- ""
@@ -536,8 +548,32 @@ download_package.CRAN <- function(package) {
 
   from <- paste0(repo, "/src/contrib/", archive_addition, name, "_", version, ".tar.gz")
   pkg_tarball <- tempfile(fileext = ".tar.gz")
-  download.file(url = from, destfile = pkg_tarball, quiet = notTRUE(getOption('lockbox.verbose')))
+  out <- suppressWarnings(tryCatch(
+    download.file(url = from, destfile = pkg_tarball, quiet = notTRUE(getOption('lockbox.verbose')))
+    , error = function(e) e))
+  # Sometimes the current version isn't accessible in it's usual place, but is already archived
+  if (is(out, "error")) {
+    archive_addition <- paste0("Archive/", name, "/")
+    from <- paste0(repo, "/src/contrib/", archive_addition, name, "_", version, ".tar.gz")
+    download.file(url = from, destfile = pkg_tarball, quiet = notTRUE(getOption('lockbox.verbose')))
+  }
   pkg_tarball
+}
+
+get_available_cran_version <- function(package, repo = "http://cran.r-project.org") {
+  repo = "http://cran.r-project.org"
+
+  # List available packages on the repo
+  available <- available.packages(contriburl =
+    contrib.url(repos = "http://cran.us.r-project.org", type = "source"))
+  available <- data.frame(unique(available[, c("Package", "Version")]))
+  pkg <- available[available$Package == package$name, ]
+
+  if (nrow(pkg) == 0) {
+    NA
+  } else{
+    pkg$Version
+  }
 }
 
 #' Download a package from github using devtools' remote_download function

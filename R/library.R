@@ -199,20 +199,20 @@ install_locked_package <- function(locked_package, installing_expr) {
   unlink(temp_library, TRUE, TRUE)
 }
 
+#' Find packages whose version does not match the current library's version.
+#'
+#' @param package locked_package or dependency package
+#' @return TRUE or FALSE according as the current library's package version
+#'   is incorrect.
 version_mismatch <- function(package) {
   UseMethod("version_mismatch")
 }
 
-#' Find packages whose version does not match the current library's version.
-#'
-#' @param locked_package locked_package.
-#' @return TRUE or FALSE according as the current library's package version
-#'   is incorrect.
 version_mismatch.locked_package <- function(locked_package) {
   !identical(current_version(locked_package), locked_package$version)
 }
 
-#' For installations that include dependencies not in lockbox, take care to
+#' For installations of dependencies not in lockbox, take care to
 #' allow for unspecified versions
 version_mismatch.dependency_package <- function(package) {
   if (is.na(current_version(package))) {

@@ -205,11 +205,11 @@ install_locked_package <- function(locked_package, installing_expr) {
 #' @return TRUE or FALSE according as the current library's package version
 #'   is incorrect.
 version_mismatch <- function(package) {
-  UseMethod("version_mismatch")
+  UseMethod("version_mismatch", package)
 }
 
-version_mismatch.locked_package <- function(locked_package) {
-  !identical(current_version(locked_package), locked_package$version)
+version_mismatch.locked_package <- function(package) {
+  !identical(current_version(package), package$version)
 }
 
 #' For installations of dependencies not in lockbox, take care to

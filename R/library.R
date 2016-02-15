@@ -192,7 +192,7 @@ version_mismatch <- function(package) {
       }
     }
   } else{
-    !identical(current_version(locked_package), locked_package$version)
+    !identical(current_version(package), package$version)
   }
 }
 

@@ -214,7 +214,7 @@ get_remote_dependencies.CRAN <- function(package) {
 #' Download the accurate remote DESCRIPTION file for a github repo.
 get_remote_dependencies.github <- function(package) {
   remote <- package$remote
-  filepath <- lockbox:::download_package.github(structure(
+  filepath <- download_package(structure(
     package,
     class = c(remote, class(package))))
   file_list <- unzip(filepath, list = TRUE)

@@ -138,9 +138,33 @@ install_package.github <- function(locked_package) {
     if (!is.null(locked_package$subdir)) {
       arguments$subdir <- locked_package$subdir
     }
+    if (is.dependency_package(locked_package)) {
+      swap_libpaths()
+    }
 
-    do.call(devtools::install_github, arguments)
+    repeat_count <- 0
+    while (repeat_count < 5) {
+      if (repeat_count == 4) {
+        warning("Could not download package: ", locked_package$name, ", version: "
+                , locked_package$version, "from github.", call. = FALSE)
+        break
+      }
+      result <- tryCatch(do.call(devtools::install_github, arguments), error = function(e)e)
+      if (!is(result, "error")) break
+      repeat_count <- repeat_count + 1
+    }
+
+    if (is.dependency_package(locked_package)) {
+      swap_libpaths()
+    }
   })
+}
+
+swap_libpaths <- function() {
+  .libPaths(c(.libPaths()[3L]
+    , .libPaths()[2L]
+    , .libPaths()[1L]
+    , .libPaths()[seq_along(.libPaths()) > 3]))
 }
 
 install_locked_package <- function(locked_package, installing_expr) {

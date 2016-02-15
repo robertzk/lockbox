@@ -214,7 +214,7 @@ get_remote_dependencies.CRAN <- function(package) {
 #' Download the accurate remote DESCRIPTION file for a github repo.
 get_remote_dependencies.github <- function(package) {
   remote <- package$remote
-  filepath <- download_package(structure(
+  filepath <- lockbox:::download_package.github(structure(
     package,
     class = c(remote, class(package))))
   file_list <- unzip(filepath, list = TRUE)
@@ -234,26 +234,49 @@ get_remote_dependencies.github <- function(package) {
 
 #' Parse dependencies from description using the tools package
 dependencies_from_description <- function(package, dcf) {
-  dependency_levels <- c("Depends", "Imports")
+  dependency_levels <- c("Depends", "Imports", "Remotes")
   dependency_levels %in% colnames(dcf)
   if (!any(dependency_levels %in% colnames(dcf))) return(list())
-  if (all(dependency_levels %in% colnames(dcf))) {
-    dependencies_parsed <- rbind(
-      tools::package.dependencies(dcf, depLevel = c("Imports"))[[package$name]]
-      , tools::package.dependencies(dcf, depLevel = c("Depends"))[[package$name]])
-  } else{
-    dependencies_parsed <- tools::package.dependencies(dcf
-      , depLevel = dependency_levels[dependency_levels %in%
-        colnames(dcf)])[[package$name]]
+  dependencies_parsed <- as.data.frame(parse_dcf(dcf
+    , depLevel = dependency_levels[dependency_levels %in%
+      colnames(dcf)])[[package$name]])
+  non_remote_dependencies <- dependencies_parsed[rownames(dependencies_parsed) != "Remotes", ]
+  remote_dependencies <- dependencies_parsed[rownames(dependencies_parsed) == "Remotes", ]
+  non_remote_dependencies <- non_remote_dependencies[!grepl("^[rR]$"
+    , non_remote_dependencies[,1]), , drop = FALSE]
+  if (identical(nrow(non_remote_dependencies),0L)){
+    non_remote_list <- list()
+  } else {
+    non_remote_list <- lapply(seq_along(non_remote_dependencies[,1])
+      , function(i) {
+        list(name = as.character(non_remote_dependencies[i,1])
+          , version = as.character(non_remote_dependencies[i,3]))
+      })
   }
-  dependencies_parsed <- dependencies_parsed[!grepl("^[rR]$"
-    , dependencies_parsed[,1]), , drop = FALSE]
-  if (identical(nrow(dcf),0L)) return(list())
-  lapply(seq_along(dependencies_parsed[,1])
-    , function(i) {
-      list(name = as.character(dependencies_parsed[i,1])
-        , version = as.character(dependencies_parsed[i,3]))
-    })
+  if (identical(nrow(remote_dependencies),0L)){
+    remote_list <- list()
+  } else {
+    matches_github <- grepl("github::"
+      , remote_dependencies[,1])
+    matches_unsupported <- grepl("bitbucket::|svn::|url::|local::|gitorious"
+      , remote_dependencies[,1])
+    if (any(matches_unsupported)) {
+      remote_list <- list()
+    } else{
+      remote_list <- lapply(seq_along(remote_dependencies[,1])
+        , function(i) {
+          name <- remote_dependencies[i,1]
+          if (matches_github[i]){
+            name <- gsub("git::.*github\\.com/", "", name)
+            name <- gsub("\\.git", "", name)
+          }
+          list(name = as.character(remote_dependencies[i,1])
+            , version = as.character(remote_dependencies[i,3])
+            , remote = "github")
+        })
+    }
+  }
+  c(non_remote_list, remote_list)
 }
 
 download_package <- function(package) {
@@ -334,8 +357,12 @@ download_package.github <- function(package) {
 #' Create remote in form devtools' remote_download likes.
 get_remote <- function(package) {
   ref <- package$ref %||% package$version
-  arguments <- list(
-    paste(package$repo, ref, sep = "@"))
+  if (is.null(ref)) {
+    arguments <- list(package$repo)
+  } else {
+    arguments <- list(
+      paste(package$repo, ref, sep = "@"))
+  }
   if (nzchar(token <- Sys.getenv("GITHUB_PAT"))) {
     arguments$auth_token <- token
   }
@@ -344,3 +371,65 @@ get_remote <- function(package) {
   }
   remote <- do.call(devtools:::github_remote, arguments)
 }
+
+#' Borrowed from tools::package.dependencies and modified to be less breaky
+#' and parse remotes
+parse_dcf <- function (x, check = FALSE, depLevel = c("Depends", "Imports",
+  "Suggests", "Remotes")) {
+  depLevel <- match.arg(depLevel, several.ok = TRUE)
+  if (!is.matrix(x))
+      x <- matrix(x, nrow = 1L, dimnames = list(NULL, names(x)))
+  if (!any(colnames(x) %in% depLevel)) return(NULL)
+  deps <- list()
+  for (k in 1L:nrow(x)) {
+    z <- x[k, colnames(x) %in% depLevel]
+    if (all(!is.na(z)) & all(z != "")) {
+        z <- unlist(strsplit(z, ",", fixed = TRUE))
+        z <- sub("^[[:space:]]*(.*)", "\\1", z)
+        z <- sub("(.*)[[:space:]]*$", "\\1", z)
+        pat <- "^([^\\([:space:]]+)[[:space:]]*\\(([^\\)]+)\\).*"
+        deps[[k]] <- cbind(sub(pat, "\\1", z), sub(pat, "\\2",
+            z), NA)
+        noversion <- deps[[k]][, 1] == deps[[k]][, 2]
+        deps[[k]][noversion, 2] <- NA
+        pat <- "[[:space:]]*([[<>=]+)[[:space:]]+(.*)"
+        deps[[k]][!noversion, 2:3] <- c(sub(pat, "\\1", deps[[k]][!noversion,
+            2]), sub(pat, "\\2", deps[[k]][!noversion, 2]))
+    }
+    else deps[[k]] <- NA
+  }
+  if (check) {
+      z <- rep.int(TRUE, nrow(x))
+      for (k in 1L:nrow(x)) {
+          if (!is.na(deps[[k]]) && any(ok <- deps[[k]][, 1] ==
+              "R")) {
+              if (!is.na(deps[[k]][ok, 2]) && deps[[k]][ok,
+                2] %in% c("<=", ">=")) {
+                op <- deps[[k]][ok, 2]
+                x1 <- rep.int(0, 6)
+                y <- c(R.version$major, strsplit(R.version$minor,
+                  ".", fixed = TRUE)[[1L]])
+                x1[seq_along(y)] <- y
+                y <- strsplit(deps[[k]][ok, 3], ".", fixed = TRUE)[[1L]]
+                x1[3 + seq_along(y)] <- y
+                x1 <- format(x1, justify = "right")
+                x2 <- paste(x1[4:6], collapse = ".")
+                x1 <- paste(x1[1L:3], collapse = ".")
+                comptext <- paste0("'", x1, "' ", op, " '",
+                  x2, "'")
+                compres <- try(eval(parse(text = comptext)))
+                if (!inherits(compres, "try-error")) {
+                  z[k] <- compres
+                }
+              }
+          }
+      }
+      names(z) <- x[, "Package"]
+      return(z)
+  }
+  else {
+      names(deps) <- x[, "Package"]
+      return(deps)
+  }
+}
+

@@ -138,33 +138,9 @@ install_package.github <- function(locked_package) {
     if (!is.null(locked_package$subdir)) {
       arguments$subdir <- locked_package$subdir
     }
-    if (is.dependency_package(locked_package)) {
-      swap_libpaths()
-    }
 
-    repeat_count <- 0
-    while (repeat_count < 5) {
-      if (repeat_count == 4) {
-        warning("Could not download package: ", locked_package$name, ", version: "
-                , locked_package$version, "from github.", call. = FALSE)
-        break
-      }
-      result <- tryCatch(do.call(devtools::install_github, arguments), error = function(e)e)
-      if (!is(result, "error")) break
-      repeat_count <- repeat_count + 1
-    }
-
-    if (is.dependency_package(locked_package)) {
-      swap_libpaths()
-    }
+    do.call(devtools::install_github, arguments)
   })
-}
-
-swap_libpaths <- function() {
-  .libPaths(c(.libPaths()[3L]
-    , .libPaths()[2L]
-    , .libPaths()[1L]
-    , .libPaths()[seq_along(.libPaths()) > 3]))
 }
 
 install_locked_package <- function(locked_package, installing_expr) {
@@ -205,24 +181,18 @@ install_locked_package <- function(locked_package, installing_expr) {
 #' @return TRUE or FALSE according as the current library's package version
 #'   is incorrect.
 version_mismatch <- function(package) {
-  UseMethod("version_mismatch", package)
-}
-
-version_mismatch.locked_package <- function(package) {
-  !identical(current_version(package), package$version)
-}
-
-#' For installations of dependencies not in lockbox, take care to
-#' allow for unspecified versions
-version_mismatch.dependency_package <- function(package) {
-  if (is.na(current_version(package))) {
-    TRUE
-  } else{
-    if (is.na(package$version)) {
-      FALSE
-    } else {
-      current_version(package) < package$version
+  if (is.dependency_package(package)) {
+    if (is.na(current_version(package))) {
+      TRUE
+    } else{
+      if (is.na(package$version)) {
+        FALSE
+      } else {
+        current_version(package) < package$version
+      }
     }
+  } else{
+    !identical(current_version(locked_package), locked_package$version)
   }
 }
 

@@ -56,7 +56,7 @@ native_namespaces <-
 pesky_namespaces <-
   c("lockbox", "httr", "RCurl", "bitops", "crayon", "yaml", "testthat",
     "stringr", "digest", "lubridate", "memoise",
-    "plyr", "devtools", "Rcpp", "roxygen")
+    "plyr", "Rcpp", "roxygen")
 
 special_namespaces <- c(native_namespaces, pesky_namespaces)
 

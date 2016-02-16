@@ -47,7 +47,7 @@ native_namespaces <-
     "tools", "translations", "utils", "lattice", "Matrix")
 
 # These namespaces are particularly difficult to unload because of dependencies.
-pesky_namespaces <- c("lockbox")
+pesky_namespaces <- c("lockbox", "RCurl", "httr")
 
 special_namespaces <- c(native_namespaces, pesky_namespaces)
 

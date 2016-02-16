@@ -32,6 +32,11 @@ lockbox_package_path <- function(locked_package, library = lockbox_library()) {
   file.path(library, locked_package$name, locked_package$version, locked_package$name)
 }
 
+#' Allow 'v' prefix in versioning comparison so devtools can download github releases
+package_version_lb <- function(version) {
+  package_version(gsub("^v","", version))
+}
+
 `place_in_lockbox!` <- function(locked_package) {
   remote <- locked_package$remote %||% "CRAN"
 
@@ -87,7 +92,7 @@ install_old_CRAN_package <- function(name, version, repo = "http://cran.r-projec
   # You can specify the fastest CRAN mirror by setting the `lockbox.CRAN_mirror` option
   # or Rstudio mirror will be used by default.
   repos <- getOption('lockbox.CRAN_mirror') %||% c(CRAN = "http://cran.rstudio.com")
-  remote_version <- package_version(as.character(pkg$Version))
+  remote_version <- package_version_lb(as.character(pkg$Version))
   if (dim(pkg)[1] == 1 && remote_version == version) {
     return(utils::install.packages(
       name, repos = repos, INSTALL_opts = "--vanilla",

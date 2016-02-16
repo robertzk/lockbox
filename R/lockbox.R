@@ -102,11 +102,11 @@ as.locked_package <- function(list) {
     list$remote <- "github"
   }
 
-  if (is.na(package_version(list$version))) {
+  if (is.na(package_version_lb(list$version))) {
     stop(sprintf("Invalid package %s version %s.",
                  sQuote(list$name), sQuote(list$version)))
   } else {
-    list$version <- package_version(list$version)
+    list$version <- package_version_lb(list$version)
   }
 
   # TODO: (RK) Support CRAN version dependencies.

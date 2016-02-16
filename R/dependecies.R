@@ -75,12 +75,12 @@ add_details <- function(current_list, lock) {
     , function(el) {
       if (el$name %in% lock_names) {
         locked_package <- lock[[which(lock_names == el$name)[1]]]
-        if (is.na(el$version) || package_version_lb(as.character(el$version)) <
-          package_version_lb(as.character(locked_package$version))) {
+        if (is.na(el$version) || package_version(as.character(el$version)) <
+          package_version(as.character(locked_package$version))) {
             el$version <- as.character(locked_package$version)
         }
-        if (package_version_lb(as.character(el$version)) >
-          package_version_lb(as.character(locked_package$version))) {
+        if (package_version(as.character(el$version)) >
+          package_version(as.character(locked_package$version))) {
             stop(paste0("Dependency: \'", el$name, ", Version: ", el$version
               , " is required, but lockbox is locked at version: "
               , as.character(locked_package$version)))
@@ -151,7 +151,7 @@ swap_versions <- function(names1, names2, version1, version2) {
       if (n %in% names2) {
         if (is.na(version2[[n]])) return(TRUE)
         if (is.na(version1[[n]])) return(FALSE)
-        package_version_lb(version1[[n]]) >= package_version_lb(version2[[n]])
+        package_version(version1[[n]]) >= package_version(version2[[n]])
       } else{
         FALSE
       }}
@@ -170,8 +170,8 @@ get_dependencies <- function(package) {
   is_local_dependency <- is.dependency_package(package) &&
     !is.na(current_version(package)) &&
     (is.na(package$version) ||
-      package_version_lb(as.character(current_version(package))) <=
-      package_version_lb(as.character(package$version)))
+      package_version(as.character(current_version(package))) <=
+      package_version(as.character(package$version)))
   if (is_local_dependency) {
     dependencies_from_description(package, description_file_for(package$name, .libPaths()[3L]))
   } else {
@@ -303,13 +303,13 @@ download_package.CRAN <- function(package) {
     expr <- gregexpr(paste0(name, "_([0-9\\.\\-]+)\\.tar\\.gz"), filenames)
     filenames <- vapply(regmatches(filenames, expr), function(match) match[1], character(1))
     archived_version <- gsub("(.*_)([0-9\\.\\-]+)(\\.tar\\.gz)", "\\2", filenames[length(filenames)])
-    if (is.na(version) || package_version_lb(archived_version) > package_version_lb(as.character(version))) {
+    if (is.na(version) || package_version(archived_version) > package_version(as.character(version))) {
       version <- archived_version
     }
   } else{
     # Simply download latest if version happens to be the latest available on CRAN.
     remote_version <- as.character(remote_version)
-    if (is.na(version) || package_version_lb(remote_version) == package_version_lb(version)) {
+    if (is.na(version) || package_version(remote_version) == package_version(version)) {
       version <- remote_version
       archive_addition <- ""
     } else{

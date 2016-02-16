@@ -46,12 +46,6 @@ native_namespaces <-
     "methods", "parallel", "profile", "splines", "stats4", "tcltk",
     "tools", "translations", "utils", "lattice", "Matrix")
 
-# # These namespaces are particularly difficult to unload because of dependencies.
-# pesky_namespaces <-
-#   c("lockbox", "httr", "RCurl", "bitops", "crayon", "yaml", "testthat",
-#     "testthatsomemore", "stringr", "digest", "lubridate", "memoise",
-#     "plyr", "magrittr", "devtools", "Rcpp", "roxygen")
-
 # These namespaces are particularly difficult to unload because of dependencies.
 pesky_namespaces <- c("lockbox")
 

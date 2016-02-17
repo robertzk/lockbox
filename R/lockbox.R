@@ -54,6 +54,9 @@ lockbox.list <- function(lock, env) {
   already_in_lockbox <- vapply(lock, exists_in_lockbox, logical(1))
 
   if (any(mismatches & !already_in_lockbox)) {
+    ## Currently the Remotes field of description files requires this 
+    ## when using devtools::install_github :/
+    library(devtools)
     all_packages <- get_ordered_dependencies(lock, mismatches & !already_in_lockbox)
     all_packages <- all_packages[vapply(all_packages
       , version_mismatch

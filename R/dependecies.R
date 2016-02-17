@@ -108,12 +108,21 @@ combine_dependencies <- function(list1, list2, current_parent) {
   version1 <- vapply(list1, function(obj) as.character(obj$version), character(1))
   version2 <- vapply(list2, function(obj) as.character(obj$version), character(1))
 
+  remote1 <- vapply(list1
+    , function(obj) if(is.null(obj$remote)) as.character(NA) else as.character(obj$remote)
+    , character(1))
+  remote2 <- vapply(list2
+    , function(obj) if(is.null(obj$remote)) as.character(NA) else as.character(obj$remote)
+    , character(1))
+
   # Certain packages are no longer on cran but incorporated into R Core
   core_pkgs <- as.character(installed.packages(priority = "base")[,1])
   version1 <- version1[!names1 %in% core_pkgs]
+  remote1 <- remote1[!names1 %in% core_pkgs]
   list1 <- list1[!names1 %in% core_pkgs]
   names1 <- names1[!names1 %in% core_pkgs]
   version2 <- version2[!names2 %in% core_pkgs]
+  remote2 <- remote2[!names2 %in% core_pkgs]
   list2 <- list2[!names2 %in% core_pkgs]
   names2 <- names2[!names2 %in% core_pkgs]
 
@@ -132,19 +141,24 @@ combine_dependencies <- function(list1, list2, current_parent) {
       sel1 <- seq_along(names2) != init_parent_slot & seq_along(names2) <= final_parent_slot
       sel2 <- seq_along(names2) > final_parent_slot
       version2 <- c(version2[sel1], version2[init_parent_slot], version2[sel2])
+      remote2 <- c(remote2[sel1], remote2[init_parent_slot], remote2[sel2])
       names2 <- c(names2[sel1], names2[init_parent_slot], names2[sel2])
     }
   }
 
-  version2 <- swap_versions(names1, names2, version1, version2)
+  swap <- swap_versions(names1, names2, version1, version2, remote2)
+  version2 <- swap[["version"]]
+  remote2 <- swap[["remote"]]
 
   names_final <- c(names1[keep1], names2)
   version_final <- c(version1[keep1], version2)
-  Map(function(n,v) list(name = n, version = v), names_final, version_final)
+  remote_final <- c(remote1[keep1], remote2)
+  Map(function(n, v, r) list(name = n, version = v, remote = r)
+    , names_final, version_final, remote_final)
 }
 
 #' Swap versions information when side1 is greater than side2
-swap_versions <- function(names1, names2, version1, version2) {
+swap_versions <- function(names1, names2, version1, version2, remote2) {
   swap_version2for1 <- vapply(
     names1
     , function(n) {
@@ -161,7 +175,8 @@ swap_versions <- function(names1, names2, version1, version2) {
     , function(n) which(names2 == n)
     , integer(1))
   version2[swap_versions2] <- version1[swap_versions1]
-  version2
+  remote2[swap_versions2] <- remote1[swap_versions1]
+  list(version = version2, remote = remote2)
 }
 
 #' Either use the current library DESCRIPTION
@@ -297,7 +312,7 @@ download_package.CRAN <- function(package) {
   if (is.na(remote_version)) {
     archive_addition <- paste0("Archive/", name, "/")
     url <- paste0(repo, "/src/contrib/", archive_addition)
-    filenames <- getURL(url, ftp.use.epsv = FALSE, dirlistonly = TRUE)
+    filenames <- RCurl::getURL(url, ftp.use.epsv = FALSE, dirlistonly = TRUE)
     filenames <- paste(url, strsplit(filenames, "\r*\n")[[1]], sep = "")
     filenames <- filenames[grepl(paste0(name, "_[0-9\\.\\-]+\\.tar\\.gz"),filenames)]
     expr <- gregexpr(paste0(name, "_([0-9\\.\\-]+)\\.tar\\.gz"), filenames)

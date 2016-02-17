@@ -149,7 +149,7 @@ install_package.github <- function(locked_package) {
                 , locked_package$version, "from github.", call. = FALSE)
         break
       }
-      result <- tryCatch(do.call(namespace_loading_install_github, arguments), error = function(e)e)
+      result <- tryCatch(do.call(devtools::install_github, arguments), error = function(e)e)
       if (!is(result, "error")) break
       repeat_count <- repeat_count + 1
     }
@@ -158,14 +158,6 @@ install_package.github <- function(locked_package) {
       swap_libpaths()
     }
   })
-}
-
-#' Function to load devtools package, then unload for installing from github.
-#' Necessary for remotes to be correctly parsed by devtools :/
-namespace_loading_install_github <- function(...){
-  library("devtools")
-  devtools::install_github(...)
-  unloadNamespace("devtools")
 }
 
 swap_libpaths <- function() {

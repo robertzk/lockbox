@@ -146,7 +146,7 @@ combine_dependencies <- function(list1, list2, current_parent) {
     }
   }
 
-  swap <- swap_versions(names1, names2, version1, version2, remote2)
+  swap <- swap_versions(names1, names2, version1, version2, remote1, remote2)
   version2 <- swap[["version"]]
   remote2 <- swap[["remote"]]
 
@@ -158,7 +158,7 @@ combine_dependencies <- function(list1, list2, current_parent) {
 }
 
 #' Swap versions information when side1 is greater than side2
-swap_versions <- function(names1, names2, version1, version2, remote2) {
+swap_versions <- function(names1, names2, version1, version2, remote1, remote2) {
   swap_version2for1 <- vapply(
     names1
     , function(n) {

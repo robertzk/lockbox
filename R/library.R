@@ -223,6 +223,7 @@ version_mismatch <- function(package) {
 #' The current version of this package in the current library.
 #'
 #' @param pkg character or locked_package. The name of the package.
+#' @param libP character.  The libPath used for version-checking
 #' @return a \code{\link{package_version}} object representing the version of
 #'   this package in the current library.
 current_version <- function(pkg, libP = libPath()) {

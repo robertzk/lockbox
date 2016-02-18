@@ -192,8 +192,9 @@ get_dependencies <- function(package) {
   } else {
     cat(crayon::blue("."))
     message(paste0("Package: ", package$name))
-    browser()
-    get_remote_dependencies(package)
+    output = tryCatch(get_remote_dependencies(package), error = function(e) e)
+    if(is(output, "error")) browser()
+    output
   }
 }
 

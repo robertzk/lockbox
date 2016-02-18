@@ -191,6 +191,7 @@ get_dependencies <- function(package) {
     dependencies_from_description(package, description_file_for(package$name, .libPaths()[3L]))
   } else {
     cat(crayon::blue("."))
+    message(paste0("Package: ", package$name))
     get_remote_dependencies(package)
   }
 }

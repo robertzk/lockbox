@@ -159,6 +159,7 @@ install_locked_package <- function(locked_package, installing_expr) {
   })
 
   if (!file.exists(pkgdir)) {
+    browser()
     unlink(temp_library, TRUE, TRUE)
     stop("Must have installed the package ",
          crayon::red(as.character(locked_package$name)),

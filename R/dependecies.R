@@ -303,7 +303,7 @@ dependencies_from_description <- function(package, dcf) {
           subname <- gsub("@.*", "", subname)
           subrepo <- gsub("@.*", "", as.character(remote_dependencies[i,1]))
           pkg <- list(name = subname
-            , repo = repo
+            , repo = subrepo
             , version = as.character(remote_dependencies[i,3])
             , remote = "github")
           if (grepl("@", name)) {

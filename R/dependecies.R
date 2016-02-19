@@ -248,9 +248,8 @@ version_from_remote <- function(package) {
 }
 
 version_from_description <- function(package_name, dcf) {
-  browser()
   if (!"Version" %in% colnames(dcf)) return(NA)
-  dcf[["Version"]]
+  as.character(dcf[1, which(colnames(dcf) == "Version")])
 }
 
 #' Parse dependencies from description using the tools package

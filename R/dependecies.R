@@ -304,7 +304,7 @@ dependencies_from_description <- function(package, dcf) {
             , version = as.character(remote_dependencies[i,3])
             , remote = "github")
           if (grepl("@", name)) {
-            pkg$ref <- gsub(".*@^", "", name)
+            pkg$ref <- gsub(".*@", "", name)
           }
           pkg
         })

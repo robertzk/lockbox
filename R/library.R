@@ -48,7 +48,7 @@ install_package <- function(locked_package) {
         as.character(locked_package$version), "from", class(locked_package)[1], "\n")
   } else {
     cat("Installing dependency", crayon::blue(locked_package$name),
-      "from", remote, "\n")
+      "from", locked_package$remote, "\n")
   }
   UseMethod("install_package")
 }

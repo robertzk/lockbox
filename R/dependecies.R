@@ -311,7 +311,6 @@ dependencies_from_description <- function(package, dcf) {
     }
   }
   if (length(remote_list) != 0) {
-    browser()
     non_remote_names <- vapply(non_remote_list, function(pkg) pkg$name, character(1))
     remote_names <- vapply(remote_list, function(pkg) pkg$name, character(1))
     if (any(non_remote_names %in% remote_names)) {

@@ -160,7 +160,6 @@ install_locked_package <- function(locked_package, installing_expr) {
     force(quietly(installing_expr))
   })
 
-  browser()
   if (!file.exists(pkgdir)) {
     unlink(temp_library, TRUE, TRUE)
     stop("Must have installed the package ",

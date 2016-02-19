@@ -395,7 +395,7 @@ get_available_cran_version <- function(package, repo = "http://cran.r-project.or
 #' Download a package from github using devtools' remote_download function
 download_package.github <- function(package) {
   if (is.na(package$version)) {
-    remote$version <- NULL
+    package$version <- NULL
   }
   remote <- get_remote(package)
   quiet <- !isTRUE(getOption('lockbox.verbose'))

@@ -62,7 +62,7 @@ lockbox.list <- function(lock, env) {
     all_packages <- all_packages[vapply(all_packages
       , version_mismatch
       , logical(1))]
-    all_packages <- c(lock[!(mismatches & !already_in_lockbox)], reset_to_locked(all_packages, lock))
+    all_packages <- c(lock[!(mismatches & !already_in_lockbox)], all_packages)
   } else{
     all_packages <- lock[mismatches]
   }
@@ -74,19 +74,6 @@ lockbox.list <- function(lock, env) {
     ## And re-build our search path.
     rebuild(all_packages)
   })
-}
-
-reset_to_locked <- function(packages, lock) {
-  lock_names <- vapply(lock, function(l) l$name, character(1))
-  lapply(
-    packages
-    , function(pack){
-      if (pack$name %in% lock_names) {
-        as.locked_package(pack)
-      } else {
-        pack
-      }
-    })
 }
 
 #' @export
@@ -102,12 +89,15 @@ as.locked_package <- function(list) {
   stopifnot(is.element("name", names(list)),
             is.element("version", names(list)))
 
+  if (is.null(list$is_dependency_package)) {
+    list$is_dependency_package <- FALSE
+  }
+
   if (is.element("repo", names(list)) && !is.element("remote", names(list))) {
     list$remote <- "github"
   }
 
-  if (is.na(list$version) &&
-    (is.null(list$is_dependency_package) || !list$is_dependency_package)) {
+  if (is.na(list$version) && !list$is_dependency_package) {
       stop(sprintf("NA version specification for locked package %s",
                  sQuote(list$name)))
   } else if(!is.na(list$version)) {

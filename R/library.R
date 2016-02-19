@@ -42,10 +42,9 @@ lockbox_package_path <- function(locked_package, library = lockbox_library()) {
 }
 
 install_package <- function(locked_package) {
-  if (is.null(locked_package$is_dependency_package) 
-    || !locked_package$is_dependency_package) {
-      cat("Installing", crayon::green(locked_package$name),
-        as.character(locked_package$version), "from", class(locked_package)[1], "\n")
+  if (!locked_package$is_dependency_package) {
+    cat("Installing", crayon::green(locked_package$name),
+      as.character(locked_package$version), "from", class(locked_package)[1], "\n")
   } else {
     cat("Installing dependency", crayon::blue(locked_package$name),
       "from", locked_package$remote, "\n")
@@ -184,7 +183,7 @@ install_locked_package <- function(locked_package, installing_expr) {
 #' @return TRUE or FALSE according as the current library's package version
 #'   is incorrect.
 version_mismatch <- function(package) {
-  if (!is.null(package$is_dependency_package) && package$is_dependency_package) {
+  if (package$is_dependency_package) {
     if (is.na(current_version(package))) {
       TRUE
     } else{

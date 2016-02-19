@@ -72,7 +72,7 @@ lockbox.list <- function(lock, env) {
     align(all_packages)
 
     ## And re-build our search path.
-    rebuild(lock)
+    rebuild(all_packages)
   })
 }
 

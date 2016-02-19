@@ -46,11 +46,9 @@ install_dependency_package <- function(dependency_package) {
   cat("Installing dependency", crayon::blue(dependency_package$name),
     "from", remote, "\n")
   if (identical(remote, "CRAN")) {
-      swap_libpaths()
       utils::install.packages(dependency_package$name
         , INSTALL_opts = "--vanilla", type = "source"
         , quiet = notTRUE(getOption("lockbox.verbose")))
-      swap_libpaths()
   } else {
     install_package(structure(
       dependency_package

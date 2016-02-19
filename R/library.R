@@ -62,9 +62,11 @@ install_package.local <- function(locked_package) {
 # Helpfully borrowed from https://github.com/christophergandrud/repmis/blob/master/R/InstallOldPackages.R
 # Did not simply import the function because it introduces too many dependencies
 #' @author Kirill Sevastyanenko
-install_old_CRAN_package <- function(name, version, repo = "http://cran.r-project.org") {
+install_old_CRAN_package <- function(package, repo = "http://cran.r-project.org") {
+  name <- package$name
+  version <- package$version
   repos <- getOption('lockbox.CRAN_mirror') %||% c(CRAN = "http://cran.rstudio.com")
-  if (is.na(version)) {
+  if (is.na(version) || package$is_dependency_package) {
     return(utils::install.packages(
       name, repos = repos, INSTALL_opts = "--vanilla", type = "source",
       quiet = notTRUE(getOption('lockbox.verbose'))))
@@ -108,7 +110,7 @@ install_package.CRAN <- function(locked_package) {
   # TODO: (RK) Fetch correct version? Support install from source?
   locked_package$repo <- locked_package$repo %||% "http://cran.r-project.org"
   install_locked_package(locked_package,
-    install_old_CRAN_package(locked_package$name, locked_package$version))
+    install_old_CRAN_package(locked_package))
 }
 
 #' @importFrom devtools install_github

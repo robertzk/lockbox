@@ -308,9 +308,13 @@ dependencies_from_description <- function(package, dcf) {
             name <- gsub("git::.*github\\.com/", "", name)
             name <- gsub("\\.git", "", name)
           }
-          list(name = as.character(remote_dependencies[i,1])
+          pkg <- list(name = as.character(remote_dependencies[i,1])
             , version = as.character(remote_dependencies[i,3])
             , remote = "github")
+          if (is.na(pkg$version)) {
+            pkg$version <- version_from_remote(list())
+          }
+          pkg
         })
     }
   }

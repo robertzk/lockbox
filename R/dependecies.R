@@ -186,6 +186,7 @@ get_dependencies <- function(package) {
     if(is(output, "error")) {
       message(crayon::red(paste0("Dependencies could not be resolved for package: "
         , package$name, " version: ", package$version)))
+      browser()
       list()
     } else {
       output

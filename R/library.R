@@ -165,13 +165,16 @@ install_locked_package <- function(locked_package, installing_expr) {
          " of version ", sQuote(as.character(locked_package$version)))
   }
 
-  if ((ver <- package_version_from_path(pkgdir)) != locked_package$version) {
-    unlink(temp_library, TRUE, TRUE)
-    stop(sprintf(paste0(
-      "Incorrect version of package %s installed. Expected ",
-      "%s but downloaded %s instead."), sQuote(locked_package$name),
-      sQuote(locked_package$version), sQuote(ver)), call. = FALSE)
+  if (!is.na(locked_package$version)) {
+    if ((ver <- package_version_from_path(pkgdir)) != locked_package$version) {
+      unlink(temp_library, TRUE, TRUE)
+      stop(sprintf(paste0(
+        "Incorrect version of package %s installed. Expected ",
+        "%s but downloaded %s instead."), sQuote(locked_package$name),
+        sQuote(locked_package$version), sQuote(ver)), call. = FALSE)
+    }
   }
+
 
   copy_real_packages_to_lockbox_library(temp_library)
   unlink(temp_library, TRUE, TRUE)

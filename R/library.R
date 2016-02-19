@@ -68,7 +68,7 @@ install_old_CRAN_package <- function(package, repo = "http://cran.r-project.org"
   repos <- getOption('lockbox.CRAN_mirror') %||% c(CRAN = "http://cran.rstudio.com")
   if (is.na(version) || package$is_dependency_package) {
     return(utils::install.packages(
-      name, repos = repos, INSTALL_opts = "--vanilla", type = "source",
+      name, repos = repos, INSTALL_opts = "--vanilla",
       quiet = notTRUE(getOption('lockbox.verbose'))))
   }
   # List available packages on the repo. Maybe we can simply install.packages?

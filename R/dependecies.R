@@ -120,8 +120,8 @@ combine_dependencies <- function(list1, list2, current_parent) {
   if (length(list1) == 0) return(list2)
   if (length(list2) == 0) return(list1)
 
-  names(version1) <- names1
-  names(version2) <- names2
+  names(list1) <- names1
+  names(list2) <- names2
   keep1 <- !names1 %in% names2
 
   if (current_parent %in% names2 && any(names2 %in% names1)) {
@@ -137,7 +137,7 @@ combine_dependencies <- function(list1, list2, current_parent) {
     }
   }
 
-  list2 <- swap_versions(names1, names2, version1, version2, list1, list2)
+  list2 <- swap_versions(names1, names2, list1, list2)
   c(list1[keep1], list2)
 }
 
@@ -147,9 +147,17 @@ swap_versions <- function(names1, names2, version1, version2, list1, list2) {
     names1
     , function(n) {
       if (n %in% names2) {
-        if (is.na(version2[[n]])) return(TRUE)
-        if (is.na(version1[[n]])) return(FALSE)
-        package_version(version1[[n]]) >= package_version(version2[[n]])
+        obj1 <- list1[[n]]
+        obj2 <- list2[[n]]
+        if (is.na(obj2$version)) {
+          if (!is.null(obj2$repo)) return(FALSE)
+          return(TRUE)
+        }
+        if (is.na(obj1$version)) {
+          if (!is.null(obj1$repo)) return(TRUE)
+          return(FALSE)
+        }
+        package_version(obj1$version) >= package_version(obj2$version)
       } else{
         FALSE
       }}
@@ -290,15 +298,27 @@ dependencies_from_description <- function(package, dcf) {
             name <- gsub("git::.*github\\.com/", "", name)
             name <- gsub("\\.git", "", name)
           }
-          pkg <- list(name = gsub("^.*/", "", as.character(remote_dependencies[i,1]))
-            , repo = as.character(remote_dependencies[i,1])
+          subname <- gsub("^.*/", "", as.character(remote_dependencies[i,1]))
+          subname <- gsub("@.*", "", subname)
+          subrepo <- gsub("@.*", "", as.character(remote_dependencies[i,1]))
+          pkg <- list(name = subname
+            , repo = repo
             , version = as.character(remote_dependencies[i,3])
             , remote = "github")
+          if (grepl("@", name)) {
+            pkg$ref <- gsub(".*@^", "", name)
+          }
           pkg
         })
     }
   }
-  if(any(grepl("argufy", vapply(c(non_remote_list,remote_list), function(pkg) pkg$name,character(1))))) browser()
+  if (length(remote_list) != 0) {
+    non_remote_names <- vapply(non_remote_list, function(pkg) pkg$name, character(1))
+    remote_names <- vapply(remote_list, function(pkg) pkg$name, character(1))
+    if (any(non_remote_names %in% remote_names)) {
+      non_remote_list <- non_remote_list[!non_remote_names %in% remote_names]
+    }
+  }
   c(non_remote_list, remote_list)
 }
 

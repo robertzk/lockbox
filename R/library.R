@@ -138,9 +138,6 @@ install_package.github <- function(locked_package) {
     if (!is.null(locked_package$subdir)) {
       arguments$subdir <- locked_package$subdir
     }
-    if (is.dependency_package(locked_package)) {
-      swap_libpaths()
-    }
 
     repeat_count <- 0
     while (repeat_count < 5) {
@@ -154,17 +151,7 @@ install_package.github <- function(locked_package) {
       repeat_count <- repeat_count + 1
     }
 
-    if (is.dependency_package(locked_package)) {
-      swap_libpaths()
-    }
   })
-}
-
-swap_libpaths <- function() {
-  .libPaths(c(.libPaths()[3L]
-    , .libPaths()[2L]
-    , .libPaths()[1L]
-    , .libPaths()[seq_along(.libPaths()) > 3]))
 }
 
 install_locked_package <- function(locked_package, installing_expr) {
@@ -226,12 +213,12 @@ version_mismatch <- function(package) {
 #' @param libP character.  The libPath used for version-checking
 #' @return a \code{\link{package_version}} object representing the version of
 #'   this package in the current library.
-current_version <- function(pkg, libP = libPath()) {
+current_version <- function(pkg) {
   UseMethod("current_version")
 }
 
-current_version.character <- function(package_name, libP = libPath()) {
-  dcf <- description_file_for(package_name, libP)
+current_version.character <- function(package_name) {
+  dcf <- description_file_for(package_name, libPath())
   if (is.null(dcf)) {
     NA
   } else {
@@ -239,12 +226,12 @@ current_version.character <- function(package_name, libP = libPath()) {
   }
 }
 
-current_version.locked_package <- function(package, libP = libPath()) {
+current_version.locked_package <- function(package) {
   current_version(package$name)
 }
 
-current_version.dependency_package <- function(package, libP = .libPaths()[3L]) {
-  current_version(package$name, libP)
+current_version.dependency_package <- function(package) {
+  current_version(package$name)
 }
 
 description_file_for <- function(package_name, libP) {

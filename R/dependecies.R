@@ -142,7 +142,7 @@ combine_dependencies <- function(list1, list2, current_parent) {
 }
 
 #' Swap versions information when side1 is greater than side2
-swap_versions <- function(names1, names2, version1, version2, list1, list2) {
+swap_versions <- function(names1, names2, list1, list2) {
   swap_version2for1 <- vapply(
     names1
     , function(n) {

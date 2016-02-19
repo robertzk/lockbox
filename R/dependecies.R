@@ -193,8 +193,13 @@ get_dependencies <- function(package) {
     cat(crayon::blue("."))
     message(paste0("Package: ", package$name))
     output = tryCatch(get_remote_dependencies(package), error = function(e) e)
-    if(is(output, "error")) browser()
-    output
+    if(is(output, "error")) {
+      message(crayon::red(paste0("Dependencies could not be resolved for package: "
+        , package$name, " version: ", package$version)))
+      list()
+    } else {
+      output
+    }
   }
 }
 

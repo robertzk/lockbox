@@ -312,7 +312,10 @@ dependencies_from_description <- function(package, dcf) {
             , version = as.character(remote_dependencies[i,3])
             , remote = "github")
           if (is.na(pkg$version)) {
-            pkg$version <- version_from_remote(list())
+            pkg$version <- version_from_remote(
+             structure(
+               pkg
+               , class = c(pkg$remote %||% "CRAN" , "dependency_package")))
           }
           pkg
         })

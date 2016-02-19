@@ -106,7 +106,7 @@ as.locked_package <- function(list) {
     list$remote <- "github"
   }
 
-  if (is.na(package_version(list$version)) &&
+  if (is.na(list$version) &&
     (is.null(list$is_dependency_package) || !list$is_dependency_package)) {
       stop(sprintf("Invalid package %s version %s.",
                  sQuote(list$name), sQuote(list$version)))

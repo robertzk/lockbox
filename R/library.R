@@ -167,7 +167,7 @@ install_locked_package <- function(locked_package, installing_expr) {
          " of version ", sQuote(as.character(locked_package$version)))
   }
 
-  if (!is.na(locked_package$version)) {
+  if (!is.na(locked_package$version) && !locked_package$is_dependency_package) {
     if ((ver <- package_version_from_path(pkgdir)) != locked_package$version) {
       unlink(temp_library, TRUE, TRUE)
       stop(sprintf(paste0(

@@ -216,8 +216,6 @@ get_remote_dependencies.CRAN <- function(package) {
   description_name <- file_list[grepl(paste0("^[^/]+"
     ,"/DESCRIPTION$"), file_list)]
   output <- tryCatch(untar(filepath, description_name, exdir = dirpath), error = function(e) e, warning = function(w) w)
-
-  if(is(output, "warning")) browser()
   description_path <- paste0(dirpath, "/", description_name)
   dcf <- read.dcf(file = description_path)
   unlink(filepath)
@@ -313,7 +311,6 @@ dependencies_from_description <- function(package, dcf) {
     }
   }
   if (length(remote_list) != 0) {
-    browser()
     non_remote_names <- vapply(non_remote_list, function(pkg) pkg$name, character(1))
     remote_names <- vapply(remote_list, function(pkg) pkg$name, character(1))
     if (any(non_remote_names %in% remote_names)) {

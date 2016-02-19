@@ -218,6 +218,7 @@ get_remote_dependencies.CRAN <- function(package) {
 
 #' Download the accurate remote DESCRIPTION file for a github repo.
 get_remote_dependencies.github <- function(package) {
+  if (package$name == "gmailr") browser()
   dcf <- download_description_github(package)
   dependencies_from_description(package, dcf)
 }

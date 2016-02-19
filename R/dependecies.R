@@ -255,6 +255,30 @@ get_remote_dependencies.github <- function(package) {
   dependencies_from_description(package, dcf)
 }
 
+version_from_remote <- function(package) {
+  remote <- package$remote
+  filepath <- download_package(structure(
+    package,
+    class = c(remote, class(package))))
+  file_list <- unzip(filepath, list = TRUE)
+  subdir <- ""
+  if (!is.null(package$subdir)){
+    subdir <- paste0("/",package$subdir)
+  }
+  description_name <- file_list$Name[grepl(paste0("^[^/]+"
+    , subdir
+    ,"/DESCRIPTION$"), file_list$Name)]
+  file_con <- unz(filepath, description_name)
+  dcf <- read.dcf(file = file_con)
+  close(file_con)
+  unlink(filepath)
+  version_from_description(package, dcf)
+}
+version_from_description <- function(package_name, dcf) {
+  if (!"Version" %in% colnames(dcf)) return(NA)
+  browser()
+  dcf[["Version"]]
+}
 #' Parse dependencies from description using the tools package
 dependencies_from_description <- function(package, dcf) {
   dependency_levels <- c("Depends", "Imports", "Remotes")

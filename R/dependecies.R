@@ -191,7 +191,6 @@ get_dependencies <- function(package) {
     dependencies_from_description(package, description_file_for(package$name, .libPaths()[3L]))
   } else {
     cat(crayon::blue("."))
-    message(paste0("Package: ", package$name))
     output = tryCatch(get_remote_dependencies(package), error = function(e) e)
     if(is(output, "error")) {
       message(crayon::red(paste0("Dependencies could not be resolved for package: "
@@ -236,26 +235,11 @@ get_remote_dependencies.CRAN <- function(package) {
 
 #' Download the accurate remote DESCRIPTION file for a github repo.
 get_remote_dependencies.github <- function(package) {
-  remote <- package$remote
-  filepath <- download_package(structure(
-    package,
-    class = c(remote, class(package))))
-  file_list <- unzip(filepath, list = TRUE)
-  subdir <- ""
-  if (!is.null(package$subdir)){
-    subdir <- paste0("/",package$subdir)
-  }
-  description_name <- file_list$Name[grepl(paste0("^[^/]+"
-    , subdir
-    ,"/DESCRIPTION$"), file_list$Name)]
-  file_con <- unz(filepath, description_name)
-  dcf <- read.dcf(file = file_con)
-  close(file_con)
-  unlink(filepath)
+  dcf <- download_description_github(package)
   dependencies_from_description(package, dcf)
 }
 
-version_from_remote <- function(package) {
+download_description_github <- function(package) {
   remote <- package$remote
   filepath <- download_package(structure(
     package,
@@ -272,13 +256,20 @@ version_from_remote <- function(package) {
   dcf <- read.dcf(file = file_con)
   close(file_con)
   unlink(filepath)
+  dcf
+}
+
+version_from_remote <- function(package) {
+  dcf <- download_description_github(package)
   version_from_description(package, dcf)
 }
+
 version_from_description <- function(package_name, dcf) {
   browser()
   if (!"Version" %in% colnames(dcf)) return(NA)
   dcf[["Version"]]
 }
+
 #' Parse dependencies from description using the tools package
 dependencies_from_description <- function(package, dcf) {
   dependency_levels <- c("Depends", "Imports", "Remotes")

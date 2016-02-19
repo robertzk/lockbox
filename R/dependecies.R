@@ -206,10 +206,10 @@ get_remote_dependencies.local <- function(package) {
 #' For packages on CRAN we will extract to a temporary directory when we
 #' download the accurate remote DESCRIPTION file.
 get_remote_dependencies.CRAN <- function(package) {
-  remote <- package$remote
-  filepath <- download_package(structure(
-    package,
-    class = c(remote, class(package))))
+  if (package$is_dependency_package) {
+    package$version <- NA
+  }
+  filepath <- download_package(package)
   split_fp <- strsplit(filepath, "/")[[1]]
   dirpath <- paste(split_fp[-length(split_fp)], collapse = "/")
   file_list <- untar(filepath, list = TRUE)

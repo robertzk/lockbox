@@ -286,7 +286,6 @@ dependencies_from_description <- function(package, dcf) {
       remote_list <- lapply(seq_along(remote_dependencies[,1])
         , function(i) {
           name <- remote_dependencies[i,1]
-          if (name == "argufy@173245a7e") browser()
           if (matches_github[i]){
             name <- gsub("git::.*github\\.com/", "", name)
             name <- gsub("\\.git", "", name)
@@ -299,6 +298,7 @@ dependencies_from_description <- function(package, dcf) {
         })
     }
   }
+  if(any(grepl("argufy", vapply(c(non_remote_list,remote_list), function(pkg) pkg$name,character(1))))) browser()
   c(non_remote_list, remote_list)
 }
 

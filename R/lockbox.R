@@ -112,7 +112,7 @@ as.locked_package <- function(list) {
     browser()
       stop(sprintf("Invalid package %s version %s.",
                  sQuote(list$name), sQuote(list$version)))
-  } else {
+  } else (!is.na(list$version)) {
     list$version <- package_version(list$version)
   }
 

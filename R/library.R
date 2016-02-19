@@ -155,13 +155,13 @@ install_locked_package <- function(locked_package, installing_expr) {
   # let us install it.
   unlink(pkgdir, TRUE, TRUE)
 
+  if (locked_package$name == "munsell") browser()
   ## Pretend our library path is the staging library during installation.
   testthatsomemore::package_stub("base", ".libPaths", function(...) temp_library, {
     force(quietly(installing_expr))
   })
 
   if (!file.exists(pkgdir)) {
-    browser()
     unlink(temp_library, TRUE, TRUE)
     stop("Must have installed the package ",
          crayon::red(as.character(locked_package$name)),

@@ -106,7 +106,7 @@ as.locked_package <- function(list) {
     list$remote <- "github"
   }
 
-  if (is.na(package_version(list$version))) {
+  if (is.na(package_version(list$version)) && !list$is_dependency_package) {
     stop(sprintf("Invalid package %s version %s.",
                  sQuote(list$name), sQuote(list$version)))
   } else {
@@ -118,13 +118,6 @@ as.locked_package <- function(list) {
 }
 
 is.locked_package <- function(obj) is(obj, "locked_package")
-
-as.dependency_package <- function(list) {
-  stopifnot(is.element("name", names(list)))
-  structure(list, class = "dependency_package")
-}
-
-is.dependency_package <- function(obj) is(obj, "dependency_package")
 
 #' The secret lockbox library path.
 lockbox_library <- function() {

@@ -31,8 +31,7 @@ get_dependencies_for_list <- function(master_list, lock, previously_parsed_deps,
       , package$name)
   }
   current_list <- add_details(current_dependencies, lock)
-  current_list <- lapply(current_list, as.dependency_package)
-  current_list <- reset_to_locked(current_list, lock)
+  current_list <- lapply(current_list, as.locked_package)
   if (identical(master_list, current_list)) return(master_list)
   get_dependencies_for_list(current_list, lock, previously_parsed_deps, current_parent)
 }
@@ -65,8 +64,8 @@ which_previously_parsed <- function(package, previously_parsed_deps) {
   0L
 }
 
-#' Check a dependency list for inclusion in the lockfile and add those additional
-#' details (repo, remote, version, subdir) if it does appear there.  Also throw
+#' Check a dependency list for inclusion in the lockfile and replace the package
+#' with the locked version if it does appear there.  Also throw
 #' an error if we require a dependency version greater than that specified by
 #' the lockfile.
 add_details <- function(current_list, lock) {
@@ -85,11 +84,10 @@ add_details <- function(current_list, lock) {
               , " is required, but lockbox is locked at version: "
               , as.character(locked_package$version)))
         }
-        fields_to_replace <- c("ref", "repo", "remote", "subdir", "dir", "load")
-        invisible(lapply(fields_to_replace, function(field) {
-          if (field %in% names(locked_package)) {
-            el[[field]] <<- locked_package[[field]]
-          }}))
+        el <- locked_package
+        el$is_dependency_package <- FALSE
+      } else {
+        el$is_dependency_package <- TRUE
       }
       if (!"remote" %in% names(el) || is.na(el$remote)) {
         el$remote <- "CRAN"
@@ -173,7 +171,7 @@ swap_versions <- function(names1, names2, list1, list2) {
 #' Either use the current library DESCRIPTION
 #' file or download the accurate remote DESCRIPTION file.
 get_dependencies <- function(package) {
-  is_local_dependency <- is.dependency_package(package) &&
+  is_local_dependency <- is.locked_package(package) &&
     !is.na(current_version(package)) &&
     (is.na(package$version) ||
       package_version(as.character(current_version(package))) <=
@@ -313,6 +311,7 @@ dependencies_from_description <- function(package, dcf) {
     }
   }
   if (length(remote_list) != 0) {
+    browser()
     non_remote_names <- vapply(non_remote_list, function(pkg) pkg$name, character(1))
     remote_names <- vapply(remote_list, function(pkg) pkg$name, character(1))
     if (any(non_remote_names %in% remote_names)) {

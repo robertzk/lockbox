@@ -41,26 +41,14 @@ lockbox_package_path <- function(locked_package, library = lockbox_library()) {
   ))
 }
 
-install_dependency_package <- function(dependency_package) {
-  remote <- dependency_package$remote %||% "CRAN"
-  cat("Installing dependency", crayon::blue(dependency_package$name),
-    "from", remote, "\n")
-  if (identical(remote, "CRAN")) {
-      utils::install.packages(dependency_package$name
-        , INSTALL_opts = "--vanilla", type = "source"
-        , quiet = notTRUE(getOption("lockbox.verbose")))
-  } else {
-    install_package(structure(
-      dependency_package
-      , class = c(dependency_package$remote, class(dependency_package))
-      , quiet = notTRUE(getOption("lockbox.verbose"))
-    ))
-  }
-}
-
 install_package <- function(locked_package) {
-  cat("Installing", crayon::green(locked_package$name),
+  if (!locked_package$is_dependency_package) {
+    cat("Installing", crayon::green(locked_package$name),
       as.character(locked_package$version), "from", class(locked_package)[1], "\n")
+  } else {
+    cat("Installing dependency", crayon::blue(locked_package$name),
+      "from", remote, "\n")
+  }
   UseMethod("install_package")
 }
 
@@ -75,6 +63,12 @@ install_package.local <- function(locked_package) {
 # Did not simply import the function because it introduces too many dependencies
 #' @author Kirill Sevastyanenko
 install_old_CRAN_package <- function(name, version, repo = "http://cran.r-project.org") {
+  repos <- getOption('lockbox.CRAN_mirror') %||% c(CRAN = "http://cran.rstudio.com")
+  if (is.na(version)) {
+    return(utils::install.packages(
+      name, repos = repos, INSTALL_opts = "--vanilla", type = "source",
+      quiet = notTRUE(getOption('lockbox.verbose'))))
+  }
   # List available packages on the repo. Maybe we can simply install.packages?
   available <- available.packages(contriburl =
     contrib.url(repos = "http://cran.us.r-project.org", type = "source"))
@@ -84,7 +78,6 @@ install_old_CRAN_package <- function(name, version, repo = "http://cran.r-projec
   # Simply install.packages if version happens to be the latest available on CRAN.
   # You can specify the fastest CRAN mirror by setting the `lockbox.CRAN_mirror` option
   # or Rstudio mirror will be used by default.
-  repos <- getOption('lockbox.CRAN_mirror') %||% c(CRAN = "http://cran.rstudio.com")
   remote_version <- package_version(as.character(pkg$Version))
   if (dim(pkg)[1] == 1 && remote_version == version) {
     return(utils::install.packages(
@@ -190,7 +183,7 @@ install_locked_package <- function(locked_package, installing_expr) {
 #' @return TRUE or FALSE according as the current library's package version
 #'   is incorrect.
 version_mismatch <- function(package) {
-  if (is.dependency_package(package)) {
+  if (package$is_dependency_package) {
     if (is.na(current_version(package))) {
       TRUE
     } else{
@@ -225,10 +218,6 @@ current_version.character <- function(package_name) {
 }
 
 current_version.locked_package <- function(package) {
-  current_version(package$name)
-}
-
-current_version.dependency_package <- function(package) {
   current_version(package$name)
 }
 

@@ -3,21 +3,16 @@
 #' @param locked_package locked_package. In particular, the \code{version}
 #'    and \code{name} elements will be used.
 align <- function(locked_package) {
-  if (is.list(locked_package) && !is.locked_package(locked_package)
-      && !is.dependency_package(locked_package)) {
+  if (is.list(locked_package) && !is.locked_package(locked_package)) {
     return(lapply(locked_package, align))
   }
-  if (is.dependency_package(locked_package)) {
-    install_dependency_package(locked_package)
-  } else {
-    stopifnot(is.locked_package(locked_package))
+  stopifnot(is.locked_package(locked_package))
 
-    ## Make sure we have this package version in the lockbox secret library.
-    `ensure_package_exists_in_lockbox!`(locked_package)
+  ## Make sure we have this package version in the lockbox secret library.
+  `ensure_package_exists_in_lockbox!`(locked_package)
 
-    ## Symlink the locked package to the correct lockbox version.
-    `symlink_to_lockbox!`(locked_package)
-  }
+  ## Symlink the locked package to the correct lockbox version.
+  `symlink_to_lockbox!`(locked_package)
 }
 
 `symlink_to_lockbox!` <- function(locked_package) {

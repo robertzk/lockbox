@@ -175,7 +175,6 @@ install_locked_package <- function(locked_package, installing_expr) {
     }
   }
 
-
   copy_real_packages_to_lockbox_library(temp_library)
   unlink(temp_library, TRUE, TRUE)
 }

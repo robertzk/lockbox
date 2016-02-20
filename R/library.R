@@ -113,10 +113,11 @@ install_package.CRAN <- function(locked_package) {
 install_package.github <- function(locked_package) {
   stopifnot(is.element("repo", names(locked_package)))
 
+  use_ref <- locked_package$is_dependency_package && is.null(locked_package$ref)
   ref <- locked_package$ref %||% locked_package$version
   # TODO: (RK) What if we just want latest from master?
   install_locked_package(locked_package, {
-    if (is.na(ref) || is.null(ref)) {
+    if (use_ref) {
       main_arg <- locked_package$repo
     } else {
       main_arg <- paste(locked_package$repo, ref, sep = "@")

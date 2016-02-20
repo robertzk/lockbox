@@ -90,7 +90,7 @@ lockbox.default <- function(obj) {
 
 reset_to_latest_version <- function(locked_package) {
   if (is_dependency_package) {
-    locked_package$version <- latest_version
+    locked_package$version <- locked_package$latest_version
   }
   locked_package
 }

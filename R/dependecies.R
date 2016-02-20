@@ -22,6 +22,8 @@ get_dependencies_for_list <- function(master_list, lock, previously_parsed_deps,
         single_package_dependencies
         , replace_with_lock
         , lock)
+      if (any(duplicated(vapply(single_package_dependencies
+              , function(p) p$name, character(1))))) browser()
       previously_parsed_deps[[length(previously_parsed_deps) + 1]] <- list(
         package = package
         , dependencies = single_package_dependencies)
@@ -109,7 +111,6 @@ get_latest_version <- function(package) {
 #' Combine two lists of dependencies via version comparisons.  Keep packages
 #' found in list1 on the left side of the entirety of list2, while moving
 #' the parent package to the space after it's rightmost dependency found in list2.
-#' Update versions with greatest values if necessary.
 combine_dependencies <- function(list1, list2, current_parent) {
   names1 <- vapply(list1, function(obj) obj$name, character(1))
   names2 <- vapply(list2, function(obj) obj$name, character(1))
@@ -175,10 +176,7 @@ swap_versions <- function(names1, names2, list1, list2) {
     , logical(1))
   swap_versions1  <- names1 %in% names2 & swap_version2for1
   swap_versions2 <- vapply(names1[swap_versions1]
-    , function(n) {
-      if(sum(names2 == n)>1) browser()
-      which(names2 == n)
-    }
+    , function(n) which(names2 == n)
     , integer(1))
   list2[swap_versions2] <- list1[swap_versions1]
   list2

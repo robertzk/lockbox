@@ -111,7 +111,7 @@ add_details <- function(current_list, lock, master_list) {
 }
 
 get_latest_version <- function(package) {
-  if (el$remote == "CRAN") {
+  if (package$remote == "CRAN") {
     get_available_cran_version(package)
   } else{
     version_from_remote(package)

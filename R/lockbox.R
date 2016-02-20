@@ -59,9 +59,7 @@ lockbox.list <- function(lock, env) {
     if(!isNamespaceLoaded("devtools")) library("devtools")
 
     all_packages <- get_ordered_dependencies(lock, mismatches & !already_in_lockbox)
-    all_packages <- all_packages[vapply(all_packages
-      , reset_to_latest_version
-      , logical(1))]
+    all_packages <- lapply(all_packages, reset_to_latest_version)
     all_packages <- all_packages[vapply(all_packages
       , version_mismatch
       , logical(1))]

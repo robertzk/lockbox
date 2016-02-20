@@ -133,34 +133,6 @@ install_package.github <- function(locked_package) {
   })
 }
 
-# locked_package <- lockbox:::as.locked_package(
-#   list(name = "s3mpi", version = "0.2.16", remote = "github", repo = "robertzk/s3mpi"))
-# install_locked_package(
-#   locked_package
-#   , {
-#     ref <- locked_package$version
-#     arguments <- list(paste(locked_package$repo, ref, sep = "@"),
-#         reload = FALSE, quiet = FALSE)
-#     if (nzchar(token <- Sys.getenv("GITHUB_PAT"))) {
-#         arguments$auth_token <- token
-#     }
-#     do.call(devtools::install_github, arguments)
-#   })
-
-# install_locked_package <- function(locked_package, installing_expr) {
-#   temp_library <- lockbox:::staging_library()
-#   pkgdir <- file.path(temp_library, locked_package$name)
-#   unlink(pkgdir, TRUE, TRUE)
-#   # testthat::with_mock(
-#   #   `.libPaths` = function(...) temp_library, {
-#   #   force(installing_expr)
-#   # })
-#   testthatsomemore::package_stub("base", ".libPaths", function(...) temp_library, {
-#     force(installing_expr)
-#   })
-# }
-
-
 install_locked_package <- function(locked_package, installing_expr) {
   temp_library <- staging_library()
   pkgdir <- file.path(temp_library, locked_package$name)

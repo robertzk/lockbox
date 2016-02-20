@@ -42,6 +42,9 @@ lockbox_package_path <- function(locked_package, library = lockbox_library()) {
 }
 
 install_package <- function(locked_package) {
+  if(locked_package$name  == "s3mpi") {
+    browser()
+  }
   if (!locked_package$is_dependency_package) {
     cat("Installing", crayon::green(locked_package$name),
       as.character(locked_package$version), "from", class(locked_package)[1], "\n")
@@ -155,9 +158,7 @@ install_locked_package <- function(locked_package, installing_expr) {
   # let us install it.
   unlink(pkgdir, TRUE, TRUE)
 
-  if(locked_package$name  == "s3mpi") {
-    browser()
-  }
+
   ## Pretend our library path is the staging library during installation.
   testthatsomemore::package_stub("base", ".libPaths", function(...) temp_library, {
     force(quietly(installing_expr))

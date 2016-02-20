@@ -102,7 +102,7 @@ add_details <- function(current_list, lock) {
         el$remote <- "CRAN"
       }
       if (el$is_dependency_package) {
-        if (lock_remotes[[el$name]] != el$remote  || is.null(el$latest_version)) {
+        if (is.null(el$latest_version) || lock_remotes[[el$name]] != el$remote) {
           el$latest_version <- get_latest_version(el)
         }
       }

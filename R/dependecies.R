@@ -18,6 +18,10 @@ get_dependencies_for_list <- function(master_list, lock, previously_parsed_deps,
        structure(package
          , class = c(package$remote %||% "CRAN"
            , class(package))))
+      single_package_dependencies <- lapply(
+        single_package_dependencies
+        , replace_with_lock
+        , lock)
       previously_parsed_deps[[length(previously_parsed_deps) + 1]] <- list(
         package = package
         , dependencies = single_package_dependencies)
@@ -28,10 +32,9 @@ get_dependencies_for_list <- function(master_list, lock, previously_parsed_deps,
     current_dependencies <- combine_dependencies(
       single_package_dependencies
       , current_dependencies
-      , package$name)
+      , package$name
+      , lock)
   }
-  current_list <- add_details(current_dependencies, lock, master_list)
-  current_list <- lapply(current_list, as.locked_package)
   if (identical(master_list, current_list)) return(master_list)
   get_dependencies_for_list(current_list, lock, previously_parsed_deps, current_parent)
 }
@@ -68,46 +71,34 @@ which_previously_parsed <- function(package, previously_parsed_deps) {
 #' with the locked version if it does appear there.  Also throw
 #' an error if we require a dependency version greater than that specified by
 #' the lockfile.
-add_details <- function(current_list, lock, master_list) {
+replace_with_lock <- function(package, lock) {
   lock_names <- vapply(lock, function(l) l$name, character(1))
-  master_names <- vapply(master_list, function(l) l$name, character(1))
-  master_remotes <- vapply(
-    master_list
-    , function(l) {
-      if(is.null(l$remote)) {
-        as.character(NA)
-      } else {
-        as.character(l$remote)}}
-    , character(1))
-  names(master_remotes) <- master_names
-  lapply(current_list
-    , function(el) {
-      if (el$name %in% lock_names) {
-        locked_package <- lock[[which(lock_names == el$name)[1]]]
-        if (is.na(el$version) || package_version(as.character(el$version)) <
-          package_version(as.character(locked_package$version))) {
-            el$version <- as.character(locked_package$version)
-        }
-        if (package_version(as.character(el$version)) >
-          package_version(as.character(locked_package$version))) {
-            stop(paste0("Dependency: \'", el$name, ", Version: ", el$version
-              , " is required, but lockbox is locked at version: "
-              , as.character(locked_package$version)))
-        }
-        el <- locked_package
-        el$is_dependency_package <- FALSE
-      } else {
-        el$is_dependency_package <- TRUE
-      }
-      if (!"remote" %in% names(el) || is.na(el$remote)) {
-        el$remote <- "CRAN"
-      }
-      if (el$is_dependency_package) {
-        if (is.null(el$latest_version) || master_remotes[[el$name]] != el$remote) {
-          el$latest_version <- get_latest_version(el)
-        }
-      }
-      el})
+  if (package$name %in% lock_names) {
+    locked_package <- lock[[which(lock_names == package$name)[1]]]
+    if (is.na(package$version) || package_version(as.character(package$version)) <
+      package_version(as.character(locked_package$version))) {
+        package$version <- as.character(locked_package$version)
+    }
+    if (package_version(as.character(package$version)) >
+      package_version(as.character(locked_package$version))) {
+        stop(paste0("Dependency: \'", package$name, ", Version: ", package$version
+          , " is required, but lockbox is locked at version: "
+          , as.character(locked_package$version)))
+    }
+    package <- locked_package
+  } else {
+    package$is_dependency_package <- TRUE
+  }
+  if (!"remote" %in% names(package) || is.na(package$remote)) {
+    package$remote <- "CRAN"
+  }
+  package <- as.locked_package(package)
+  if (package$is_dependency_package) {
+    if (is.null(package$latest_version) || master_remotes[[package$name]] != package$remote) {
+      package$latest_version <- get_latest_version(package)
+    }
+  }
+  package
 }
 
 get_latest_version <- function(package) {
@@ -170,15 +161,17 @@ swap_versions <- function(names1, names2, list1, list2) {
       if (n %in% names2) {
         obj1 <- list1[[n]]
         obj2 <- list2[[n]]
-        if (is.na(obj2$version)) {
-          if (!is.null(obj2$repo)) return(FALSE)
-          return(TRUE)
+        if (obj1$is_dependency_package && obj2$is_dependency_package) {
+          if (obj1$remote != obj2$remote) {
+            package_version(obj1$latest_version) > package_version(obj2$latest_version)
+          } else {
+            FALSE
+          }
+        } else if (obj1$is_dependency_package){
+          FALSE
+        } else {
+          TRUE
         }
-        if (is.na(obj1$version)) {
-          if (!is.null(obj1$repo)) return(TRUE)
-          return(FALSE)
-        }
-        package_version(obj1$version) >= package_version(obj2$version)
       } else{
         FALSE
       }}
@@ -203,7 +196,7 @@ get_dependencies <- function(package) {
     dependencies_from_description(package, description_file_for(package$name, libPath()))
   } else {
     cat(crayon::blue("."))
-    output = tryCatch(get_remote_dependencies(package), error = function(e) e)
+    output <- tryCatch(get_remote_dependencies(package), error = function(e) e)
     if(is(output, "error")) {
       message(crayon::red(paste0("Dependencies could not be resolved for package: "
         , package$name, " version: ", package$version)))
@@ -214,6 +207,7 @@ get_dependencies <- function(package) {
   }
 }
 
+#' Get the dependencies for a given package
 get_remote_dependencies <- function(package) {
   UseMethod("get_remote_dependencies")
 }
@@ -238,7 +232,7 @@ get_remote_dependencies.CRAN <- function(package) {
   file_list <- untar(filepath, list = TRUE)
   description_name <- file_list[grepl(paste0("^[^/]+"
     ,"/DESCRIPTION$"), file_list)]
-  output <- tryCatch(untar(filepath, description_name, exdir = dirpath), error = function(e) e, warning = function(w) w)
+  output <- untar(filepath, description_name, exdir = dirpath)
   description_path <- paste0(dirpath, "/", description_name)
   dcf <- read.dcf(file = description_path)
   unlink(filepath)
@@ -298,8 +292,9 @@ dependencies_from_description <- function(package, dcf) {
   } else {
     non_remote_list <- lapply(seq_along(non_remote_dependencies[,1])
       , function(i) {
-        list(name = as.character(non_remote_dependencies[i,1])
-          , version = as.character(non_remote_dependencies[i,3]))
+        name <- as.character(non_remote_dependencies[i,1])
+        version <- as.character(non_remote_dependencies[i,3])
+        list(name = name, version = version)
       })
   }
   if (identical(nrow(remote_dependencies),0L)){
@@ -311,7 +306,7 @@ dependencies_from_description <- function(package, dcf) {
       , remote_dependencies[,1])
     if (any(matches_unsupported)) {
       remote_list <- list()
-    } else{
+    } else {
       remote_list <- lapply(seq_along(remote_dependencies[,1])
         , function(i) {
           name <- remote_dependencies[i,1]

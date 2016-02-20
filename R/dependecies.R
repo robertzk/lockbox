@@ -128,6 +128,9 @@ combine_dependencies <- function(list1, list2, current_parent) {
   if (length(list1) == 0) return(list2)
   if (length(list2) == 0) return(list1)
 
+  test <- 0
+  if (any(duplicated(names1))) browser()
+
   names(list1) <- names1
   names(list2) <- names2
   keep1 <- !names1 %in% names2

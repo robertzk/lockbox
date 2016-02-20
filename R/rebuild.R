@@ -33,11 +33,6 @@ reset_search_path <- function() {
   }
 }
 
-rebuild <- function(package) {
-  try(unloadNamespace(package), silent = TRUE)
-  attach(package)
-}
-
 attach <- function(locked_package) {
   if (!identical(locked_package$load, FALSE)) {
     library(locked_package$name, character.only = TRUE)

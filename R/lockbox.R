@@ -60,6 +60,9 @@ lockbox.list <- function(lock, env) {
 
     all_packages <- get_ordered_dependencies(lock, mismatches & !already_in_lockbox)
     all_packages <- all_packages[vapply(all_packages
+      , reset_to_latest_version
+      , logical(1))]
+    all_packages <- all_packages[vapply(all_packages
       , version_mismatch
       , logical(1))]
     all_packages <- c(lock[!(mismatches & !already_in_lockbox)], all_packages)
@@ -83,6 +86,13 @@ lockbox.default <- function(obj) {
     "must be a ", sQuote("character"), " or ", sQuote("list"), " but ",
     "instead I got a ", sQuote(class(obj)[1]), "."
   )
+}
+
+reset_to_latest_version <- function(locked_package) {
+  if (is_dependency_package) {
+    locked_package$version <- latest_version
+  }
+  locked_package
 }
 
 as.locked_package <- function(list) {

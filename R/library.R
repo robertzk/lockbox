@@ -42,9 +42,6 @@ lockbox_package_path <- function(locked_package, library = lockbox_library()) {
 }
 
 install_package <- function(locked_package) {
-  if(locked_package$name  == "s3mpi") {
-    browser()
-  }
   if (!locked_package$is_dependency_package) {
     cat("Installing", crayon::green(locked_package$name),
       as.character(locked_package$version), "from", class(locked_package)[1], "\n")
@@ -53,7 +50,6 @@ install_package <- function(locked_package) {
       "from", locked_package$remote, "\n")
   }
   UseMethod("install_package")
-  rebuild(locked_package)
 }
 
 install_package.local <- function(locked_package) {
@@ -69,11 +65,7 @@ install_package.local <- function(locked_package) {
 install_old_CRAN_package <- function(package, repo = "http://cran.r-project.org") {
   name <- package$name
   version <- package$version
-  if (is.na(version) || package$is_dependency_package) {
-    return(utils::install.packages(
-      name, repos = c(CRAN = repo), INSTALL_opts = "--vanilla",
-      quiet = notTRUE(getOption('lockbox.verbose'))))
-  }
+
   # List available packages on the repo. Maybe we can simply install.packages?
   available <- available.packages(contriburl =
     contrib.url(repos = "http://cran.us.r-project.org", type = "source"))
@@ -136,20 +128,38 @@ install_package.github <- function(locked_package) {
       arguments$subdir <- locked_package$subdir
     }
 
-    repeat_count <- 0
-    while (repeat_count < 5) {
-      if (repeat_count == 4) {
-        warning("Could not download package: ", locked_package$name, ", version: "
-                , locked_package$version, "from github.", call. = FALSE)
-        break
-      }
-      result <- tryCatch(do.call(devtools::install_github, arguments), error = function(e)e)
-      if (!is(result, "error")) break
-      repeat_count <- repeat_count + 1
-    }
+    do.call(devtools::install_github, arguments)
 
   })
 }
+
+# locked_package <- lockbox:::as.locked_package(
+#   list(name = "s3mpi", version = "0.2.16", remote = "github", repo = "robertzk/s3mpi"))
+# install_locked_package(
+#   locked_package
+#   , {
+#     ref <- locked_package$version
+#     arguments <- list(paste(locked_package$repo, ref, sep = "@"),
+#         reload = FALSE, quiet = FALSE)
+#     if (nzchar(token <- Sys.getenv("GITHUB_PAT"))) {
+#         arguments$auth_token <- token
+#     }
+#     do.call(devtools::install_github, arguments)
+#   })
+
+# install_locked_package <- function(locked_package, installing_expr) {
+#   temp_library <- lockbox:::staging_library()
+#   pkgdir <- file.path(temp_library, locked_package$name)
+#   unlink(pkgdir, TRUE, TRUE)
+#   # testthat::with_mock(
+#   #   `.libPaths` = function(...) temp_library, {
+#   #   force(installing_expr)
+#   # })
+#   testthatsomemore::package_stub("base", ".libPaths", function(...) temp_library, {
+#     force(installing_expr)
+#   })
+# }
+
 
 install_locked_package <- function(locked_package, installing_expr) {
   temp_library <- staging_library()

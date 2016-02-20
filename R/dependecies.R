@@ -70,6 +70,15 @@ which_previously_parsed <- function(package, previously_parsed_deps) {
 #' the lockfile.
 add_details <- function(current_list, lock) {
   lock_names <- vapply(lock, function(l) l$name, character(1))
+  lock_remotes <- vapply(
+    lock
+    , function(l) {
+      if(is.null(l$remote)) {
+        as.character(NA)
+      } else {
+        as.character(l$remote)}}
+    , character(1))
+  names(lock_remotes) <- lock_names
   lapply(current_list
     , function(el) {
       if (el$name %in% lock_names) {
@@ -92,7 +101,20 @@ add_details <- function(current_list, lock) {
       if (!"remote" %in% names(el) || is.na(el$remote)) {
         el$remote <- "CRAN"
       }
+      if (el$is_dependency_package) {
+        if (lock_remotes[[el$name]] != el$remote  || is.null(el$latest_version)) {
+          el$latest_version <- get_latest_version(el)
+        }
+      }
       el})
+}
+
+get_latest_version <- function(package) {
+  if (el$remote == "CRAN") {
+    get_available_cran_version(package)
+  } else{
+    version_from_remote(package)
+  }
 }
 
 #' Combine two lists of dependencies via version comparisons.  Keep packages
@@ -330,7 +352,7 @@ download_package.CRAN <- function(package) {
   name <- package$name
   version <- package$version
   repo = "http://cran.r-project.org"
-  if (!is.locked_package(package)) {
+  if (package$is_dependency_package) {
     version <- NA
   }
 
@@ -374,13 +396,11 @@ download_package.CRAN <- function(package) {
 
 get_available_cran_version <- function(package, repo = "http://cran.r-project.org") {
   repo = "http://cran.r-project.org"
-
   # List available packages on the repo
   available <- available.packages(contriburl =
     contrib.url(repos = "http://cran.us.r-project.org", type = "source"))
   available <- data.frame(unique(available[, c("Package", "Version")]))
   pkg <- available[available$Package == package$name, ]
-
   if (nrow(pkg) == 0) {
     NA
   } else{

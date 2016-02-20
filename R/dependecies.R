@@ -94,9 +94,7 @@ replace_with_lock <- function(package, lock) {
   }
   package <- as.locked_package(package)
   if (package$is_dependency_package) {
-    if (is.null(package$latest_version) || master_remotes[[package$name]] != package$remote) {
-      package$latest_version <- get_latest_version(package)
-    }
+    package$latest_version <- get_latest_version(package)
   }
   package
 }

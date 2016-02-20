@@ -116,8 +116,13 @@ install_package.github <- function(locked_package) {
   ref <- locked_package$ref %||% locked_package$version
   # TODO: (RK) What if we just want latest from master?
   install_locked_package(locked_package, {
+    if (is.na(ref) || is.null(ref)) {
+      main_arg <- locked_package$repo
+    } else {
+      main_arg <- paste(locked_package$repo, ref, sep = "@")
+    }
     arguments <- list(
-      paste(locked_package$repo, ref, sep = "@"),
+      main_arg,
       reload = FALSE,
       quiet  = notTRUE(getOption('lockbox.verbose'))
     )

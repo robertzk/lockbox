@@ -308,7 +308,6 @@ dependencies_from_description <- function(package, dcf) {
     } else {
       remote_list <- lapply(seq_along(remote_dependencies[,1])
         , function(i) {
-          browser()
           name <- remote_dependencies[i,1]
           if (matches_github[i]){
             name <- gsub("git::.*github\\.com/", "", name)

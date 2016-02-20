@@ -34,8 +34,8 @@ get_dependencies_for_list <- function(master_list, lock, previously_parsed_deps,
       , current_dependencies
       , package$name)
   }
-  if (identical(master_list, current_list)) return(master_list)
-  get_dependencies_for_list(current_list, lock, previously_parsed_deps, current_parent)
+  if (identical(master_list, current_dependencies)) return(master_list)
+  get_dependencies_for_list(current_dependencies, lock, previously_parsed_deps, current_parent)
 }
 
 #' Have we previously gotten this packages dependencies?
@@ -116,6 +116,12 @@ combine_dependencies <- function(list1, list2, current_parent) {
   names1 <- vapply(list1, function(obj) obj$name, character(1))
   names2 <- vapply(list2, function(obj) obj$name, character(1))
 
+  test <- 0
+  if (any(duplicated(names1))) browser()
+
+  test <- 0.5
+  if (any(duplicated(names2))) browser()
+
   version1 <- vapply(list1, function(obj) as.character(obj$version), character(1))
   version2 <- vapply(list2, function(obj) as.character(obj$version), character(1))
 
@@ -131,11 +137,6 @@ combine_dependencies <- function(list1, list2, current_parent) {
   if (length(list1) == 0) return(list2)
   if (length(list2) == 0) return(list1)
 
-  test <- 0
-  if (any(duplicated(names1))) browser()
-
-  test <- 0.5
-  if (any(duplicated(names2))) browser()
 
   names(list1) <- names1
   names(list2) <- names2

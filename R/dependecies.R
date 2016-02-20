@@ -72,7 +72,7 @@ add_details <- function(current_list, lock, master_list) {
   lock_names <- vapply(lock, function(l) l$name, character(1))
   master_names <- vapply(master_list, function(l) l$name, character(1))
   master_remotes <- vapply(
-    lock
+    master_list
     , function(l) {
       if(is.null(l$remote)) {
         as.character(NA)

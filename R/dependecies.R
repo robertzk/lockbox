@@ -110,6 +110,9 @@ get_latest_version <- function(package) {
 #' found in list1 on the left side of the entirety of list2, while moving
 #' the parent package to the space after it's rightmost dependency found in list2.
 combine_dependencies <- function(list1, list2, current_parent) {
+  old_list1 <- list1
+  old_list2 <- list2
+
   names1 <- vapply(list1, function(obj) obj$name, character(1))
   names2 <- vapply(list2, function(obj) obj$name, character(1))
 
@@ -131,6 +134,9 @@ combine_dependencies <- function(list1, list2, current_parent) {
   test <- 0
   if (any(duplicated(names1))) browser()
 
+  test <- 0.5
+  if (any(duplicated(names2))) browser()
+
   names(list1) <- names1
   names(list2) <- names2
   keep1 <- !names1 %in% names2
@@ -143,7 +149,6 @@ combine_dependencies <- function(list1, list2, current_parent) {
       sel1 <- seq_along(names2) != init_parent_slot & seq_along(names2) <= final_parent_slot
       sel2 <- seq_along(names2) > final_parent_slot
       list2 <- c(list2[sel1], list2[init_parent_slot], list2[sel2])
-      version2 <- c(version2[sel1], version2[init_parent_slot], version2[sel2])
       names2 <- c(names2[sel1], names2[init_parent_slot], names2[sel2])
     }
   }

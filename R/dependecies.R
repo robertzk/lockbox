@@ -30,7 +30,7 @@ get_dependencies_for_list <- function(master_list, lock, previously_parsed_deps,
       , current_dependencies
       , package$name)
   }
-  current_list <- add_details(current_dependencies, lock)
+  current_list <- add_details(current_dependencies, lock, master_list)
   current_list <- lapply(current_list, as.locked_package)
   if (identical(master_list, current_list)) return(master_list)
   get_dependencies_for_list(current_list, lock, previously_parsed_deps, current_parent)
@@ -68,9 +68,10 @@ which_previously_parsed <- function(package, previously_parsed_deps) {
 #' with the locked version if it does appear there.  Also throw
 #' an error if we require a dependency version greater than that specified by
 #' the lockfile.
-add_details <- function(current_list, lock) {
+add_details <- function(current_list, lock, master_list) {
   lock_names <- vapply(lock, function(l) l$name, character(1))
-  lock_remotes <- vapply(
+  master_names <- vapply(master_list, function(l) l$name, character(1))
+  master_remotes <- vapply(
     lock
     , function(l) {
       if(is.null(l$remote)) {
@@ -78,7 +79,7 @@ add_details <- function(current_list, lock) {
       } else {
         as.character(l$remote)}}
     , character(1))
-  names(lock_remotes) <- lock_names
+  names(master_remotes) <- master_names
   lapply(current_list
     , function(el) {
       if (el$name %in% lock_names) {
@@ -102,7 +103,7 @@ add_details <- function(current_list, lock) {
         el$remote <- "CRAN"
       }
       if (el$is_dependency_package) {
-        if (is.null(el$latest_version) || lock_remotes[[el$name]] != el$remote) {
+        if (is.null(el$latest_version) || master_remotes[[el$name]] != el$remote) {
           el$latest_version <- get_latest_version(el)
         }
       }

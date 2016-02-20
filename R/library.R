@@ -65,10 +65,9 @@ install_package.local <- function(locked_package) {
 install_old_CRAN_package <- function(package, repo = "http://cran.r-project.org") {
   name <- package$name
   version <- package$version
-  repos <- getOption('lockbox.CRAN_mirror') %||% c(CRAN = "http://cran.rstudio.com")
   if (is.na(version) || package$is_dependency_package) {
     return(utils::install.packages(
-      name, repos = repos, INSTALL_opts = "--vanilla",
+      name, repos = c(CRAN = repo), INSTALL_opts = "--vanilla",
       quiet = notTRUE(getOption('lockbox.verbose'))))
   }
   # List available packages on the repo. Maybe we can simply install.packages?
@@ -81,6 +80,7 @@ install_old_CRAN_package <- function(package, repo = "http://cran.r-project.org"
   # You can specify the fastest CRAN mirror by setting the `lockbox.CRAN_mirror` option
   # or Rstudio mirror will be used by default.
   remote_version <- package_version(as.character(pkg$Version))
+  repos <- getOption('lockbox.CRAN_mirror') %||% c(CRAN = "http://cran.rstudio.com")
   if (dim(pkg)[1] == 1 && remote_version == version) {
     return(utils::install.packages(
       name, repos = repos, INSTALL_opts = "--vanilla",
@@ -155,7 +155,9 @@ install_locked_package <- function(locked_package, installing_expr) {
   # let us install it.
   unlink(pkgdir, TRUE, TRUE)
 
-  if (locked_package$name == "munsell") browser()
+  if(locked_package$name  == "s3mpi") {
+    browser()
+  }
   ## Pretend our library path is the staging library during installation.
   testthatsomemore::package_stub("base", ".libPaths", function(...) temp_library, {
     force(quietly(installing_expr))

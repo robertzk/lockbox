@@ -175,7 +175,10 @@ swap_versions <- function(names1, names2, list1, list2) {
     , logical(1))
   swap_versions1  <- names1 %in% names2 & swap_version2for1
   swap_versions2 <- vapply(names1[swap_versions1]
-    , function(n) which(names2 == n)
+    , function(n) {
+      if(sum(names2 == n)>1) browser()
+      which(names2 == n)
+    }
     , integer(1))
   list2[swap_versions2] <- list1[swap_versions1]
   list2

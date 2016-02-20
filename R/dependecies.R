@@ -22,8 +22,6 @@ get_dependencies_for_list <- function(master_list, lock, previously_parsed_deps,
         single_package_dependencies
         , replace_with_lock
         , lock)
-      if (any(duplicated(vapply(single_package_dependencies
-              , function(p) p$name, character(1))))) browser()
       previously_parsed_deps[[length(previously_parsed_deps) + 1]] <- list(
         package = package
         , dependencies = single_package_dependencies)
@@ -147,7 +145,13 @@ combine_dependencies <- function(list1, list2, current_parent) {
     }
   }
 
+  test <- 1
+  if (any(duplicated(vapply(c(list1[keep1], list2)
+    , function(p) p$name, character(1))))) browser()
   list2 <- swap_versions(names1, names2, list1, list2)
+  test <- 2
+  if (any(duplicated(vapply(c(list1[keep1], list2)
+    , function(p) p$name, character(1))))) browser()
   c(list1[keep1], list2)
 }
 

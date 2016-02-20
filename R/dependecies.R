@@ -32,8 +32,7 @@ get_dependencies_for_list <- function(master_list, lock, previously_parsed_deps,
     current_dependencies <- combine_dependencies(
       single_package_dependencies
       , current_dependencies
-      , package$name
-      , lock)
+      , package$name)
   }
   if (identical(master_list, current_list)) return(master_list)
   get_dependencies_for_list(current_list, lock, previously_parsed_deps, current_parent)

@@ -53,6 +53,7 @@ install_package <- function(locked_package) {
       "from", locked_package$remote, "\n")
   }
   UseMethod("install_package")
+  rebuild(locked_package)
 }
 
 install_package.local <- function(locked_package) {

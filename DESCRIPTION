@@ -11,13 +11,13 @@ Depends:
     R (>= 3.0.1),
     httr,
     RCurl
+    devtools,
 License: MIT
 LazyData: true
 Imports:
     yaml,
     digest,
     testthatsomemore,
-    devtools,
     utils
 Suggests:
     knitr,

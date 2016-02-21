@@ -113,11 +113,11 @@ install_package.CRAN <- function(locked_package) {
 install_package.github <- function(locked_package) {
   stopifnot(is.element("repo", names(locked_package)))
 
-  use_ref <- locked_package$is_dependency_package && is.null(locked_package$ref)
+  no_ref <- locked_package$is_dependency_package && is.null(locked_package$ref)
   ref <- locked_package$ref %||% locked_package$version
   # TODO: (RK) What if we just want latest from master?
   install_locked_package(locked_package, {
-    if (use_ref) {
+    if (no_ref) {
       main_arg <- locked_package$repo
     } else {
       main_arg <- paste(locked_package$repo, ref, sep = "@")
@@ -179,18 +179,18 @@ install_package.github <- function(locked_package) {
 
 
 
-# install_locked_package <- function(locked_package, installing_expr) {
-#   temp_library <- lockbox:::staging_library()
-#   pkgdir <- file.path(temp_library, locked_package$name)
-#   unlink(pkgdir, TRUE, TRUE)
-#   testthat::with_mock(
-#     `.libPaths` = function(...) temp_library, {
-#     force(installing_expr)
-#   })
-#   # testthatsomemore::package_stub("base", ".libPaths", function(...) temp_library, {
-#   #   force(installing_expr)
-#   # })
-# }
+install_locked_package <- function(locked_package, installing_expr) {
+  temp_library <- lockbox:::staging_library()
+  pkgdir <- file.path(temp_library, locked_package$name)
+  unlink(pkgdir, TRUE, TRUE)
+  testthat::with_mock(
+    `.libPaths` = function(...) temp_library, {
+    force(installing_expr)
+  })
+  # testthatsomemore::package_stub("base", ".libPaths", function(...) temp_library, {
+  #   force(installing_expr)
+  # })
+}
 
 install_locked_package <- function(locked_package, installing_expr) {
   temp_library <- staging_library()

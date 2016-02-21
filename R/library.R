@@ -113,8 +113,6 @@ install_package.CRAN <- function(locked_package) {
 install_package.github <- function(locked_package) {
   stopifnot(is.element("repo", names(locked_package)))
 
-  if (locked_package$name == "gmailr") browser()
-
   use_ref <- locked_package$is_dependency_package && is.null(locked_package$ref)
   ref <- locked_package$ref %||% locked_package$version
   # TODO: (RK) What if we just want latest from master?
@@ -136,10 +134,63 @@ install_package.github <- function(locked_package) {
       arguments$subdir <- locked_package$subdir
     }
 
+    if (locked_package$name == "gmailr") browser()
     do.call(devtools::install_github, arguments)
 
   })
 }
+
+# locked_package <- lockbox:::as.locked_package(
+#   list(name = "gmailr", version = "0.7.0.9000", remote = "github", repo = "jimhester/gmailr", is_dependency_package = TRUE, latest_version = "0.7.0.9000"))
+
+# fn(locked_package,
+#   {
+#     ref <- locked_package$version
+#     main_arg <- locked_package$repo
+#     arguments <- list(main_arg,
+#         reload = FALSE, quiet = FALSE)
+#     if (nzchar(token <- Sys.getenv("GITHUB_PAT"))) {
+#         arguments$auth_token <- token
+#     }
+#     do.call(devtools::install_github, arguments)
+#   })
+
+# install_locked_package(
+#   locked_package
+#   , {
+#     ref <- locked_package$version
+#     main_arg <- locked_package$repo
+#     arguments <- list(main_arg,
+#         reload = FALSE, quiet = FALSE)
+#     if (nzchar(token <- Sys.getenv("GITHUB_PAT"))) {
+#         arguments$auth_token <- token
+#     }
+#     do.call(devtools::install_github, arguments)
+#   })
+
+# fn <- function(locked_package, installing_expr) {
+#   temp_library <- lockbox:::staging_library()
+#   pkgdir <- file.path(temp_library, locked_package$name)
+#   # unlink(pkgdir, TRUE, TRUE)
+#   testthat::with_mock(
+#     `.libPaths` = function(...) temp_library
+#     , force(installing_expr))
+# }
+
+
+
+# install_locked_package <- function(locked_package, installing_expr) {
+#   temp_library <- lockbox:::staging_library()
+#   pkgdir <- file.path(temp_library, locked_package$name)
+#   unlink(pkgdir, TRUE, TRUE)
+#   testthat::with_mock(
+#     `.libPaths` = function(...) temp_library, {
+#     force(installing_expr)
+#   })
+#   # testthatsomemore::package_stub("base", ".libPaths", function(...) temp_library, {
+#   #   force(installing_expr)
+#   # })
+# }
 
 install_locked_package <- function(locked_package, installing_expr) {
   temp_library <- staging_library()
@@ -147,7 +198,7 @@ install_locked_package <- function(locked_package, installing_expr) {
 
   # For some reason, if the package already exists, R CMD INSTALL does not
   # let us install it.
-  unlink(pkgdir, TRUE, TRUE)
+  # unlink(pkgdir, TRUE, TRUE)
 
 
   ## Pretend our library path is the staging library during installation.

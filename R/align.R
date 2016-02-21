@@ -6,6 +6,7 @@ align <- function(locked_package) {
   if (is.list(locked_package) && !is.locked_package(locked_package)) {
     return(lapply(locked_package, align))
   }
+
   stopifnot(is.locked_package(locked_package))
 
   ## Make sure we have this package version in the lockbox secret library.

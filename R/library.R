@@ -112,6 +112,7 @@ install_package.CRAN <- function(locked_package) {
 #' @importFrom devtools install_github
 install_package.github <- function(locked_package) {
   stopifnot(is.element("repo", names(locked_package)))
+  browser()
 
   no_ref <- locked_package$is_dependency_package && is.null(locked_package$ref)
   ref <- locked_package$ref %||% locked_package$version

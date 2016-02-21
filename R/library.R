@@ -134,7 +134,7 @@ install_package.github <- function(locked_package) {
       arguments$subdir <- locked_package$subdir
     }
 
-    if (locked_package$name == "gmailr") browser()
+    # if (locked_package$name == "gmailr") browser()
     do.call(devtools::install_github, arguments)
 
   })
@@ -142,6 +142,10 @@ install_package.github <- function(locked_package) {
 
 # locked_package <- lockbox:::as.locked_package(
 #   list(name = "gmailr", version = "0.7.0.9000", remote = "github", repo = "jimhester/gmailr", is_dependency_package = TRUE, latest_version = "0.7.0.9000"))
+
+# arguments2 <- list("jimhester/gmailr@5ae820f3fca4f1617f3498464365ac57c690ef62",reload = T,quiet = F)
+# do.call(devtools::install_github, arguments2)
+# install_github("jimhester/gmailr")
 
 # fn(locked_package,
 #   {
@@ -202,8 +206,12 @@ install_locked_package <- function(locked_package, installing_expr) {
 
 
   ## Pretend our library path is the staging library during installation.
-  testthatsomemore::package_stub("base", ".libPaths", function(...) temp_library, {
-    force(quietly(installing_expr))
+  ## Avoid dependency installation woes that accompany R CMD INSTALL with symlinks
+  testthatsomemore::package_stub("devtools", "install"
+    , function(...) utils::install.packages(..., dependencies = F), {
+      testthatsomemore::package_stub("base", ".libPaths", function(...) temp_library, {
+        force(quietly(installing_expr))
+      })
   })
 
   if (!file.exists(pkgdir)) {

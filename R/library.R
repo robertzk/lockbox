@@ -117,26 +117,13 @@ install_package.github <- function(locked_package) {
   ref <- locked_package$ref %||% locked_package$version
   # TODO: (RK) What if we just want latest from master?
   install_locked_package(locked_package, {
+    final_package <- locked_package
     if (no_ref) {
-      main_arg <- locked_package$repo
-    } else {
-      main_arg <- paste(locked_package$repo, ref, sep = "@")
+      final_package$version <- NA
     }
-    arguments <- list(
-      main_arg,
-      reload = FALSE,
-      quiet  = notTRUE(getOption('lockbox.verbose'))
-    )
-    if (nzchar(token <- Sys.getenv("GITHUB_PAT"))) {
-      arguments$auth_token <- token
-    }
-    if (!is.null(locked_package$subdir)) {
-      arguments$subdir <- locked_package$subdir
-    }
-
-    # if (locked_package$name == "gmailr") browser()
-    do.call(devtools::install_github, arguments)
-
+    filepath <- download_package(final_package)
+    utils::install.packages(filepath
+      , repos = NULL, type = "source", dependencies = F)
   })
 }
 
@@ -206,14 +193,9 @@ install_locked_package <- function(locked_package, installing_expr) {
 
 
   ## Pretend our library path is the staging library during installation.
-  ## Avoid dependency installation woes that accompany R CMD INSTALL with symlinks
-  testthatsomemore::package_stub("devtools", "install"
-    , function(...) utils::install.packages(...
-      , repos = NULL, type = "source", dependencies = F), {
-        testthatsomemore::package_stub("base", ".libPaths"
+  testthatsomemore::package_stub("base", ".libPaths"
         , function(...) temp_library, {
           force(quietly(installing_expr))
-        })
   })
 
   if (!file.exists(pkgdir)) {

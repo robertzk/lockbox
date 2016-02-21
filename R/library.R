@@ -179,18 +179,18 @@ install_package.github <- function(locked_package) {
 
 
 
-install_locked_package <- function(locked_package, installing_expr) {
-  temp_library <- lockbox:::staging_library()
-  pkgdir <- file.path(temp_library, locked_package$name)
-  unlink(pkgdir, TRUE, TRUE)
-  testthat::with_mock(
-    `.libPaths` = function(...) temp_library, {
-    force(installing_expr)
-  })
-  # testthatsomemore::package_stub("base", ".libPaths", function(...) temp_library, {
-  #   force(installing_expr)
-  # })
-}
+# install_locked_package <- function(locked_package, installing_expr) {
+#   temp_library <- lockbox:::staging_library()
+#   pkgdir <- file.path(temp_library, locked_package$name)
+#   unlink(pkgdir, TRUE, TRUE)
+#   testthat::with_mock(
+#     `.libPaths` = function(...) temp_library, {
+#     force(installing_expr)
+#   })
+#   # testthatsomemore::package_stub("base", ".libPaths", function(...) temp_library, {
+#   #   force(installing_expr)
+#   # })
+# }
 
 install_locked_package <- function(locked_package, installing_expr) {
   temp_library <- staging_library()
@@ -198,7 +198,7 @@ install_locked_package <- function(locked_package, installing_expr) {
 
   # For some reason, if the package already exists, R CMD INSTALL does not
   # let us install it.
-  # unlink(pkgdir, TRUE, TRUE)
+  unlink(pkgdir, TRUE, TRUE)
 
 
   ## Pretend our library path is the staging library during installation.

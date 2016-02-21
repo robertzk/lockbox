@@ -208,10 +208,12 @@ install_locked_package <- function(locked_package, installing_expr) {
   ## Pretend our library path is the staging library during installation.
   ## Avoid dependency installation woes that accompany R CMD INSTALL with symlinks
   testthatsomemore::package_stub("devtools", "install"
-    , function(...) utils::install.packages(..., dependencies = F), {
-      testthatsomemore::package_stub("base", ".libPaths", function(...) temp_library, {
-        force(quietly(installing_expr))
-      })
+    , function(...) utils::install.packages(...
+      , repos = NULL, type = "source", dependencies = F), {
+        testthatsomemore::package_stub("base", ".libPaths"
+        , function(...) temp_library, {
+          force(quietly(installing_expr))
+        })
   })
 
   if (!file.exists(pkgdir)) {

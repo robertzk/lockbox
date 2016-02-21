@@ -112,19 +112,22 @@ install_package.CRAN <- function(locked_package) {
 #' @importFrom devtools install_github
 install_package.github <- function(locked_package) {
   stopifnot(is.element("repo", names(locked_package)))
-  browser()
 
   no_ref <- locked_package$is_dependency_package && is.null(locked_package$ref)
   ref <- locked_package$ref %||% locked_package$version
-  # TODO: (RK) What if we just want latest from master?
   install_locked_package(locked_package, {
     final_package <- locked_package
     if (no_ref) {
       final_package$version <- NA
     }
     filepath <- download_package(final_package)
-    utils::install.packages(filepath
+    temp_dir <- gsub("/[^/]+.zip", "", filepath)
+    extracted_file <- unzip(filepath, exdir = temp_dir)[1]
+    extracted_path <- gsub("/[^/]+$", "", extracted_file)
+    utils::install.packages(extracted_path
       , repos = NULL, type = "source", dependencies = F)
+    unlink(filepath)
+    unlink(extracted_path)
   })
 }
 

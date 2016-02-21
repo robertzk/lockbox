@@ -25,6 +25,7 @@ lockbox.character <- function(file, env) {
 
 #' @export
 lockbox.list <- function(lock, env) {
+  library(devtools)
   if (missing(env)) env <- "!packages"
   if (is.null(lock$packages))
     stop("Invalid config. Make sure your config format is correct")
@@ -55,10 +56,6 @@ lockbox.list <- function(lock, env) {
   already_in_lockbox <- vapply(lock, exists_in_lockbox, logical(1))
 
   if (any(mismatches & !already_in_lockbox)) {
-    ## Currently the Remotes field of description files requires this 
-    ## when using devtools::install_github :/
-    if(!isNamespaceLoaded("devtools")) library("devtools")
-
     all_packages <- get_ordered_dependencies(lock, mismatches & !already_in_lockbox)
     all_packages <- lapply(all_packages, reset_to_latest_version)
     all_packages <- all_packages[vapply(all_packages

@@ -211,7 +211,7 @@ get_dependencies <- function(package) {
 strip_available_dependencies <- function(dependencies) {
   dependencies <- lapply(dependencies
     , function(package) {
-      if(currently_available(package)) NULL
+      if(package$name %in% pesky_namespaces) NULL
       else package
     })
  dependencies[!vapply(dependencies, is.null, logical(1))]

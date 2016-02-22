@@ -128,15 +128,10 @@ combine_dependencies <- function(list1, list2, current_parent) {
   names1 <- vapply(list1, function(obj) obj$name, character(1))
   names2 <- vapply(list2, function(obj) obj$name, character(1))
 
-  version1 <- vapply(list1, function(obj) as.character(obj$version), character(1))
-  version2 <- vapply(list2, function(obj) as.character(obj$version), character(1))
-
   # Certain packages are no longer on cran but incorporated into R Core
   core_pkgs <- as.character(installed.packages(priority = "base")[,1])
-  version1 <- version1[!names1 %in% core_pkgs]
   list1 <- list1[!names1 %in% core_pkgs]
   names1 <- names1[!names1 %in% core_pkgs]
-  version2 <- version2[!names2 %in% core_pkgs]
   list2 <- list2[!names2 %in% core_pkgs]
   names2 <- names2[!names2 %in% core_pkgs]
 

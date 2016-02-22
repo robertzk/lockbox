@@ -62,10 +62,7 @@ install_package.local <- function(locked_package) {
 # Helpfully borrowed from https://github.com/christophergandrud/repmis/blob/master/R/InstallOldPackages.R
 # Did not simply import the function because it introduces too many dependencies
 #' @author Kirill Sevastyanenko
-install_old_CRAN_package <- function(package, repo = "http://cran.r-project.org") {
-  name <- package$name
-  version <- package$version
-
+install_old_CRAN_package <- function(name, version, repo = "http://cran.r-project.org") {
   # List available packages on the repo. Maybe we can simply install.packages?
   available <- available.packages(contriburl =
     contrib.url(repos = "http://cran.us.r-project.org", type = "source"))
@@ -106,7 +103,7 @@ install_package.CRAN <- function(locked_package) {
   # TODO: (RK) Fetch correct version? Support install from source?
   locked_package$repo <- locked_package$repo %||% "http://cran.r-project.org"
   install_locked_package(locked_package,
-    install_old_CRAN_package(locked_package))
+    install_old_CRAN_package(locked_package$name, locked_package$version))
 }
 
 #' @importFrom devtools install_github
@@ -134,6 +131,9 @@ install_package.github <- function(locked_package) {
     output <- tryCatch(
       do.call(devtools::install_github, arguments)
       , error = function(e) e)
+
+    ## There are strange cases(usually involving "Remotes") where install_github
+    ## will error out but an explicit download and extraction will not
     if (is(output, "error")) {
       final_package <- locked_package
       if (no_ref) {
@@ -153,62 +153,6 @@ install_package.github <- function(locked_package) {
   })
 }
 
-# locked_package <- lockbox:::as.locked_package(
-#   list(name = "gmailr", version = "0.7.0.9000", remote = "github", repo = "jimhester/gmailr", is_dependency_package = TRUE, latest_version = "0.7.0.9000"))
-
-# arguments2 <- list("jimhester/gmailr@5ae820f3fca4f1617f3498464365ac57c690ef62",reload = T,quiet = F)
-# do.call(devtools::install_github, arguments2)
-# install_github("jimhester/gmailr")
-
-# fn(locked_package,
-#   {
-#     ref <- locked_package$version
-#     main_arg <- locked_package$repo
-#     arguments <- list(main_arg,
-#         reload = FALSE, quiet = FALSE)
-#     if (nzchar(token <- Sys.getenv("GITHUB_PAT"))) {
-#         arguments$auth_token <- token
-#     }
-#     do.call(devtools::install_github, arguments)
-#   })
-
-# install_locked_package(
-#   locked_package
-#   , {
-#     ref <- locked_package$version
-#     main_arg <- locked_package$repo
-#     arguments <- list(main_arg,
-#         reload = FALSE, quiet = FALSE)
-#     if (nzchar(token <- Sys.getenv("GITHUB_PAT"))) {
-#         arguments$auth_token <- token
-#     }
-#     do.call(devtools::install_github, arguments)
-#   })
-
-# fn <- function(locked_package, installing_expr) {
-#   temp_library <- lockbox:::staging_library()
-#   pkgdir <- file.path(temp_library, locked_package$name)
-#   # unlink(pkgdir, TRUE, TRUE)
-#   testthat::with_mock(
-#     `.libPaths` = function(...) temp_library
-#     , force(installing_expr))
-# }
-
-
-
-# install_locked_package <- function(locked_package, installing_expr) {
-#   temp_library <- lockbox:::staging_library()
-#   pkgdir <- file.path(temp_library, locked_package$name)
-#   unlink(pkgdir, TRUE, TRUE)
-#   testthat::with_mock(
-#     `.libPaths` = function(...) temp_library, {
-#     force(installing_expr)
-#   })
-#   # testthatsomemore::package_stub("base", ".libPaths", function(...) temp_library, {
-#   #   force(installing_expr)
-#   # })
-# }
-
 install_locked_package <- function(locked_package, installing_expr) {
   temp_library <- staging_library()
   pkgdir <- file.path(temp_library, locked_package$name)
@@ -219,7 +163,7 @@ install_locked_package <- function(locked_package, installing_expr) {
 
   ## Pretend our library path is the staging library during installation.
   testthatsomemore::package_stub("base", ".libPaths", function(...) temp_library, {
-          force(quietly(installing_expr))
+    force(quietly(installing_expr))
   })
 
   if (!file.exists(pkgdir)) {
@@ -229,14 +173,13 @@ install_locked_package <- function(locked_package, installing_expr) {
          " of version ", sQuote(as.character(locked_package$version)))
   }
 
-  if (!is.na(locked_package$version) && !locked_package$is_dependency_package) {
-    if ((ver <- package_version_from_path(pkgdir)) != locked_package$version) {
-      unlink(temp_library, TRUE, TRUE)
-      stop(sprintf(paste0(
-        "Incorrect version of package %s installed. Expected ",
-        "%s but downloaded %s instead."), sQuote(locked_package$name),
-        sQuote(locked_package$version), sQuote(ver)), call. = FALSE)
-    }
+  if (!locked_package$is_dependency_package &&
+    (ver <- package_version_from_path(pkgdir)) != locked_package$version) {
+    unlink(temp_library, TRUE, TRUE)
+    stop(sprintf(paste0(
+      "Incorrect version of package %s installed. Expected ",
+      "%s but downloaded %s instead."), sQuote(locked_package$name),
+      sQuote(locked_package$version), sQuote(ver)), call. = FALSE)
   }
 
   copy_real_packages_to_lockbox_library(temp_library)
@@ -249,19 +192,7 @@ install_locked_package <- function(locked_package, installing_expr) {
 #' @return TRUE or FALSE according as the current library's package version
 #'   is incorrect.
 version_mismatch <- function(locked_package) {
-  if (locked_package$is_dependency_package) {
-    if (is.na(current_version(locked_package))) {
-      TRUE
-    } else{
-      if (is.na(locked_package$version)) {
-        FALSE
-      } else {
-        current_version(locked_package) < locked_package$version
-      }
-    }
-  } else{
-    !identical(current_version(locked_package), locked_package$version)
-  }
+  !identical(current_version(locked_package), locked_package$version)
 }
 
 #' The current version of this package in the current library.

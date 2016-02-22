@@ -18,8 +18,9 @@ get_dependencies_for_list <- function(master_list, lock, previously_parsed_deps,
        structure(package
          , class = c(package$remote %||% "CRAN"
            , class(package))))
-      single_package_dependencies <- lapply(
-        single_package_dependencies
+      single_package_dependencies <- lapply(single_package_dependencies
+        , add_latest_version_in_lockbox)
+      single_package_dependencies <- lapply(single_package_dependencies
         , replace_with_lock
         , lock)
       previously_parsed_deps[[length(previously_parsed_deps) + 1]] <- list(
@@ -64,6 +65,18 @@ which_previously_parsed <- function(package, previously_parsed_deps) {
     }
   }
   0L
+}
+
+add_latest_version_in_lockbox <- function(package) {
+  package$latest_version_in_lockbox <- max_version(
+    list.files(file.path(lockbox_library(), package)))
+  package
+}
+
+#' Take a vector of versions and find the max without coercing to package_version
+max_package_version <- function(versions) {
+  formatted_versions <- package_version(as.character(versions))
+  versions[which(formatted_versions == max(formatted_versions))[1]]
 }
 
 #' Check a dependency list for inclusion in the lockfile and replace the package
@@ -183,17 +196,17 @@ swap_versions <- function(names1, names2, list1, list2) {
   list2
 }
 
-#' Either use the current library DESCRIPTION
+#' Either use the current lockbox library DESCRIPTION
 #' file or download the accurate remote DESCRIPTION file.
 get_dependencies <- function(package) {
-  is_local_dependency <- is.locked_package(package) &&
-    !is.na(current_version(package)) &&
-    (is.na(package$version) ||
-      package_version(as.character(current_version(package))) <=
-      package_version(as.character(package$version)))
-  if (is_local_dependency) {
-    dependencies <- dependencies_from_description(package
-      , description_file_for(package$name, libPath()))
+  locked_package <- package
+  if (is.na(locked_package$version)) {
+    locked_package$version <- locked_package$latest_version_in_lockbox
+  }
+  if (!is.na(locked_package$version) && exists_in_lockbox(locked_package)) {
+    dependencies <- dependencies_from_description(locked_package
+      , description_file_for(locked_package$name
+        , gsub("/[^/]+$", "", lockbox_package_path(locked_package))))
   } else {
     cat(crayon::blue("."))
     output <- tryCatch(get_remote_dependencies(package), error = function(e) e)

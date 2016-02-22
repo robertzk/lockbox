@@ -62,7 +62,7 @@ lockbox.list <- function(lock, env) {
       , logical(1))]
     all_packages <- c(lock[!(mismatches & !already_in_lockbox)], all_packages)
   } else{
-    all_packages <- lock[mismatches]
+    all_packages <- lock
   }
 
   quietly({

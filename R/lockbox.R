@@ -25,7 +25,6 @@ lockbox.character <- function(file, env) {
 
 #' @export
 lockbox.list <- function(lock, env) {
-  message("Start")
   if (missing(env)) env <- "!packages"
   if (is.null(lock$packages))
     stop("Invalid config. Make sure your config format is correct")
@@ -39,7 +38,6 @@ lockbox.list <- function(lock, env) {
       lock <- lock[!sapply(lock, is.null)]
     }
 
-  message("aslocked")
   lock <- lapply(lock, as.locked_package)
   disallow_special_packages(lock)
   disallow_duplicate_packages(lock)

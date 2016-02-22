@@ -112,23 +112,43 @@ install_package.CRAN <- function(locked_package) {
 #' @importFrom devtools install_github
 install_package.github <- function(locked_package) {
   stopifnot(is.element("repo", names(locked_package)))
-  if(locked_package$name == "e1071") browser()
-
   no_ref <- locked_package$is_dependency_package && is.null(locked_package$ref)
   ref <- locked_package$ref %||% locked_package$version
   install_locked_package(locked_package, {
-    final_package <- locked_package
     if (no_ref) {
-      final_package$version <- NA
+      main_arg <- locked_package$repo
+    } else {
+      main_arg <- paste(locked_package$repo, ref, sep = "@")
     }
-    filepath <- download_package(final_package)
-    temp_dir <- gsub("/[^/]+.zip", "", filepath)
-    extracted_file <- unzip(filepath, exdir = temp_dir)[1]
-    extracted_path <- gsub("/[^/]+$", "", extracted_file)
-    utils::install.packages(extracted_path
-      , repos = NULL, type = "source", dependencies = F)
-    unlink(filepath)
-    unlink(extracted_path)
+    arguments <- list(
+      main_arg,
+      reload = FALSE,
+      quiet  = notTRUE(getOption('lockbox.verbose'))
+    )
+    if (nzchar(token <- Sys.getenv("GITHUB_PAT"))) {
+      arguments$auth_token <- token
+    }
+    if (!is.null(locked_package$subdir)) {
+      arguments$subdir <- locked_package$subdir
+    }
+    output <- tryCatch(
+      do.call(devtools::install_github, arguments)
+      , error = function(e) e)
+    if (is(output, "error")) {
+      final_package <- locked_package
+      if (no_ref) {
+        final_package$version <- NA
+      }
+      filepath <- download_package(final_package)
+      temp_dir <- gsub("/[^/]+.zip", "", filepath)
+      extracted_file <- unzip(filepath, exdir = temp_dir)[1]
+      extracted_path <- gsub("/[^/]+$", "", extracted_file)
+      output <- tryCatch(install.packages(filepath, repos = NULL, type = "source", dependencies = F))
+      output <- install.packages(extracted_path
+          , repos = NULL, type = "source", dependencies = F)
+      unlink(filepath)
+      unlink(extracted_path)
+    }
   })
 }
 

@@ -98,8 +98,9 @@ as.locked_package <- function(list) {
   }
 
   if (!list$is_dependency_package && is.na(package_version(list$version))) {
-     stop(sprintf("Invalid package %s version %s.",
+    stop(sprintf("Invalid package %s version %s.",
                  sQuote(list$name), sQuote(list$version)))
+  } else if (!list$is_dependency_package) {
     list$version <- package_version(list$version)
   }
 

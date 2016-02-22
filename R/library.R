@@ -109,16 +109,16 @@ install_package.CRAN <- function(locked_package) {
 #' @importFrom devtools install_github
 install_package.github <- function(locked_package) {
   stopifnot(is.element("repo", names(locked_package)))
-  no_ref <- locked_package$is_dependency_package && is.null(locked_package$ref)
+
   ref <- locked_package$ref %||% locked_package$version
   install_locked_package(locked_package, {
-    if (no_ref) {
-      main_arg <- locked_package$repo
+    if (locked_package$is_dependency_package && is.null(locked_package$ref)) {
+      repo_arg <- locked_package$repo
     } else {
-      main_arg <- paste(locked_package$repo, ref, sep = "@")
+      repo_arg <- paste(locked_package$repo, ref, sep = "@")
     }
     arguments <- list(
-      main_arg,
+      repo_arg,
       reload = FALSE,
       quiet  = notTRUE(getOption('lockbox.verbose'))
     )
@@ -173,8 +173,7 @@ install_locked_package <- function(locked_package, installing_expr) {
          " of version ", sQuote(as.character(locked_package$version)))
   }
 
-  if (!locked_package$is_dependency_package &&
-    (ver <- package_version_from_path(pkgdir)) != locked_package$version) {
+  if ((ver <- package_version_from_path(pkgdir)) != locked_package$version) {
     unlink(temp_library, TRUE, TRUE)
     stop(sprintf(paste0(
       "Incorrect version of package %s installed. Expected ",

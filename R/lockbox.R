@@ -98,10 +98,10 @@ as.locked_package <- function(list) {
   }
 
   if (!list$is_dependency_package && is.na(package_version(list$version))) {
-      stop(sprintf("Invalid package %s version %s.",
+     stop(sprintf("Invalid package %s version %s.",
                  sQuote(list$name), sQuote(list$version)))
+    list$version <- package_version(list$version)
   }
-  list$version <- package_version(list$version)
 
   # TODO: (RK) Support CRAN version dependencies.
   structure(list, class = "locked_package")

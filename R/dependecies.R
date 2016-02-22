@@ -199,8 +199,10 @@ swap_versions <- function(names1, names2, list1, list2) {
 #' file or download the accurate remote DESCRIPTION file.
 get_dependencies <- function(package, lock) {
   locked_package <- package
-  if (is.na(locked_package$version)) {
-    locked_package$version <- locked_package$latest_version_in_lockbox %||% NA
+  if (is.na(locked_package$version) ||
+    package_version(as.character(locked_package$version)) <
+    package_version(as.character(locked_package$latest_version_in_lockbox))) {
+      locked_package$version <- locked_package$latest_version_in_lockbox %||% NA
   }
   if (!is.na(locked_package$version) && exists_in_lockbox(locked_package)) {
     dependencies <- dependencies_from_description(locked_package

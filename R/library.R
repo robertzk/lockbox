@@ -282,7 +282,7 @@ current_version.locked_package <- function(package) {
 }
 
 version_in_lib <- function(package_name, libP = libPath()) {
-  dcf <- description_file_for(package_name)
+  dcf <- description_file_for(package_name, libP)
   if (is.null(dcf)) {
     NA
   } else {

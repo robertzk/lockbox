@@ -210,7 +210,6 @@ get_dependencies <- function(package, lock) {
       , description_file_for(locked_package$name
         , gsub("/[^/]+$", "", lockbox_package_path(locked_package))))
   } else {
-    browser()
     cat(crayon::blue("."))
     output <- tryCatch(get_remote_dependencies(package), error = function(e) e)
     if (is(output, "error")) {

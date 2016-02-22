@@ -1,8 +1,8 @@
 #' Get dependencies for all elements with lock, but only do so for current
 #' version mismatches and non-cran installations
-get_ordered_dependencies <- function(lock, mismatches) {
+get_ordered_dependencies <- function(lock) {
    cat(crayon::blue(paste("Retrieving dependency info...")))
-   deps <- get_dependencies_for_list(lock[mismatches], lock, list(), "")
+   deps <- get_dependencies_for_list(lock, lock, list(), "")
    cat("\n")
    deps
 }
@@ -18,11 +18,6 @@ get_dependencies_for_list <- function(master_list, lock, previously_parsed_deps,
        structure(package
          , class = c(package$remote %||% "CRAN"
            , class(package))))
-      single_package_dependencies <- lapply(single_package_dependencies
-        , add_latest_version_in_lockbox)
-      single_package_dependencies <- lapply(single_package_dependencies
-        , replace_with_lock
-        , lock)
       previously_parsed_deps[[length(previously_parsed_deps) + 1]] <- list(
         package = package
         , dependencies = single_package_dependencies)
@@ -219,7 +214,8 @@ get_dependencies <- function(package) {
     }
   }
   dependencies <- strip_available_dependencies(dependencies)
-  dependencies
+  dependencies <- lapply(dependencies, add_latest_version_in_lockbox)
+  lapply(dependencies, replace_with_lock, lock)
 }
 
 strip_available_dependencies <- function(dependencies) {

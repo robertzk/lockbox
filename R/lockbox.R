@@ -44,6 +44,9 @@ lockbox.list <- function(lock, env) {
 
   set_transient_library()
 
+  ## Add dependencies to lock
+  lock <- get_ordered_dependencies(lock)
+
   ## Find the packages whose version does not match the current library.
   mismatches <- vapply(lock, version_mismatch, logical(1))
 
@@ -51,26 +54,12 @@ lockbox.list <- function(lock, env) {
     cat('Using', crayon::green(locked_package$name), as.character(locked_package$version), '\n')
   })
 
-  ## Find the packages that will need to be installed
-  already_in_lockbox <- vapply(lock, exists_in_lockbox, logical(1))
-
-  if (any(mismatches & !already_in_lockbox)) {
-    all_packages <- get_ordered_dependencies(lock, mismatches & !already_in_lockbox)
-    all_packages <- lapply(all_packages, reset_to_latest_version)
-    all_packages <- all_packages[vapply(all_packages
-      , version_mismatch
-      , logical(1))]
-    all_packages <- c(lock[!(mismatches & !already_in_lockbox)], all_packages)
-  } else{
-    all_packages <- lock
-  }
-
   quietly({
     ## Replace our library so that it has these packages instead.
-    align(all_packages)
+    align(lock[mismatches])
 
     ## And re-build our search path.
-    rebuild(all_packages)
+    rebuild(lock)
   })
 }
 

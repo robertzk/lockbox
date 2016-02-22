@@ -75,8 +75,8 @@ install_old_CRAN_package <- function(package, repo = "http://cran.r-project.org"
   # Simply install.packages if version happens to be the latest available on CRAN.
   # You can specify the fastest CRAN mirror by setting the `lockbox.CRAN_mirror` option
   # or Rstudio mirror will be used by default.
-  remote_version <- package_version(as.character(pkg$Version))
   repos <- getOption('lockbox.CRAN_mirror') %||% c(CRAN = "http://cran.rstudio.com")
+  remote_version <- package_version(as.character(pkg$Version))
   if (dim(pkg)[1] == 1 && remote_version == version) {
     return(utils::install.packages(
       name, repos = repos, INSTALL_opts = "--vanilla",
@@ -244,22 +244,22 @@ install_locked_package <- function(locked_package, installing_expr) {
 
 #' Find packages whose version does not match the current library's version.
 #'
-#' @param package locked_package
+#' @param locked_package locked_package.
 #' @return TRUE or FALSE according as the current library's package version
 #'   is incorrect.
-version_mismatch <- function(package) {
-  if (package$is_dependency_package) {
-    if (is.na(current_version(package))) {
+version_mismatch <- function(locked_package) {
+  if (locked_package$is_dependency_package) {
+    if (is.na(current_version(locked_package))) {
       TRUE
     } else{
-      if (is.na(package$version)) {
+      if (is.na(locked_package$version)) {
         FALSE
       } else {
-        current_version(package) < package$version
+        current_version(locked_package) < locked_package$version
       }
     }
   } else{
-    !identical(current_version(package), package$version)
+    !identical(current_version(locked_package), locked_package$version)
   }
 }
 

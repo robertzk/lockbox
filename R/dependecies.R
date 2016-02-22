@@ -218,14 +218,14 @@ strip_available_dependencies <- function(dependencies) {
 }
 
 currently_available <- function(package) {
-  any(vapply(.libPaths(), functino(libP) {
+  any(vapply(.libPaths(), function(libP) {
     version_available <- version_in_lib(package$name, libP)
     if (is.na(version_available)) FALSE
     else if(is.na(package$version)) TRUE
     else if(package_version(as.character(package$version)) >=
       package_version(as.character(version_available))) TRUE
     else FALSE
-  }))
+  }, logical(1)))
 }
 
 #' Get the dependencies for a given package

@@ -22,7 +22,7 @@ get_dependencies_for_list <- function(master_list, lock, previously_parsed_deps,
       previously_parsed_deps[[length(previously_parsed_deps) + 1]] <- list(
         package = package
         , dependencies = single_package_dependencies)
-    } else{
+    } else {
       single_package_dependencies <- previously_parsed_deps[[which_previously_parsed(
         package, previously_parsed_deps)]][["dependencies"]]
     }
@@ -71,6 +71,7 @@ add_latest_version_in_lockbox <- function(package) {
 
 #' Take a vector of versions and find the max without coercing to package_version
 max_package_version <- function(versions) {
+  if (length(versions) == 0) return(NULL)
   formatted_versions <- package_version(as.character(versions))
   versions[which(formatted_versions == max(formatted_versions))[1]]
 }
@@ -102,7 +103,8 @@ replace_with_lock <- function(package, lock) {
   }
   package <- as.locked_package(package)
   if (package$is_dependency_package) {
-    package$latest_version <- get_latest_version(package)
+    package$latest_version <- package$latest_version_in_lockbox %||%
+      get_latest_version(package)
   }
   package
 }
@@ -197,7 +199,7 @@ swap_versions <- function(names1, names2, list1, list2) {
 get_dependencies <- function(package, lock) {
   locked_package <- package
   if (is.na(locked_package$version)) {
-    locked_package$version <- locked_package$latest_version_in_lockbox
+    locked_package$version <- locked_package$latest_version_in_lockbox %||% NA
   }
   if (!is.na(locked_package$version) && exists_in_lockbox(locked_package)) {
     dependencies <- dependencies_from_description(locked_package

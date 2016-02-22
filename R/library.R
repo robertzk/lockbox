@@ -216,10 +216,8 @@ install_locked_package <- function(locked_package, installing_expr) {
   # let us install it.
   unlink(pkgdir, TRUE, TRUE)
 
-
   ## Pretend our library path is the staging library during installation.
-  testthatsomemore::package_stub("base", ".libPaths"
-        , function(...) temp_library, {
+  testthatsomemore::package_stub("base", ".libPaths", function(...) temp_library, {
           force(quietly(installing_expr))
   })
 
@@ -246,7 +244,7 @@ install_locked_package <- function(locked_package, installing_expr) {
 
 #' Find packages whose version does not match the current library's version.
 #'
-#' @param package locked_package or dependency package
+#' @param package locked_package
 #' @return TRUE or FALSE according as the current library's package version
 #'   is incorrect.
 version_mismatch <- function(package) {
@@ -268,7 +266,6 @@ version_mismatch <- function(package) {
 #' The current version of this package in the current library.
 #'
 #' @param pkg character or locked_package. The name of the package.
-#' @param libP character.  The libPath used for version-checking
 #' @return a \code{\link{package_version}} object representing the version of
 #'   this package in the current library.
 current_version <- function(pkg) {
@@ -276,7 +273,7 @@ current_version <- function(pkg) {
 }
 
 current_version.character <- function(package_name) {
-  dcf <- description_file_for(package_name, libPath())
+  dcf <- description_file_for(package_name)
   if (is.null(dcf)) {
     NA
   } else {
@@ -288,8 +285,8 @@ current_version.locked_package <- function(package) {
   current_version(package$name)
 }
 
-description_file_for <- function(package_name, libP) {
-  dcf_file <- file.path(libP, package_name, "DESCRIPTION")
+description_file_for <- function(package_name) {
+  dcf_file <- file.path(libPath(), package_name, "DESCRIPTION")
   if (file.exists(dcf_file)) {
     read.dcf(dcf_file)
   } else {

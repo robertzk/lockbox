@@ -25,7 +25,6 @@ lockbox.character <- function(file, env) {
 
 #' @export
 lockbox.list <- function(lock, env) {
-  library(devtools)
   if (missing(env)) env <- "!packages"
   if (is.null(lock$packages))
     stop("Invalid config. Make sure your config format is correct")

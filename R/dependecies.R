@@ -192,7 +192,7 @@ get_dependencies <- function(package) {
       package_version(as.character(current_version(package))) <=
       package_version(as.character(package$version)))
   if (is_local_dependency) {
-    dependencies_from_description(package, description_file_for(package$name))
+    dependencies <- dependencies_from_description(package, description_file_for(package$name))
   } else {
     cat(crayon::blue("."))
     output <- tryCatch(get_remote_dependencies(package), error = function(e) e)
@@ -201,9 +201,31 @@ get_dependencies <- function(package) {
         , package$name, " version: ", package$version)))
       list()
     } else {
-      output
+      dependencies <- output
     }
   }
+  dependencies <- strip_available_dependencies(dependencies)
+  dependencies
+}
+
+strip_available_dependencies <- function(dependencies) {
+  dependencies <- lapply(dependencies
+    , function(package) {
+      if(currently_available(package)) NULL
+      else package
+    })
+ dependencies[!vapply(dependencies, is.null, logical(1))]
+}
+
+currently_available <- function(package) {
+  any(vapply(.libPaths(), functino(libP) {
+    version_available <- version_in_lib(package$name, libP)
+    if (is.na(version_available)) FALSE
+    else if(is.na(package$version)) TRUE
+    else if(package_version(as.character(package$version)) >=
+      package_version(as.character(version_available))) TRUE
+    else FALSE
+  }))
 }
 
 #' Get the dependencies for a given package

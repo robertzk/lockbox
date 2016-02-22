@@ -200,6 +200,7 @@ swap_versions <- function(names1, names2, list1, list2) {
 get_dependencies <- function(package, lock) {
   locked_package <- package
   if (locked_package$is_dependency_package &&
+    !is.null(locked_package$latest_version_in_lockbox) &&
     (is.na(locked_package$version) ||
       package_version(as.character(locked_package$version)) <
       package_version(as.character(locked_package$latest_version_in_lockbox)))) {

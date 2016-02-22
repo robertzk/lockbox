@@ -207,9 +207,10 @@ get_dependencies <- function(package, lock) {
       , description_file_for(locked_package$name
         , gsub("/[^/]+$", "", lockbox_package_path(locked_package))))
   } else {
+    browser()
     cat(crayon::blue("."))
     output <- tryCatch(get_remote_dependencies(package), error = function(e) e)
-    if(is(output, "error")) {
+    if (is(output, "error")) {
       message(crayon::red(paste0("Dependencies could not be resolved for package: "
         , package$name, " version: ", package$version)))
       list()

@@ -332,8 +332,9 @@ dependencies_from_description <- function(package, dcf) {
     non_remote_list <- lapply(seq_along(non_remote_dependencies[,1])
       , function(i) {
         name <- as.character(non_remote_dependencies[i,1])
-        version <- as.character(non_remote_dependencies[i,3])
-        list(name = name, version = version)
+        ref <- as.character(non_remote_dependencies[i,3])
+        version <- as.character(package_version(ref))
+        list(name = name, version = version, ref = ref)
       })
   }
   if (identical(nrow(remote_dependencies),0L)){

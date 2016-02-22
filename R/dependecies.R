@@ -102,10 +102,10 @@ replace_with_lock <- function(package, lock) {
     package$remote <- "CRAN"
   }
   package <- as.locked_package(package)
-  if (package$is_dependency_package) {
-    browser()
-    package$latest_version <- package$latest_version_in_lockbox %||%
-      get_latest_version(package)
+  if (package$is_dependency_package && !package$name %in%
+    as.character(installed.packages(priority = "base")[,1])) {
+      package$latest_version <- package$latest_version_in_lockbox %||%
+        get_latest_version(package)
   }
   package
 }

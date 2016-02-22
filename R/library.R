@@ -145,7 +145,8 @@ install_package.github <- function(locked_package) {
       extracted_path <- gsub("/[^/]+$", "", extracted_file)
       output <- tryCatch(install.packages(filepath, repos = NULL, type = "source", dependencies = F))
       output <- install.packages(extracted_path
-          , repos = NULL, type = "source", dependencies = F)
+          , repos = NULL, type = "source", dependencies = F
+          , quiet  = notTRUE(getOption('lockbox.verbose')))
       unlink(filepath)
       unlink(extracted_path)
     }

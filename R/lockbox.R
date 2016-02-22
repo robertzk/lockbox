@@ -79,9 +79,10 @@ lockbox.default <- function(obj) {
 
 reset_to_latest_version <- function(locked_package) {
   if (locked_package$is_dependency_package) {
-    locked_package$version <- as.character(
-      package_version(locked_package$latest_version))
+    locked_package$version <- locked_package$latest_version
   }
+  locked_package$version <- as.character(
+    package_version(locked_package$version))
   locked_package
 }
 
@@ -100,7 +101,7 @@ as.locked_package <- function(list) {
   if (!list$is_dependency_package && is.na(package_version(list$version))) {
     stop(sprintf("Invalid package %s version %s.",
                  sQuote(list$name), sQuote(list$version)))
-  } else {
+  } else if (!list$is_dependency_package) {
     list$version <- package_version(list$version)
   }
 

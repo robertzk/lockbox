@@ -63,7 +63,7 @@ which_previously_parsed <- function(package, previously_parsed_deps) {
 }
 
 add_latest_version_in_lockbox <- function(package) {
-  package$latest_version_in_lockbox <- max_version(
+  package$latest_version_in_lockbox <- max_package_version(
     list.files(file.path(lockbox_library(), package)))
   package
 }

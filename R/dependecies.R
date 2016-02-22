@@ -192,7 +192,8 @@ get_dependencies <- function(package) {
       package_version(as.character(current_version(package))) <=
       package_version(as.character(package$version)))
   if (is_local_dependency) {
-    dependencies <- dependencies_from_description(package, description_file_for(package$name))
+    dependencies <- dependencies_from_description(package
+      , description_file_for(package$name, libPath()))
   } else {
     cat(crayon::blue("."))
     output <- tryCatch(get_remote_dependencies(package), error = function(e) e)

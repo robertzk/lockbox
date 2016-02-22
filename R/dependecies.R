@@ -17,7 +17,8 @@ get_dependencies_for_list <- function(master_list, lock, previously_parsed_deps,
       single_package_dependencies <- get_dependencies(
        structure(package
          , class = c(package$remote %||% "CRAN"
-           , class(package))))
+           , class(package)))
+       , lock)
       previously_parsed_deps[[length(previously_parsed_deps) + 1]] <- list(
         package = package
         , dependencies = single_package_dependencies)
@@ -193,7 +194,7 @@ swap_versions <- function(names1, names2, list1, list2) {
 
 #' Either use the current lockbox library DESCRIPTION
 #' file or download the accurate remote DESCRIPTION file.
-get_dependencies <- function(package) {
+get_dependencies <- function(package, lock) {
   locked_package <- package
   if (is.na(locked_package$version)) {
     locked_package$version <- locked_package$latest_version_in_lockbox

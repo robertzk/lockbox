@@ -103,6 +103,7 @@ replace_with_lock <- function(package, lock) {
   }
   package <- as.locked_package(package)
   if (package$is_dependency_package) {
+    browser()
     package$latest_version <- package$latest_version_in_lockbox %||%
       get_latest_version(package)
   }

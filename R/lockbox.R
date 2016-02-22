@@ -51,6 +51,7 @@ lockbox.list <- function(lock, env) {
   ## Find the packages whose version does not match the current library.
   mismatches <- vapply(lock, version_mismatch, logical(1))
 
+  browser()
   sapply(lock[!mismatches], function(locked_package) {
     if (locked_package$is_dependency_package) {
       cat('Using dependency', crayon::blue(locked_package$name), as.character(locked_package$version), '\n')

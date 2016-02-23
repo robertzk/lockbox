@@ -405,6 +405,17 @@ download_package.CRAN <- function(package) {
   pkg_tarball
 }
 
+#' Download a package from github using devtools' remote_download function
+download_package.github <- function(package) {
+  if (is.na(package$version)) {
+    package$version <- NULL
+  }
+  remote <- get_remote(package)
+  quiet <- !isTRUE(getOption('lockbox.verbose'))
+  devtools:::remote_download.github_remote(remote, quiet = quiet)
+}
+
+#' Return the latest available version of a package from CRAN
 get_available_cran_version <- function(package, repo = "http://cran.r-project.org") {
   repo = "http://cran.r-project.org"
   # List available packages on the repo
@@ -417,16 +428,6 @@ get_available_cran_version <- function(package, repo = "http://cran.r-project.or
   } else{
     pkg$Version
   }
-}
-
-#' Download a package from github using devtools' remote_download function
-download_package.github <- function(package) {
-  if (is.na(package$version)) {
-    package$version <- NULL
-  }
-  remote <- get_remote(package)
-  quiet <- !isTRUE(getOption('lockbox.verbose'))
-  devtools:::remote_download.github_remote(remote, quiet = quiet)
 }
 
 #' Create remote in form devtools' remote_download likes.
@@ -507,4 +508,3 @@ parse_dcf <- function (x, check = FALSE, depLevel = c("Depends", "Imports",
       return(deps)
   }
 }
-

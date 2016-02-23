@@ -1,5 +1,4 @@
-#' Get dependencies for all elements with lock, but only do so for current
-#' version mismatches and non-cran installations
+#' Get dependencies for all elements in lock
 get_ordered_dependencies <- function(lock) {
    cat(crayon::blue(paste("Retrieving dependency info...")))
    deps <- get_dependencies_for_list(lock, lock, list(), "")
@@ -63,6 +62,7 @@ which_previously_parsed <- function(package, previously_parsed_deps) {
   0L
 }
 
+#' Attach the latest available lockbox version to a package
 add_latest_version_in_lockbox <- function(package) {
   package$latest_version_in_lockbox <- max_package_version(
     list.files(file.path(lockbox_library(), package)))
@@ -113,7 +113,7 @@ replace_with_lock <- function(package, lock) {
 get_latest_version <- function(package) {
   if (package$remote == "CRAN") {
     get_available_cran_version(package)
-  } else{
+  } else {
     version_from_remote(package)
   }
 }
@@ -143,7 +143,6 @@ combine_dependencies <- function(list1, list2, current_parent) {
   keep1 <- !names1 %in% names2
 
   if (current_parent %in% names2 && any(names2 %in% names1)) {
-    new_selection <- !names1 %in% names2
     init_parent_slot <- which(names2 == current_parent)
     final_parent_slot <- max(which(names2 %in% names1))
     if (final_parent_slot > init_parent_slot) {
@@ -159,7 +158,7 @@ combine_dependencies <- function(list1, list2, current_parent) {
   c(list1[keep1], list2)
 }
 
-#' Swap versions information when side1 is greater than side2
+#' Swap all package information when side1 is greater than side2
 swap_versions <- function(names1, names2, list1, list2) {
   swap_version2for1 <- vapply(
     names1

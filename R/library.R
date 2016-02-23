@@ -184,20 +184,16 @@ current_version <- function(pkg) {
 }
 
 current_version.character <- function(package_name) {
-  version_in_lib(package_name)
-}
-
-current_version.locked_package <- function(package) {
-  current_version(package$name)
-}
-
-version_in_lib <- function(package_name, libP = libPath()) {
-  dcf <- description_file_for(package_name, libP)
+  dcf <- description_file_for(package_name, libPath())
   if (is.null(dcf)) {
     NA
   } else {
     package_version(unname(dcf[,"Version"]))
   }
+}
+
+current_version.locked_package <- function(package) {
+  current_version(package$name)
 }
 
 description_file_for <- function(package_name, libP) {

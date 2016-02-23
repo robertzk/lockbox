@@ -2,13 +2,11 @@
 % Please edit documentation in R/dependecies.R
 \name{get_ordered_dependencies}
 \alias{get_ordered_dependencies}
-\title{Get dependencies for all elements with lock, but only do so for current
-version mismatches and non-cran installations}
+\title{Get dependencies for all elements in lock}
 \usage{
 get_ordered_dependencies(lock)
 }
 \description{
-Get dependencies for all elements with lock, but only do so for current
-version mismatches and non-cran installations
+Get dependencies for all elements in lock
 }
 

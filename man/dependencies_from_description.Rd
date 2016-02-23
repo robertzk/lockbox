@@ -2,11 +2,11 @@
 % Please edit documentation in R/dependecies.R
 \name{dependencies_from_description}
 \alias{dependencies_from_description}
-\title{Parse dependencies from description using the tools package}
+\title{Parse dependencies from description}
 \usage{
 dependencies_from_description(package, dcf)
 }
 \description{
-Parse dependencies from description using the tools package
+Parse dependencies from description
 }
 

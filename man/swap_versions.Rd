@@ -2,11 +2,11 @@
 % Please edit documentation in R/dependecies.R
 \name{swap_versions}
 \alias{swap_versions}
-\title{Swap versions information when side1 is greater than side2}
+\title{Swap all package information when side1 is greater than side2}
 \usage{
 swap_versions(names1, names2, list1, list2)
 }
 \description{
-Swap versions information when side1 is greater than side2
+Swap all package information when side1 is greater than side2
 }
 

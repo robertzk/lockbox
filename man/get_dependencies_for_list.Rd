@@ -5,8 +5,7 @@
 \title{Recursive function to take a list and lock and extract dependencies, sorting
 along the way using the combine_dependencies function.}
 \usage{
-get_dependencies_for_list(master_list, lock, previously_parsed_deps,
-  current_parent)
+get_dependencies_for_list(master_list, lock, previously_parsed_deps)
 }
 \description{
 Recursive function to take a list and lock and extract dependencies, sorting

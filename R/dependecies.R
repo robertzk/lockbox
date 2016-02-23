@@ -14,7 +14,7 @@ get_ordered_dependencies <- function(lock) {
 #'   we have already parsed out of their respective description files
 get_dependencies_for_list <- function(master_list, lock, previously_parsed_deps) {
   current_dependencies <- master_list
-  for (i in 1:length(master_list)) {
+  for (i in seq_along(master_list)) {
     package <- master_list[[i]]
     previously_parsed_loc <- which_previously_parsed(
         package, previously_parsed_deps)

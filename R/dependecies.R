@@ -122,9 +122,6 @@ get_latest_version <- function(package) {
 #' found in list1 on the left side of the entirety of list2, while moving
 #' the parent package to the space after it's rightmost dependency found in list2.
 combine_dependencies <- function(list1, list2, current_parent) {
-  old_list1 <- list1
-  old_list2 <- list2
-
   names1 <- vapply(list1, function(obj) obj$name, character(1))
   names2 <- vapply(list2, function(obj) obj$name, character(1))
 

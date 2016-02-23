@@ -210,7 +210,7 @@ get_dependencies <- function(package, lock) {
     if (is(output, "error")) {
       message(crayon::red(paste0("Dependencies could not be resolved for package: "
         , package$name, " version: ", package$version)))
-      list()
+      dependencies <- list()
     } else {
       dependencies <- output
     }

@@ -128,28 +128,8 @@ install_package.github <- function(locked_package) {
     if (!is.null(locked_package$subdir)) {
       arguments$subdir <- locked_package$subdir
     }
-    output <- tryCatch(
-      do.call(devtools::install_github, arguments)
-      , error = function(e) e)
 
-    ## There are strange cases(usually involving "Remotes") where install_github
-    ## will error out but an explicit download and extraction will not
-    if (is(output, "error")) {
-      final_package <- locked_package
-      if (no_ref) {
-        final_package$version <- NA
-      }
-      filepath <- download_package(final_package)
-      temp_dir <- gsub("/[^/]+.zip", "", filepath)
-      extracted_file <- unzip(filepath, exdir = temp_dir)[1]
-      extracted_path <- gsub("/[^/]+$", "", extracted_file)
-      output <- tryCatch(install.packages(filepath, repos = NULL, type = "source", dependencies = F))
-      output <- install.packages(extracted_path
-          , repos = NULL, type = "source", dependencies = F
-          , quiet  = notTRUE(getOption('lockbox.verbose')))
-      unlink(filepath)
-      unlink(extracted_path)
-    }
+    do.call(devtools::install_github, arguments)
   })
 }
 

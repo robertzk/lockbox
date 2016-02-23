@@ -164,10 +164,18 @@ swap_versions <- function(names1, names2, list1, list2) {
         obj1 <- list1[[n]]
         obj2 <- list2[[n]]
         if (obj1$is_dependency_package && obj2$is_dependency_package) {
-          if (obj1$remote != obj2$remote) {
-            package_version(obj1$latest_version) > package_version(obj2$latest_version)
-          } else {
+          if (is.na(obj1$version) && is.na(obj2$version)) {
+            if (obj1$remote != obj2$remote) {
+              package_version(obj1$latest_version) > package_version(obj2$latest_version)
+            } else {
+              FALSE
+            }
+          } else if(is.na(obj1$version)) {
             FALSE
+          } else if(is.na(obj2$version)) {
+            TRUE
+          } else{
+            package_version(obj1$version) > package_version(obj2$version)
           }
         } else if (obj1$is_dependency_package){
           FALSE

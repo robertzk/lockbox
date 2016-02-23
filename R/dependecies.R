@@ -8,6 +8,10 @@ get_ordered_dependencies <- function(lock) {
 
 #' Recursive function to take a list and lock and extract dependencies, sorting
 #' along the way using the combine_dependencies function.
+#' @param master_list list.  Packages to go through and parse dependencies from
+#' @param lock list.  Original list of locked packages
+#' @param previously_parsed_deps.  List of packages and their dependencies that
+#'   we have already parsed out of their respective description files
 get_dependencies_for_list <- function(master_list, lock, previously_parsed_deps) {
   current_dependencies <- master_list
   for (i in 1:length(master_list)) {

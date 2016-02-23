@@ -12,7 +12,9 @@ get_dependencies_for_list <- function(master_list, lock, previously_parsed_deps)
   current_dependencies <- master_list
   for (i in 1:length(master_list)) {
     package <- master_list[[i]]
-    if (!is_previously_parsed(package, previously_parsed_deps)) {
+    previously_parsed_loc <- which_previously_parsed(
+        package, previously_parsed_deps)
+    if (identical(previously_parsed_loc, 0L)) {
       single_package_dependencies <- get_dependencies(
        structure(package
          , class = c(package$remote %||% "CRAN"
@@ -22,8 +24,8 @@ get_dependencies_for_list <- function(master_list, lock, previously_parsed_deps)
         package = package
         , dependencies = single_package_dependencies)
     } else {
-      single_package_dependencies <- previously_parsed_deps[[which_previously_parsed(
-        package, previously_parsed_deps)]][["dependencies"]]
+      single_package_dependencies <-
+        previously_parsed_deps[[previously_parsed_loc]]$dependencies
     }
     current_dependencies <- combine_dependencies(
       single_package_dependencies
@@ -32,16 +34,6 @@ get_dependencies_for_list <- function(master_list, lock, previously_parsed_deps)
   }
   if (identical(master_list, current_dependencies)) return(master_list)
   get_dependencies_for_list(current_dependencies, lock, previously_parsed_deps)
-}
-
-#' Have we previously gotten this packages dependencies?
-is_previously_parsed <- function(package, previously_parsed_deps) {
-  location <- which_previously_parsed(package, previously_parsed_deps)
-  if (identical(location, 0L)) {
-    FALSE
-  } else{
-    TRUE
-  }
 }
 
 #' Where, if anywhere, have I stored this packages/version combinations'
@@ -84,11 +76,7 @@ replace_with_lock <- function(package, lock) {
   lock_names <- vapply(lock, function(l) l$name, character(1))
   if (package$name %in% lock_names) {
     locked_package <- lock[[which(lock_names == package$name)[1]]]
-    if (is.na(package$version) || package_version(as.character(package$version)) <
-      package_version(as.character(locked_package$version))) {
-        package$version <- as.character(locked_package$version)
-    }
-    if (package_version(as.character(package$version)) >
+    if (!is.na(package$version) && package_version(as.character(package$version)) >
       package_version(as.character(locked_package$version))) {
         stop(paste0("Dependency: \'", package$name, ", Version: ", package$version
           , " is required, but lockbox is locked at version: "

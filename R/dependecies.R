@@ -229,17 +229,6 @@ strip_available_dependencies <- function(dependencies) {
  dependencies[!vapply(dependencies, is.null, logical(1))]
 }
 
-currently_available <- function(package) {
-  any(vapply(.libPaths(), function(libP) {
-    version_available <- version_in_lib(package$name, libP)
-    if (is.na(version_available)) FALSE
-    else if(is.na(package$version)) TRUE
-    else if(package_version(as.character(package$version)) >=
-      package_version(as.character(version_available))) TRUE
-    else FALSE
-  }, logical(1)))
-}
-
 #' Get the dependencies for a given package
 get_remote_dependencies <- function(package) {
   UseMethod("get_remote_dependencies")
@@ -308,7 +297,7 @@ version_from_description <- function(package_name, dcf) {
   as.character(dcf[1, which(colnames(dcf) == "Version")])
 }
 
-#' Parse dependencies from description using the tools package
+#' Parse dependencies from description
 dependencies_from_description <- function(package, dcf) {
   dependency_levels <- c("Depends", "Imports", "Remotes")
   dependency_levels %in% colnames(dcf)

@@ -1,14 +1,14 @@
 #' Get dependencies for all elements in lock
 get_ordered_dependencies <- function(lock) {
    cat(crayon::blue(paste("Retrieving dependency info...")))
-   deps <- get_dependencies_for_list(lock, lock, list(), "")
+   deps <- get_dependencies_for_list(lock, lock, list())
    cat("\n")
    deps
 }
 
 #' Recursive function to take a list and lock and extract dependencies, sorting
 #' along the way using the combine_dependencies function.
-get_dependencies_for_list <- function(master_list, lock, previously_parsed_deps, current_parent) {
+get_dependencies_for_list <- function(master_list, lock, previously_parsed_deps) {
   current_dependencies <- master_list
   for (i in 1:length(master_list)) {
     package <- master_list[[i]]
@@ -31,7 +31,7 @@ get_dependencies_for_list <- function(master_list, lock, previously_parsed_deps,
       , package$name)
   }
   if (identical(master_list, current_dependencies)) return(master_list)
-  get_dependencies_for_list(current_dependencies, lock, previously_parsed_deps, current_parent)
+  get_dependencies_for_list(current_dependencies, lock, previously_parsed_deps)
 }
 
 #' Have we previously gotten this packages dependencies?

@@ -133,34 +133,34 @@ combine_dependencies <- function(list1, list2, current_parent) {
   # Certain packages are no longer on cran but incorporated into R Core
   core_pkgs <- as.character(installed.packages(priority = "base")[,1])
   list1 <- list1[!names[[1]] %in% core_pkgs]
-  names1 <- names1[!names[[1]] %in% core_pkgs]
-  list2 <- list2[!names2 %in% core_pkgs]
-  names2 <- names2[!names2 %in% core_pkgs]
+  names[[1]] <- names[[1]][!names[[1]] %in% core_pkgs]
+  list2 <- list2[!names[[2]] %in% core_pkgs]
+  names[[2]] <- names[[2]][!names[[2]] %in% core_pkgs]
 
   if (length(list1) == 0) return(list2)
   if (length(list2) == 0) return(list1)
 
-  names(list1) <- names1
-  names(list2) <- names2
+  names(list1) <- names[[1]]
+  names(list2) <- names[[2]]
 
   ## Find the rightmost dependency of the current package and move our current
   ## package to the immediate right of that spot.  This preserves previous
   ## sorting order while ensuring that the current package will be installed
   ## after all its dependencies
-  if (current_parent %in% names2 && any(names2 %in% names1)) {
-    init_parent_slot <- which(names2 == current_parent)
-    final_parent_slot <- max(which(names2 %in% names1))
+  if (current_parent %in% names[[2]] && any(names[[2]] %in% names[[1]])) {
+    init_parent_slot <- which(names[[2]] == current_parent)
+    final_parent_slot <- max(which(names[[2]] %in% names[[1]]))
     if (final_parent_slot > init_parent_slot) {
-      sel1 <- seq_along(names2) != init_parent_slot & seq_along(names2) <= final_parent_slot
-      sel2 <- seq_along(names2) > final_parent_slot
+      sel1 <- seq_along(names[[2]]) != init_parent_slot & seq_along(names[[2]]) <= final_parent_slot
+      sel2 <- seq_along(names[[2]]) > final_parent_slot
       list2 <- c(list2[sel1], list2[init_parent_slot], list2[sel2])
-      names2 <- c(names2[sel1], names2[init_parent_slot], names2[sel2])
+      names[[2]] <- c(names[[2]][sel1], names[[2]][init_parent_slot], names[[2]][sel2])
     }
   }
 
-  list2 <- swap_packages(names1, names2, list1, list2)
+  list2 <- swap_packages(names[[1]], names[[2]], list1, list2)
 
-  c(list1[!names1 %in% names2], list2)
+  c(list1[!names[[1]] %in% names[[2]], list2)
 }
 
 #' Swap packages by comparing version information. 1ist2 has already

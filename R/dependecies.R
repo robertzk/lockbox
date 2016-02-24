@@ -316,8 +316,6 @@ version_from_description <- function(package_name, dcf) {
   as.character(dcf[1, which(colnames(dcf) == "Version")])
 }
 
-lockbox:::description_file_for(package$name
-        , gsub("/[^/]+$", "", lockbox:::lockbox_package_path(package)))
 #' Parse dependencies from description
 dependencies_from_description <- function(package, dcf) {
   ## We install 3 kinds of dependencies listed in the description file. If our

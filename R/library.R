@@ -49,7 +49,14 @@ install_package <- function(locked_package) {
     cat("Installing dependency", crayon::blue(locked_package$name),
       "from", locked_package$remote, "\n")
   }
-  UseMethod("install_package")
+  fn <- UseMethod("install_package", locked_package)
+  output <- tryCatch(fn(), error = function(e) e)
+
+  ## If we have an error during installation try again and show everything
+  if (is(output, "error")) {
+    option(lockbox.verbose = TRUE)
+    fn()
+  }
 }
 
 install_package.local <- function(locked_package) {
@@ -94,8 +101,9 @@ install_old_CRAN_package <- function(name, version, repo = "http://cran.r-projec
   setwd(tmpdir)
 
   utils::install.packages(pkg.tarball, repos = NULL, type = "source",
-                          INSTALL_opts = "--vanilla",
-                          quiet = notTRUE(getOption("lockbox.verbose")))
+    INSTALL_opts = "--vanilla",
+    quiet = notTRUE(getOption("lockbox.verbose")))
+
   unlink(pkg.tarball)
 }
 

@@ -146,7 +146,7 @@ disallow_special_packages <- function(lock) {
 
 disallow_duplicate_packages <- function(lock) {
   locked_names <- vapply(lock, function(p) p$name, character(1))
-  if( any(duplicated(locked_names))) {
+  if (any(duplicated(locked_names))) {
     stop(paste0("The following packages are duplicated in your lockfile: "
       , paste(locked_names[duplicated(locked_names)], collapse = ", ")))
   }

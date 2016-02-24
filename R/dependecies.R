@@ -160,7 +160,7 @@ combine_dependencies <- function(list1, list2, current_parent) {
 
   list2 <- swap_packages(names[[1]], names[[2]], list1, list2)
 
-  c(list1[!names[[1]] %in% names[[2]], list2)
+  c(list1[!names[[1]] %in% names[[2]]], list2)
 }
 
 #' Swap packages by comparing version information. 1ist2 has already

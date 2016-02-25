@@ -83,7 +83,7 @@ install_old_CRAN_package <- function(name, version, repo = "http://cran.r-projec
   remote_version <- package_version(as.character(pkg$Version))
   if (dim(pkg)[1] == 1 && remote_version == version) {
     return(utils::install.packages(
-      name, repos = repos, INSTALL_opts = "--vanilla",
+      name, repos = repos, INSTALL_opts = "--vanilla", type = "source",
       quiet = notTRUE(getOption('lockbox.verbose'))))
   }
 

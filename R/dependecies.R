@@ -549,6 +549,40 @@ github_remote <- function(repo, username = NULL, ref = NULL, subdir = NULL,
   )
 }
 
+#' Stolen from devtools.
+#' Parse concise git repo specification: [username/]repo[/subdir][#pull|@ref|@*release]
+#' (the *release suffix represents the latest release)
+parse_git_repo <- function(path) {
+  username_rx <- "(?:([^/]+)/)?"
+  repo_rx <- "([^/@#]+)"
+  subdir_rx <- "(?:/([^@#]*[^@#/]))?"
+  ref_rx <- "(?:@([^*].*))"
+  pull_rx <- "(?:#([0-9]+))"
+  release_rx <- "(?:@([*]release))"
+  ref_or_pull_or_release_rx <- sprintf("(?:%s|%s|%s)?", ref_rx, pull_rx, release_rx)
+  github_rx <- sprintf("^(?:%s%s%s%s|(.*))$",
+    username_rx, repo_rx, subdir_rx, ref_or_pull_or_release_rx)
+
+  param_names <- c("username", "repo", "subdir", "ref", "pull", "release", "invalid")
+  replace <- stats::setNames(sprintf("\\%d", seq_along(param_names)), param_names)
+  params <- lapply(replace, function(r) gsub(github_rx, r, path, perl = TRUE))
+  if (params$invalid != "")
+    stop(sprintf("Invalid git repo: %s", path))
+  params <- params[sapply(params, nchar) > 0]
+
+  if (!is.null(params$pull)) {
+    params$ref <- github_pull(params$pull)
+    params$pull <- NULL
+  }
+
+  if (!is.null(params$release)) {
+    params$ref <- github_release()
+    params$release <- NULL
+  }
+
+  params
+}
+
 #' Borrowed from tools::package.dependencies and modified to be less breaky
 #' and parse remotes
 parse_dcf <- function (x, check = FALSE, depLevel = c("Depends", "Imports",
@@ -608,4 +642,43 @@ parse_dcf <- function (x, check = FALSE, depLevel = c("Depends", "Imports",
       names(deps) <- x[, "Package"]
       return(deps)
   }
+}
+
+#' Resolve the ref.  Stolen from devtools
+github_resolve_ref <- function(x, params) UseMethod("github_resolve_ref")
+
+#' @export
+github_resolve_ref.default <- function(x, params) {
+  params$ref <- x
+  params
+}
+
+#' @export
+github_resolve_ref.NULL <- function(x, params) {
+  params$ref <- "master"
+  params
+}
+
+#' @export
+github_resolve_ref.github_pull <- function(x, params) {
+  # GET /repos/:user/:repo/pulls/:number
+  path <- file.path("repos", params$username, params$repo, "pulls", x)
+  response <- github_GET(path)
+
+  params$username <- response$head$user$login
+  params$ref <- response$head$ref
+  params
+}
+
+# Retrieve the ref for the latest release
+#' @export
+github_resolve_ref.github_release <- function(x, params) {
+  # GET /repos/:user/:repo/releases
+  path <- paste("repos", params$username, params$repo, "releases", sep = "/")
+  response <- github_GET(path)
+  if (length(response) == 0L)
+    stop("No releases found for repo ", params$username, "/", params$repo, ".")
+
+  params$ref <- response[[1L]]$tag_name
+  params
 }

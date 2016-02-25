@@ -1,3 +1,6 @@
+# All functions in this file were shamelessly stolen from devtools to decrease
+# the dependency requirements of lockbox.  They remain unaltered
+
 remote_download_github_remote <- function(x, quiet = FALSE) {
   dest <- tempfile(fileext = paste0(".zip"))
   src_root <- paste0("https://", x$host, "/repos/", x$username, "/", x$repo)
@@ -21,8 +24,6 @@ remote_download_github_remote <- function(x, quiet = FALSE) {
   download(dest, src, auth)
 }
 
-# All functions in this file were shamelessly stolen from devtools to decrease
-# the dependency requirements of lockbox
 github_remote <- function(repo, username = NULL, ref = NULL, subdir = NULL,
                        auth_token = github_pat(), sha = NULL,
                        host = "api.github.com") {

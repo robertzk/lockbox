@@ -417,6 +417,7 @@ download_package <- function(package) {
 
 #' Download CRAN package, either current or older version
 download_package.CRAN <- function(package) {
+  if(package$name == "htmlwidgets") browser()
   remote_version <- get_available_cran_version(package)
   name <- package$name
   version <- package$version

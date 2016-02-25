@@ -49,7 +49,10 @@ github_remote <- function(repo, username = NULL, ref = NULL, subdir = NULL,
   )
 }
 
-#' Stolen from devtools.
+remote <- function(type, ...) {
+  structure(list(...), class = c(paste0(type, "_remote"), "remote"))
+}
+
 #' Parse concise git repo specification: [username/]repo[/subdir][#pull|@ref|@*release]
 #' (the *release suffix represents the latest release)
 parse_git_repo <- function(path) {

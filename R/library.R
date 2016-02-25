@@ -114,31 +114,21 @@ install_package.CRAN <- function(locked_package) {
     install_old_CRAN_package(locked_package$name, locked_package$version))
 }
 
-#' @importFrom devtools install_github
+#' Install package by downloading from github
 install_package.github <- function(locked_package) {
   stopifnot(is.element("repo", names(locked_package)))
 
   ref <- locked_package$ref %||% locked_package$version
   install_locked_package(locked_package, {
-    if (locked_package$is_dependency_package && is.null(locked_package$ref)) {
-      repo_arg <- locked_package$repo
-    } else {
-      repo_arg <- paste(locked_package$repo, ref, sep = "@")
-    }
-    arguments <- list(
-      repo_arg,
-      reload = FALSE,
-      quiet  = notTRUE(getOption('lockbox.verbose'))
-    )
-    if (nzchar(token <- Sys.getenv("GITHUB_PAT"))) {
-      arguments$auth_token <- token
-    }
-    if (!is.null(locked_package$subdir)) {
-      arguments$subdir <- locked_package$subdir
-    }
-
-    do.call(devtools::install_github, arguments)
+     install_from_gitub(locked_package)
   })
+}
+
+install_from_github(locked_package) {
+  filepath <- download_package(package)
+  utils::install.packages(filepath, repos = NULL, type = "source",
+    INSTALL_opts = "--vanilla",
+    quiet = notTRUE(getOption("lockbox.verbose")))
 }
 
 install_locked_package <- function(locked_package, installing_expr) {

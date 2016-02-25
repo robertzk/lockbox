@@ -453,14 +453,39 @@ download_package.CRAN <- function(package) {
   pkg_tarball
 }
 
-#' Download a package from github using devtools' remote_download function
+#' Download a package using the github remote arguments.  Borrowed entirely from
+#' devtools
+remote_download_github_remote <- function(x, quiet = FALSE) {
+  dest <- tempfile(fileext = paste0(".zip"))
+  src_root <- paste0("https://", x$host, "/repos/", x$username, "/", x$repo)
+  src <- paste0(src_root, "/zipball/", x$ref)
+
+  if (!quiet) {
+    message("Downloading GitHub repo ", x$username, "/", x$repo, "@", x$ref,
+            "\nfrom URL ", src)
+  }
+
+  if (!is.null(x$auth_token)) {
+    auth <- httr::authenticate(
+      user = x$auth_token,
+      password = "x-oauth-basic",
+      type = "basic"
+    )
+  } else {
+    auth <- NULL
+  }
+
+  download(dest, src, auth)
+}
+
+#' Download a package from github our version of devtools' remote_download
+#' function
 download_package.github <- function(package) {
   if (is.na(package$version)) {
     package$version <- NULL
   }
   remote <- get_remote(package)
-  quiet <- !isTRUE(getOption('lockbox.verbose'))
-  devtools:::remote_download.github_remote(remote, quiet = quiet)
+  remote_download_github_remote(remote, quiet = !isTRUE(getOption('lockbox.verbose')))
 }
 
 #' Return the latest available version of a package from CRAN
@@ -493,7 +518,34 @@ get_remote <- function(package) {
   if (!is.null(package$subdir)) {
     arguments$subdir <- package$subdir
   }
-  remote <- do.call(devtools:::github_remote, arguments)
+  remote <- do.call(github_remote, arguments)
+}
+
+#' Get remote for a repo given a username, ref, subdir, auth_token, etc.  Stolen
+#' shamelessly from devtools
+github_remote <- function(repo, username = NULL, ref = NULL, subdir = NULL,
+                       auth_token = github_pat(), sha = NULL,
+                       host = "api.github.com") {
+
+  meta <- parse_git_repo(repo)
+  meta <- github_resolve_ref(meta$ref %||% ref, meta)
+
+  if (is.null(meta$username)) {
+    meta$username <- username %||% getOption("github.user") %||%
+      stop("Unknown username.")
+    warning("Username parameter is deprecated. Please use ",
+      username, "/", repo, call. = FALSE)
+  }
+
+  remote("github",
+    host = host,
+    repo = meta$repo,
+    subdir = meta$subdir %||% subdir,
+    username = meta$username,
+    ref = meta$ref,
+    sha = sha,
+    auth_token = auth_token
+  )
 }
 
 #' Borrowed from tools::package.dependencies and modified to be less breaky

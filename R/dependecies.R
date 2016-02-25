@@ -425,12 +425,12 @@ download_package.CRAN <- function(package) {
     version <- NA
   }
 
+    browser()
   ###Some packages are available in archive only
   if (is.na(remote_version)) {
     ## Get all the filenames in the archive directory for the package
     archive_addition <- paste0("Archive/", name, "/")
     url <- paste0(repo, "/src/contrib/", archive_addition)
-    browser()
 
     filenames <- RCurl::getURL(url, ftp.use.epsv = FALSE, dirlistonly = TRUE)
     filenames <- paste(url, strsplit(filenames, "\r*\n")[[1]], sep = "")

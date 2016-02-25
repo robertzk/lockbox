@@ -484,6 +484,7 @@ download_package.github <- function(package) {
   if (is.na(package$version)) {
     package$version <- NULL
   }
+  browser()
   remote <- get_remote(package)
   remote_download_github_remote(remote, quiet = !isTRUE(getOption('lockbox.verbose')))
 }

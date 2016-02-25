@@ -22,4 +22,4 @@ Suggests:
     microbenchmark
 Roxygen: list(wrap = FALSE)
 VignetteBuilder: knitr
-RoxygenNote: 5.0.1
+RoxygenNote: 4.1.1

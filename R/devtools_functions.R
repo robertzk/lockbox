@@ -24,6 +24,13 @@ remote_download_github_remote <- function(x, quiet = FALSE) {
   download(dest, src, auth)
 }
 
+download <- function(path, url, ...) {
+  request <- httr::GET(url, ...)
+  httr::stop_for_status(request)
+  writeBin(httr::content(request, "raw"), path)
+  path
+}
+
 github_remote <- function(repo, username = NULL, ref = NULL, subdir = NULL,
                        auth_token = github_pat(), sha = NULL,
                        host = "api.github.com") {

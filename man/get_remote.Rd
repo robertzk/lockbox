@@ -2,11 +2,11 @@
 % Please edit documentation in R/dependecies.R
 \name{get_remote}
 \alias{get_remote}
-\title{Create remote in form devtools' remote_download likes.}
+\title{Create remote in form devtools' remote_download  function likes.}
 \usage{
 get_remote(package)
 }
 \description{
-Create remote in form devtools' remote_download likes.
+Create remote in form devtools' remote_download  function likes.
 }
 

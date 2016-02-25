@@ -2,13 +2,13 @@
 % Please edit documentation in R/dependecies.R
 \name{download_package.github}
 \alias{download_package.github}
-\title{Download a package from github our version of devtools' remote_download
+\title{Download a package from github using our version of devtools' remote_download
 function}
 \usage{
 \method{download_package}{github}(package)
 }
 \description{
-Download a package from github our version of devtools' remote_download
+Download a package from github using our version of devtools' remote_download
 function
 }
 

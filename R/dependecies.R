@@ -263,7 +263,7 @@ get_remote_dependencies.local <- function(package) {
 
 #' For packages on CRAN we will extract to a temporary directory when we
 #' download the accurate remote DESCRIPTION file. Because these are tarballs
-#' there is no simple way to extract only our desired file, like we can with
+#' there is no simple way to extract only our desired file like we can with
 #' zipfiles using the unz function.
 get_remote_dependencies.CRAN <- function(package) {
   if (package$is_dependency_package) {
@@ -277,8 +277,9 @@ get_remote_dependencies.CRAN <- function(package) {
     ,"/DESCRIPTION$"), file_list)]
   output <- untar(filepath, description_name, exdir = dirpath)
   description_path <- paste0(dirpath, "/", description_name)
-  dcf <- read.dcf(file = description_path)
   unlink(filepath)
+  dcf <- read.dcf(file = description_path)
+  unlink(description_path)
   dependencies_from_description(package, dcf)
 }
 

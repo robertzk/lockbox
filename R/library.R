@@ -150,9 +150,9 @@ install_locked_package <- function(locked_package, installing_expr) {
   unlink(pkgdir, TRUE, TRUE)
 
   ## Pretend our library path is the staging library during installation.
-  testthatsomemore::package_stub("base", ".libPaths", function(...) temp_library, {
-    force(quietly(installing_expr))
-  })
+  testthat::with_mock(
+    `base::.libPaths` = function(...) temp_library
+    , {force(quietly(installing_expr))})
 
   if (!file.exists(pkgdir)) {
     unlink(temp_library, TRUE, TRUE)

@@ -430,7 +430,12 @@ download_package.CRAN <- function(package) {
     ## Get all the filenames in the archive directory for the package
     archive_addition <- paste0("Archive/", name, "/")
     url <- paste0(repo, "/src/contrib/", archive_addition)
+    browser()
+
     filenames <- RCurl::getURL(url, ftp.use.epsv = FALSE, dirlistonly = TRUE)
+    filenames <- paste(url, strsplit(filenames, "\r*\n")[[1]], sep = "")
+
+    filenames <- httr::get(url, ftp.use.epsv = FALSE, dirlistonly = TRUE)
     filenames <- paste(url, strsplit(filenames, "\r*\n")[[1]], sep = "")
 
     ##  Subset to those filenames that have our package name, version

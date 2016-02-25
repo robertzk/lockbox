@@ -120,7 +120,7 @@ install_package.github <- function(locked_package) {
 
   ref <- locked_package$ref %||% locked_package$version
   install_locked_package(locked_package, {
-     install_from_gitub(locked_package)
+     install_from_github(locked_package)
   })
 }
 

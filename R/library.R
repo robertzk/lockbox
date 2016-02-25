@@ -124,7 +124,7 @@ install_package.github <- function(locked_package) {
   })
 }
 
-install_from_github(locked_package) {
+install_from_github <- function(locked_package) {
   filepath <- download_package(package)
   utils::install.packages(filepath, repos = NULL, type = "source",
     INSTALL_opts = "--vanilla",

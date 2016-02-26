@@ -449,6 +449,7 @@ download_package.CRAN <- function(package) {
   name <- package$name
   version <- package$version
   repo <- "http://cran.r-project.org"
+
   if (package$is_dependency_package) {
     pkg_tarball <- tempfile(fileext = ".tar.gz")
     unlink(pkg_tarball)
@@ -457,8 +458,18 @@ download_package.CRAN <- function(package) {
       , type = "source", quiet = notTRUE(getOption('lockbox.verbose')))[1, 2])
   }
 
-  from <- paste0(file.path(repo, "src", "contrib", "Archive", "name")
-    , "/", name, "_", version)
+  ## Simply download latest if version happens to be the latest available on CRAN.
+  remote_version <- as.character(remote_version)
+  if (is.na(version) || package_version(remote_version) == package_version(version)) {
+    version <- remote_version
+    archive_addition <- ""
+  } else{
+    archive_addition <- paste0("Archive/", name, "/")
+  }
+
+  from <- paste0(repo, "/src/contrib/", archive_addition, name, "_", version
+    , ".tar.gz")
+
   pkg_tarball <- tempfile(fileext = ".tar.gz")
   out <- suppressWarnings(tryCatch(
     download.file(url = from, destfile = pkg_tarball

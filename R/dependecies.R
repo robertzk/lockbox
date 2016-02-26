@@ -1,6 +1,7 @@
 #' Get dependencies for all elements in lock
 get_ordered_dependencies <- function(lock) {
    cat(crayon::blue(paste("Retrieving dependency info...")))
+   names(lock) <- vapply(lock, `[[`, character(1), "name")
    deps <- get_dependencies_for_list(lock, lock, list())
    cat("\n")
    deps
@@ -32,7 +33,11 @@ get_dependencies_for_list <- function(master_list, lock, previously_parsed_deps)
        , lock)
       package <- dependency_output$package
       single_package_dependencies <- dependency_output$dependencies
-      current_dependencies[[i]] <- package
+
+      ## Our package comes out of dependency search with a download_path
+      ## attached.  We will use this for installation (assuming we keep this
+      ## version of the package.
+      current_dependencies[[package$name]] <- package
 
       ## Store the dependencies for this particular package in our humongous
       ## previously_parsed_deps object
@@ -42,14 +47,18 @@ get_dependencies_for_list <- function(master_list, lock, previously_parsed_deps)
     } else {
       single_package_dependencies <-
         previously_parsed_deps[[previously_parsed_loc]]$dependencies
+      current_dependencies[[package$name]] <-
+          previously_parsed_deps[[previously_parsed_loc]]$package
     }
     ## Now combine the dependencies from this package with our big dependency
-    ## list
+    ## list.
+
     current_dependencies <- combine_dependencies(
       single_package_dependencies
       , current_dependencies
       , package$name)
   }
+
   if (identical(master_list, current_dependencies)) return(master_list)
 
   ## Run through the entire list again, because we have a bunch of new packages
@@ -278,6 +287,7 @@ get_remote_dependencies.local <- function(package) {
 #' there is no simple way to extract only our desired file like we can with
 #' zipfiles using the unz function.
 get_remote_dependencies.CRAN <- function(package) {
+  original_version <- package$version
   if (package$is_dependency_package) {
     package$version <- NA
   }
@@ -290,6 +300,7 @@ get_remote_dependencies.CRAN <- function(package) {
   output <- untar(filepath, description_name, exdir = dirpath)
   description_path <- paste0(dirpath, "/", description_name)
   package$download_path <- filepath
+  package$version <- original_version
   dcf <- read.dcf(file = description_path)
   unlink(description_path)
   list(package = package, dependencies = dependencies_from_description(package, dcf))
@@ -389,7 +400,7 @@ dependencies_from_description <- function(package, dcf) {
         , function(i) {
           name <- remote_dependencies[i,1]
 
-          ## if github is expliitly stated as the remote then we remove
+          ## if github is explicitly stated as the remote then we remove
           ## such references
           if (matches_github[i]){
             name <- gsub("git::.*github\\.com/", "", name)
@@ -400,8 +411,8 @@ dependencies_from_description <- function(package, dcf) {
           ## Could potentially fail if the repo is named something different 
           ## than its package name.  Other option is to download it now
           ## and parse it on the fly, but if we do that we have to do it
-          ## every time we load, since we don't know it's name for package
-          ## lookup in our lockbox directory
+          ## every time we load, since we don't know its package name to
+          ## look it up in our lockbox directory
           subname <- gsub("^.*/", "", as.character(remote_dependencies[i,1]))
           subname <- gsub("@.*", "", subname)
           subrepo <- gsub("@.*", "", as.character(remote_dependencies[i,1]))
@@ -412,8 +423,7 @@ dependencies_from_description <- function(package, dcf) {
           if (grepl("@", name)) {
             pkg$ref <- gsub(".*@", "", name)
           }
-          pkg
-        })
+          pkg})
     }
   }
 

@@ -78,6 +78,7 @@ install_package.CRAN <- function(locked_package, libP) {
 install_package.github <- function(locked_package, libP) {
   stopifnot(is.element("repo", names(locked_package)))
   ref <- locked_package$ref %||% locked_package$version
+  if (locked_package$name == "e1071") browser()
 
   filepath <- locked_package$download_path
   subdir <- ""

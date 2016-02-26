@@ -238,7 +238,7 @@ get_dependencies <- function(package, lock) {
       dependencies <- list()
     } else {
       package <- output$package
-      dependencies <- output$dcf
+      dependencies <- output$dependencies
     }
   }
   dependencies <- strip_available_dependencies(dependencies)
@@ -292,14 +292,14 @@ get_remote_dependencies.CRAN <- function(package) {
   package$download_path <- filepath
   dcf <- read.dcf(file = description_path)
   unlink(description_path)
-  list(package = package, dcf = dependencies_from_description(package, dcf))
+  list(package = package, dependencies = dependencies_from_description(package, dcf))
 }
 
 #' Download the accurate remote DESCRIPTION file for a github repo.
 get_remote_dependencies.github <- function(package) {
   output <- download_description_github(package)
   list(package = output$package
-    , dependencies_from_description(package, output$dcf))
+    , dependencies = dependencies_from_description(package, output$dcf))
 }
 
 download_description_github <- function(package) {

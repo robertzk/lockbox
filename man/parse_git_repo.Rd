@@ -2,14 +2,12 @@
 % Please edit documentation in R/devtools_functions.R
 \name{parse_git_repo}
 \alias{parse_git_repo}
-\title{Stolen from devtools.
-Parse concise git repo specification: [username/]repo[/subdir][#pull|@ref|@*release]
+\title{Parse concise git repo specification: [username/]repo[/subdir][#pull|@ref|@*release]
 (the *release suffix represents the latest release)}
 \usage{
 parse_git_repo(path)
 }
 \description{
-Stolen from devtools.
 Parse concise git repo specification: [username/]repo[/subdir][#pull|@ref|@*release]
 (the *release suffix represents the latest release)
 }

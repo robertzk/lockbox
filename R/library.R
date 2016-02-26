@@ -35,13 +35,13 @@ lockbox_package_path <- function(locked_package, library = lockbox_library()) {
 `place_in_lockbox!` <- function(locked_package) {
   remote <- locked_package$remote %||% "CRAN"
 
-  install_package(structure(
+  install_locked_package(structure(
     locked_package,
     class = c(remote, class(locked_package))
   ))
 }
 
-install_package <- function(locked_package) {
+install_package <- function(locked_package, libP) {
   if (!locked_package$is_dependency_package) {
     cat("Installing", crayon::green(locked_package$name),
       as.character(locked_package$version), "from", class(locked_package)[1], "\n")
@@ -49,7 +49,7 @@ install_package <- function(locked_package) {
     cat("Installing dependency", crayon::blue(locked_package$name),
       "from", locked_package$remote, "\n")
   }
-  fn <- UseMethod("install_package", locked_package)
+  fn <- UseMethod("install_package")
   output <- tryCatch(fn(), error = function(e) e)
 
   ## If we have an error during installation try again and show everything
@@ -59,76 +59,39 @@ install_package <- function(locked_package) {
   }
 }
 
-install_package.local <- function(locked_package) {
+install_package.local <- function(locked_package, libP) {
   stopifnot(is.element("dir", names(locked_package)))
-  install_locked_package(locked_package,
-    devtools::install(locked_package$dir,
-                      quiet = notTRUE(getOption("lockbox.verbose"))))
-}
 
-# Helpfully borrowed from https://github.com/christophergandrud/repmis/blob/master/R/InstallOldPackages.R
-# Did not simply import the function because it introduces too many dependencies
-#' @author Kirill Sevastyanenko
-install_old_CRAN_package <- function(name, version, repo = "http://cran.r-project.org") {
-  # List available packages on the repo. Maybe we can simply install.packages?
-  available <- available.packages(contriburl =
-    contrib.url(repos = "http://cran.us.r-project.org", type = "source"))
-  available <- data.frame(unique(available[, c("Package", "Version")]))
-  pkg <- available[available$Package == name, ]
-
-  # Simply install.packages if version happens to be the latest available on CRAN.
-  # You can specify the fastest CRAN mirror by setting the `lockbox.CRAN_mirror` option
-  # or Rstudio mirror will be used by default.
-  repos <- getOption('lockbox.CRAN_mirror') %||% c(CRAN = "http://cran.rstudio.com")
-  remote_version <- package_version(as.character(pkg$Version))
-  if (dim(pkg)[1] == 1 && remote_version == version) {
-    return(utils::install.packages(
-      name, repos = repos, INSTALL_opts = "--vanilla", type = "source",
-      quiet = notTRUE(getOption('lockbox.verbose'))))
-  }
-
-  # If we did not find the package on CRAN - try CRAN archive.
-  from <- paste0(repo, "/src/contrib/Archive/", name, "/", name, "_", version, ".tar.gz")
-  pkg.tarball <- tempfile(fileext = ".tar.gz")
-  download.file(url = from, destfile = pkg.tarball, quiet = notTRUE(getOption('lockbox.verbose')))
-
-  # We need to switch directories to ensure no infinite loop happens when
-  # the .Rprofile calls lockbox::lockbox.
-  old_dir <- getwd()
-  on.exit(setwd(old_dir))
-  tmpdir <- file.path(tempdir(), "foo")
-  dir.create(tmpdir, FALSE, TRUE)
-  setwd(tmpdir)
-
-  utils::install.packages(pkg.tarball, repos = NULL, type = "source",
+  utils::install.packages(locked_package$dir, lib = libP, repos = NULL, type = "source",
     INSTALL_opts = "--vanilla",
     quiet = notTRUE(getOption("lockbox.verbose")))
-
-  unlink(pkg.tarball)
 }
 
-install_package.CRAN <- function(locked_package) {
-  # TODO: (RK) Fetch correct version? Support install from source?
-  locked_package$repo <- locked_package$repo %||% "http://cran.r-project.org"
-  install_locked_package(locked_package,
-    install_old_CRAN_package(locked_package$name, locked_package$version))
+install_package.CRAN <- function(locked_package, libP) {
+  filepath <- locked_package$download_path
+  utils::install.packages(filepath, lib = libP, repos = NULL, type = "source",
+    INSTALL_opts = "--vanilla",
+    quiet = notTRUE(getOption("lockbox.verbose")))
+  unlink(locked_package$filepath)
 }
 
-#' Install package by downloading from github
-install_package.github <- function(locked_package) {
+install_package.github <- function(locked_package, libP) {
   stopifnot(is.element("repo", names(locked_package)))
-
   ref <- locked_package$ref %||% locked_package$version
-  install_locked_package(locked_package, {
-     install_from_github(locked_package)
-  })
-}
 
-install_from_github <- function(locked_package) {
-  filepath <- download_package(package)
-  utils::install.packages(filepath, repos = NULL, type = "source",
+  filepath <- locked_package$download_path
+  subdir <- ""
+  if (!is.null(locked_package$subdir)) {
+    subdir <- paste0("/",package$subdir)
+  }
+  extracted_filepath <- unzip(filepath
+    , exdir = gsub("/[^/]+$","",filepath))[1]
+  extracted_dir <- gsub("/[^/]+$","", extracted_filepath)
+  utils::install.packages(extracted_dir, lib = libP, repos = NULL, type = "source",
     INSTALL_opts = "--vanilla",
     quiet = notTRUE(getOption("lockbox.verbose")))
+  unlink(extracted_dir)
+  unlink(locked_package$filepath)
 }
 
 install_locked_package <- function(locked_package, installing_expr) {
@@ -140,9 +103,7 @@ install_locked_package <- function(locked_package, installing_expr) {
   unlink(pkgdir, TRUE, TRUE)
 
   ## Pretend our library path is the staging library during installation.
-  testthat::with_mock(
-    `base::.libPaths` = function(...) temp_library
-    , {force(quietly(installing_expr))})
+  install_package(locked_package, temp_library)
 
   if (!file.exists(pkgdir)) {
     unlink(temp_library, TRUE, TRUE)

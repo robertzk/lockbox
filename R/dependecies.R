@@ -25,11 +25,15 @@ get_dependencies_for_list <- function(master_list, lock, previously_parsed_deps)
     previously_parsed_loc <- which_previously_parsed(
         package, previously_parsed_deps)
     if (identical(previously_parsed_loc, 0L)) {
-      single_package_dependencies <- get_dependencies(
+      dependency_output <- get_dependencies(
        structure(package
          , class = c(package$remote %||% "CRAN"
            , class(package)))
        , lock)
+      package <- dependency_output$package
+      single_package_dependencies <- dependency_output$dependencies
+      current_dependencies[[i]] <- package
+
       ## Store the dependencies for this particular package in our humongous
       ## previously_parsed_deps object
       previously_parsed_deps[[length(previously_parsed_deps) + 1]] <- list(
@@ -197,6 +201,10 @@ swap_packages <- function(names1, names2, list1, list2) {
   list2_swap <- vapply(names1[swap_package2for1]
     , function(n) which(names2 == n)
     , integer(1))
+  lapply(list2[list2_swap], function(pkg) {
+    if (!is.null(pkg$download_path)) {
+       unlink(pkg$download_path)
+    }})
   list2[list2_swap] <- list1[swap_package2for1]
   list2
 }
@@ -229,7 +237,8 @@ get_dependencies <- function(package, lock) {
         , package$name, " version: ", package$version)))
       dependencies <- list()
     } else {
-      dependencies <- output
+      package <- output$package
+      dependencies <- output$dcf
     }
   }
   dependencies <- strip_available_dependencies(dependencies)
@@ -237,7 +246,8 @@ get_dependencies <- function(package, lock) {
   dependencies <- lapply(dependencies, function(dep) {
     dep$parent_package <- package$name
     dep})
-  lapply(dependencies, replace_with_lock, lock)
+  dependencies <- lapply(dependencies, replace_with_lock, lock)
+  list(package = package, dependencies = dependencies)
 }
 
 strip_available_dependencies <- function(dependencies) {
@@ -258,7 +268,9 @@ get_remote_dependencies <- function(package) {
 get_remote_dependencies.local <- function(package) {
   description_name <- file_list$Name[grepl(paste0("^[^/]+"
     ,"/DESCRIPTION$"), file_list$Name)]
-  dependencies_from_description(package, read.dcf(description_name))
+  list(package = package
+    , dependencies =
+      dependencies_from_description(package, read.dcf(description_name)))
 }
 
 #' For packages on CRAN we will extract to a temporary directory when we
@@ -277,15 +289,17 @@ get_remote_dependencies.CRAN <- function(package) {
     ,"/DESCRIPTION$"), file_list)]
   output <- untar(filepath, description_name, exdir = dirpath)
   description_path <- paste0(dirpath, "/", description_name)
-  unlink(filepath)
+  package$download_path <- filepath
   dcf <- read.dcf(file = description_path)
   unlink(description_path)
-  dependencies_from_description(package, dcf)
+  list(package = package, dcf = dependencies_from_description(package, dcf))
 }
 
 #' Download the accurate remote DESCRIPTION file for a github repo.
 get_remote_dependencies.github <- function(package) {
-  dependencies_from_description(package, download_description_github(package))
+  output <- download_description_github(package)
+  list(package = output$package
+    , dependencies_from_description(package, output$dcf))
 }
 
 download_description_github <- function(package) {
@@ -293,6 +307,7 @@ download_description_github <- function(package) {
   filepath <- download_package(structure(
     package,
     class = c(remote, class(package))))
+  package$download_path <- filepath
   file_list <- unzip(filepath, list = TRUE)
   subdir <- ""
   if (!is.null(package$subdir)){
@@ -304,12 +319,14 @@ download_description_github <- function(package) {
   file_con <- unz(filepath, description_name)
   dcf <- read.dcf(file = file_con)
   close(file_con)
-  unlink(filepath)
-  dcf
+  list(package = package, dcf = dcf)
 }
 
 version_from_remote <- function(package) {
-  version_from_description(package, download_description_github(package))
+  output <- download_description_github(package)
+  unlink(package$download_path)
+  version_from_description(package
+    , output$dcf)
 }
 
 version_from_description <- function(package_name, dcf) {
@@ -417,7 +434,6 @@ download_package <- function(package) {
 
 #' Download CRAN package, either current or older version
 download_package.CRAN <- function(package) {
-  if(package$name == "htmlwidgets") browser()
   remote_version <- get_available_cran_version(package)
   name <- package$name
   version <- package$version

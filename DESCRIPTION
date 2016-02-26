@@ -15,8 +15,7 @@ LazyData: true
 Imports:
     yaml,
     digest,
-    utils,
-    testthat
+    utils
 Suggests:
     knitr,
     microbenchmark

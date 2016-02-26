@@ -26,7 +26,6 @@ get_dependencies_for_list <- function(master_list, lock, previously_parsed_deps)
     previously_parsed_loc <- which_previously_parsed(
         package, previously_parsed_deps)
     if (identical(previously_parsed_loc, 0L)) {
-      print(package$name)
       dependency_output <- get_dependencies(
        structure(package
          , class = c(package$remote %||% "CRAN"
@@ -243,7 +242,6 @@ get_dependencies <- function(package, lock) {
     cat(crayon::blue("."))
     output <- tryCatch(get_remote_dependencies(package), error = function(e) e)
     if (is(output, "error")) {
-      browser()
       message(crayon::red(paste0("Dependencies could not be resolved for package: "
         , package$name, " version: ", package$version)))
       dependencies <- list()
@@ -293,6 +291,7 @@ get_remote_dependencies.CRAN <- function(package) {
   if (package$is_dependency_package) {
     package$version <- NA
   }
+  if (package$name == "scales") browser()
   filepath <- download_package(package)
   split_fp <- strsplit(filepath, "/")[[1]]
   dirpath <- dirname(filepath)

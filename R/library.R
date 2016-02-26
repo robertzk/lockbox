@@ -115,6 +115,10 @@ install_package.github <- function(locked_package) {
     )
     if (nzchar(token <- Sys.getenv("GITHUB_PAT"))) {
       arguments$auth_token <- token
+    } else {
+      warning(crayon::red("Warning: "), "To download private repositories, please set up your ",
+        sQuote(crayon::yellow("GITHUB_PAT")), " by following the instructions at ",
+        "https://help.github.com/articles/creating-an-access-token-for-command-line-use/")
     }
     if (!is.null(locked_package$subdir)) {
       arguments$subdir <- locked_package$subdir

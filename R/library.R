@@ -42,7 +42,6 @@ lockbox_package_path <- function(locked_package, library = lockbox_library()) {
 }
 
 install_package <- function(locked_package, libP) {
-  if(locked_package$name == "scales")browser()
   if (!locked_package$is_dependency_package) {
     cat("Installing", crayon::green(locked_package$name),
       as.character(locked_package$version), "from", class(locked_package)[1], "\n")

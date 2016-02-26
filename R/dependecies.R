@@ -19,6 +19,7 @@ get_dependencies_for_list <- function(master_list, lock, previously_parsed_deps)
   for (i in seq_along(master_list)) {
     package <- master_list[[i]]
 
+    if(package$name == "scales")browser()
     ## Find out if we've parsed this package's description before and, if so,
     ## where we've stored it's list of dependencies in our humongous
     ## previously_parsed_deps list object.  If this comes back as 0 then we

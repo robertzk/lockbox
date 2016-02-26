@@ -291,7 +291,6 @@ get_remote_dependencies.CRAN <- function(package) {
   if (package$is_dependency_package) {
     package$version <- NA
   }
-  if (package$name == "scales") browser()
   filepath <- download_package(package)
   split_fp <- strsplit(filepath, "/")[[1]]
   dirpath <- dirname(filepath)

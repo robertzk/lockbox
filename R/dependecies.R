@@ -125,7 +125,7 @@ replace_with_lock <- function(package, lock) {
   if (package$is_dependency_package && !package$name %in%
     as.character(installed.packages(priority = "base")[,1])) {
       package$latest_version <- package$latest_version_in_lockbox %||%
-        get_latest_version(package)
+        package$latest_version %||% get_latest_version(package)
   }
   package
 }

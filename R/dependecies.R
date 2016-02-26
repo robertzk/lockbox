@@ -210,7 +210,9 @@ swap_packages <- function(names1, names2, list1, list2) {
   lapply(which(swap_package2for1)
     , function(index) {
       obj2 <- list2[which(names2 == names1[index])]
-      if (obj2$download_path != list1[[index]]$download_path) {
+      obj1 <- list1[[index]]
+      if (!is.null(obj1$download_path) && !is.null(obj2$download_path) &&
+        obj2$download_path != obj1$download_path) {
         unlink(obj2$download_path)
       }})
 
@@ -218,7 +220,6 @@ swap_packages <- function(names1, names2, list1, list2) {
   list2_swap <- vapply(names1[swap_package2for1]
     , function(n) which(names2 == n)
     , integer(1))
-
 
   list2[list2_swap] <- list1[swap_package2for1]
   list2

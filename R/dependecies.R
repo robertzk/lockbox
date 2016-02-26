@@ -243,6 +243,7 @@ get_dependencies <- function(package, lock) {
     cat(crayon::blue("."))
     output <- tryCatch(get_remote_dependencies(package), error = function(e) e)
     if (is(output, "error")) {
+      browser()
       message(crayon::red(paste0("Dependencies could not be resolved for package: "
         , package$name, " version: ", package$version)))
       dependencies <- list()
@@ -302,9 +303,8 @@ get_remote_dependencies.CRAN <- function(package) {
   description_path <- paste0(dirpath, "/", description_name)
   package$download_path <- filepath
   package$version <- original_version
-  package$latest_version <- version_from_description(package$name, dcf)
-  if(is.na(package$latest_version)) browser()
   dcf <- read.dcf(file = description_path)
+  package$latest_version <- version_from_description(package$name, dcf)
   unlink(description_path)
   list(package = package, dependencies = dependencies_from_description(package, dcf))
 }

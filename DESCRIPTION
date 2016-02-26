@@ -18,7 +18,8 @@ Imports:
     utils
 Suggests:
     knitr,
-    microbenchmark
+    microbenchmark,
+    testthat
 Roxygen: list(wrap = FALSE)
 VignetteBuilder: knitr
 RoxygenNote: 5.0.1

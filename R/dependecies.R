@@ -460,7 +460,7 @@ download_package.CRAN <- function(package) {
 
   ## Simply download latest if version happens to be the latest available on CRAN.
   remote_version <- as.character(remote_version)
-  if (is.na(version) || package_version(remote_version) == package_version(version)) {
+  if (package_version(remote_version) == package_version(version)) {
     version <- remote_version
     archive_addition <- ""
   } else{

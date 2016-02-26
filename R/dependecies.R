@@ -451,66 +451,21 @@ download_package.CRAN <- function(package) {
   version <- package$version
   repo <- "http://cran.r-project.org"
   if (package$is_dependency_package) {
-    version <- NA
+    pkg_tarball <- tempfile(fileext = ".tar.gz")
+    unlink(pkg_tarball)
+    dest_dir <- gsub("/[^/]+$", "", pkg_tarball)
+    return(download.packages(package$name, dest_dir, repos = repo
+      , type = "source", quiet = notTRUE(getOption('lockbox.verbose')))[1, 2])
   }
 
-  ###Some packages are available in archive only
-  if (is.na(remote_version)) {
-    ## Get all the filenames in the archive directory for the package
-    archive_addition <- paste0("Archive/", name, "/")
-    url <- paste0(repo, "/src/contrib/", archive_addition)
-    filenames <- RCurl::getURL(url, ftp.use.epsv = FALSE, dirlistonly = TRUE)
-    filenames <- paste(url, strsplit(filenames, "\r*\n")[[1]], sep = "")
-
-    ##  Subset to those filenames that have our package name, version
-    ##  information and are tarballs
-    filenames <- Filter(
-      function(f) grepl(paste0(name, "_[0-9\\.\\-]+\\.tar\\.gz"),f), filenames)
-
-    ## Get the part of the filename that matches this desired format
-    expr <- gregexpr(paste0(name, "_([0-9\\.\\-]+)\\.tar\\.gz"), filenames)
-    filenames <- vapply(regmatches(filenames, expr), function(match) match[1]
-      , character(1))
-
-    ## Finally, extract the version information from the filenames and select
-    ## the last one, which will be the most recent
-    archived_version <- gsub("(.*_)([0-9\\.\\-]+)(\\.tar\\.gz)", "\\2"
-      , filenames[length(filenames)])
-
-    ## If we have a missing version we'll just use that latest archive, otherwise
-    ## we'll make sure that we only use the latest archive if its later than
-    ## then version currently attached to the package
-    if (is.na(version) || package_version(archived_version) >
-      package_version(as.character(version))) {
-        version <- archived_version
-    }
-  } else{
-    ## Simply download latest if version happens to be the latest available on CRAN.
-    remote_version <- as.character(remote_version)
-    if (is.na(version) || package_version(remote_version) == package_version(version)) {
-      version <- remote_version
-      archive_addition <- ""
-    } else{
-      archive_addition <- paste0("Archive/", name, "/")
-    }
-  }
-
-  from <- paste0(repo, "/src/contrib/", archive_addition, name, "_", version
-    , ".tar.gz")
+  from <- paste0(file.path(repo, "src", "contrib", "Archive", "name")
+    , "/", name, "_", version)
   pkg_tarball <- tempfile(fileext = ".tar.gz")
   out <- suppressWarnings(tryCatch(
     download.file(url = from, destfile = pkg_tarball
     , quiet = notTRUE(getOption('lockbox.verbose')))
       , error = function(e) e))
-  ## Sometimes the current version isn't accessible in it's usual place
-  ## , but is already archived
-  if (is(out, "error")) {
-    archive_addition <- paste0("Archive/", name, "/")
-    from <- paste0(repo, "/src/contrib/", archive_addition, name, "_", version
-      , ".tar.gz")
-    download.file(url = from, destfile = pkg_tarball
-      , quiet = notTRUE(getOption('lockbox.verbose')))
-  }
+
   pkg_tarball
 }
 

@@ -450,6 +450,10 @@ download_package.CRAN <- function(package) {
   version <- package$version
   repo <- "http://cran.r-project.org"
 
+  ## Dependency package means that we grab the latest.  download.packages
+  ## does a better job grabbing the latest than we do.  Edge-cases where certain
+  ## things have been updated on the information page for a package but others
+  ## have not.
   if (package$is_dependency_package) {
     pkg_tarball <- tempfile(fileext = ".tar.gz")
     unlink(pkg_tarball)

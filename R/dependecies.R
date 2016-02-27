@@ -213,7 +213,7 @@ swap_packages <- function(names1, names2, list1, list2) {
       obj1 <- list1[[index]]
       if (!is.null(obj1$download_path) && !is.null(obj2$download_path) &&
         obj2$download_path != obj1$download_path) {
-        unlink(obj2$download_path)
+        unlink(obj2$download_path, TRUE, TRUE)
       }})
 
   ## Swap a package from list1 into list2

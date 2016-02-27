@@ -85,7 +85,7 @@ install_package.github <- function(locked_package, libP, quiet) {
     INSTALL_opts = "--vanilla",
     quiet = quiet)
 
-  unlink(temp_dir)
+  unlink(temp_dir, TRUE, TRUE)
   unlink(locked_package$filepath)
 }
 

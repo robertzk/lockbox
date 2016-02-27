@@ -49,53 +49,44 @@ install_package <- function(locked_package, libP) {
     cat("Installing dependency", crayon::blue(locked_package$name),
       "from", locked_package$remote, "\n")
   }
-  fn <- UseMethod("install_package")
-  output <- tryCatch(fn(), error = function(e) e)
-
-  ## If we have an error during installation try again and show everything
-  if (is(output, "error")) {
-    option(lockbox.verbose = TRUE)
-    fn()
-  }
+  UseMethod("install_package")
 }
 
-install_package.local <- function(locked_package, libP) {
+install_package.local <- function(locked_package, libP, quiet) {
   stopifnot(is.element("dir", names(locked_package)))
 
-  utils::install.packages(locked_package$dir, lib = libP, repos = NULL, type = "source",
-    INSTALL_opts = "--vanilla",
-    quiet = notTRUE(getOption("lockbox.verbose")))
+  utils::install.packages(locked_package$dir, lib = libP, repos = NULL
+    , type = "source", INSTALL_opts = "--vanilla", quiet = quiet)
 }
 
-install_package.CRAN <- function(locked_package, libP) {
+install_package.CRAN <- function(locked_package, libP, quiet) {
   filepath <- locked_package$download_path
   utils::install.packages(filepath, lib = libP, repos = NULL, type = "source",
-    INSTALL_opts = "--vanilla",
-    quiet = notTRUE(getOption("lockbox.verbose")))
+    INSTALL_opts = "--vanilla", quiet = quiet)
   unlink(locked_package$filepath)
 }
 
-install_package.github <- function(locked_package, libP) {
+install_package.github <- function(locked_package, libP, quiet) {
   stopifnot(is.element("repo", names(locked_package)))
   ref <- locked_package$ref %||% locked_package$version
 
   subdir <- ""
   if (!is.null(locked_package$subdir)) {
-    subdir <- paste0("/",package$subdir)
+    subdir <- paste0("/", package$subdir)
   }
 
   filepath <- locked_package$download_path
-  extracted_dir <- paste0(libP,"/LOCKBOX-TEMPORARY-DIRECTORY")
+  temp_dir <- paste0(libP,"/LOCKBOX-TEMPORARY-DIRECTORY")
 
-  dir.create(extracted_dir)
-  extracted_filepath <- unzip(filepath, exdir = extracted_dir)
+  extracted_filepath <- unzip(filepath, exdir = temp_dir)[1]
+  extracted_dir <- gsub("/[^/]+$","", extracted_filepath)
 
-  utils::install.packages(paste0(extracted_dir, subdir), lib = libP
+  utils::install.packages(file.path(extracted_dir, subdir), lib = libP
     , repos = NULL, type = "source",
     INSTALL_opts = "--vanilla",
-    quiet = notTRUE(getOption("lockbox.verbose")))
+    quiet = quiet)
 
-  unlink(extracted_dir)
+  unlink(temp_dir)
   unlink(locked_package$filepath)
 }
 
@@ -107,8 +98,17 @@ install_locked_package <- function(locked_package, installing_expr) {
   # let us install it.
   unlink(pkgdir, TRUE, TRUE)
 
-  ## Pretend our library path is the staging library during installation.
-  install_package(locked_package, temp_library)
+  ## Install to the staging library
+
+  browser()
+  output <- tryCatch(install_package(locked_package, temp_library
+    , quiet = notTRUE(getOption("lockbox.verbose")))
+    , error = function(e) e)
+
+  ## If we have an error during installation try again and show everything
+  if (is(output, "error")) {
+    install_package(locked_package, temp_library, quiet = FALSE)
+  }
 
   if (!file.exists(pkgdir)) {
     unlink(temp_library, TRUE, TRUE)

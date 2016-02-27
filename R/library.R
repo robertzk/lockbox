@@ -78,19 +78,24 @@ install_package.CRAN <- function(locked_package, libP) {
 install_package.github <- function(locked_package, libP) {
   stopifnot(is.element("repo", names(locked_package)))
   ref <- locked_package$ref %||% locked_package$version
-  if (locked_package$name == "e1071") browser()
+  browser()
 
-  filepath <- locked_package$download_path
   subdir <- ""
   if (!is.null(locked_package$subdir)) {
     subdir <- paste0("/",package$subdir)
   }
-  extracted_filepath <- unzip(filepath
-    , exdir = gsub("/[^/]+$","",filepath))[1]
-  extracted_dir <- gsub("/[^/]+$","", extracted_filepath)
-  utils::install.packages(extracted_dir, lib = libP, repos = NULL, type = "source",
+
+  filepath <- locked_package$download_path
+  extracted_dir <- paste0(libP,"/LOCKBOX-TEMPORARY-DIRECTORY")
+
+  dir.create(extracted_dir)
+  extracted_filepath <- unzip(filepath, exdir = extracted_dir)
+
+  utils::install.packages(paste0(extracted_dir, subdir), lib = libP
+    , repos = NULL, type = "source",
     INSTALL_opts = "--vanilla",
     quiet = notTRUE(getOption("lockbox.verbose")))
+
   unlink(extracted_dir)
   unlink(locked_package$filepath)
 }

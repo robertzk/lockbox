@@ -41,7 +41,7 @@ lockbox_package_path <- function(locked_package, library = lockbox_library()) {
   ))
 }
 
-install_package <- function(locked_package, libP) {
+install_package <- function(locked_package, libP, quiet) {
   if (!locked_package$is_dependency_package) {
     cat("Installing", crayon::green(locked_package$name),
       as.character(locked_package$version), "from", class(locked_package)[1], "\n")
@@ -99,15 +99,13 @@ install_locked_package <- function(locked_package, installing_expr) {
   unlink(pkgdir, TRUE, TRUE)
 
   ## Install to the staging library
-
-  browser()
   output <- tryCatch(install_package(locked_package, temp_library
-    , quiet = notTRUE(getOption("lockbox.verbose")))
+    , notTRUE(getOption("lockbox.verbose")))
     , error = function(e) e)
 
   ## If we have an error during installation try again and show everything
   if (is(output, "error")) {
-    install_package(locked_package, temp_library, quiet = FALSE)
+    install_package(locked_package, temp_library, FALSE)
   }
 
   if (!file.exists(pkgdir)) {

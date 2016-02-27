@@ -68,7 +68,6 @@ install_package.CRAN <- function(locked_package, libP, quiet) {
 
 install_package.github <- function(locked_package, libP, quiet) {
   stopifnot(is.element("repo", names(locked_package)))
-  ref <- locked_package$ref %||% locked_package$version
 
   subdir <- ""
   if (!is.null(locked_package$subdir)) {

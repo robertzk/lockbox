@@ -249,9 +249,9 @@ get_dependencies <- function(package, lock) {
     cat(crayon::blue("."))
     output <- tryCatch(get_remote_dependencies(package), error = function(e) e)
     if (is(output, "error")) {
-      message(crayon::red(paste0("Dependencies could not be resolved for package: "
-        , package$name, " version: ", package$version)))
-      dependencies <- list()
+      stop(crayon::red(paste0("Dependencies could not be resolved for package: "
+        , package$name, " version: ", package$version
+        , " remote:", package$remote)))
     } else {
       package <- output$package
       dependencies <- output$dependencies

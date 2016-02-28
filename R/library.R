@@ -61,7 +61,7 @@ install_package.local <- function(locked_package, libP, quiet) {
 
 install_package.CRAN <- function(locked_package, libP, quiet) {
   filepath <- locked_package$download_path
-  utils::install.packages(filepath, lib = libP, repos = NULL, type = "source",
+  utils::install.packages(temp, lib = libP, repos = NULL, type = "source",
     INSTALL_opts = "--vanilla", quiet = quiet)
   unlink(locked_package$filepath)
 }
@@ -69,23 +69,26 @@ install_package.CRAN <- function(locked_package, libP, quiet) {
 install_package.github <- function(locked_package, libP, quiet) {
   stopifnot(is.element("repo", names(locked_package)))
 
-  subdir <- ""
+  filepath <- locked_package$download_path
+  parent_dir <- dirname(filepath)
+
+  # Be very careful here to get the extracted package directory
+  # while maintaining cross-platform support
+  extracted_dir <- gsub(file.path(parent_dir,"")
+    , "", unzip(filepath, exdir = parent_dir)[1])
+  extracted_dir <- file.path(parent_dir
+    , gsub(paste0(.Platform$file.sep,".*"), "", extracted_dir))
+
   if (!is.null(locked_package$subdir)) {
-    subdir <- paste0("/", package$subdir)
+    extracted_dir <- file.path(extracted_dir, package$subdir)
   }
 
-  filepath <- locked_package$download_path
-  temp_dir <- paste0(libP,"/LOCKBOX-TEMPORARY-DIRECTORY")
+  Sys.chmod(file.path(extracted_dir,"configure"), "0777")
+  Sys.chmod(file.path(extracted_dir,"cleanup"), "0777")
+  utils::install.packages(extracted_dir, lib = libP,repos = NULL
+    , type = "source", INSTALL_opts = "--vanilla", quiet = quiet)
 
-  extracted_filepath <- unzip(filepath, exdir = temp_dir)[1]
-  extracted_dir <- gsub("/[^/]+$","", extracted_filepath)
-
-  utils::install.packages(file.path(extracted_dir, subdir), lib = libP
-    , repos = NULL, type = "source",
-    INSTALL_opts = "--vanilla",
-    quiet = quiet)
-
-  unlink(temp_dir, TRUE, TRUE)
+  unlink(extracted_dir, TRUE, TRUE)
   unlink(locked_package$filepath)
 }
 

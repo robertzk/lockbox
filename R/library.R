@@ -61,7 +61,7 @@ install_package.local <- function(locked_package, libP, quiet) {
 
 install_package.CRAN <- function(locked_package, libP, quiet) {
   filepath <- locked_package$download_path
-  utils::install.packages(temp, lib = libP, repos = NULL, type = "source",
+  utils::install.packages(filepath, lib = libP, repos = NULL, type = "source",
     INSTALL_opts = "--vanilla", quiet = quiet)
   unlink(locked_package$filepath)
 }

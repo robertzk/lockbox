@@ -80,7 +80,7 @@ install_package.github <- function(locked_package, libP, quiet) {
     , gsub(paste0(.Platform$file.sep,".*"), "", extracted_dir))
 
   if (!is.null(locked_package$subdir)) {
-    extracted_dir <- file.path(extracted_dir, package$subdir)
+    extracted_dir <- file.path(extracted_dir, locked_package$subdir)
   }
 
   Sys.chmod(file.path(extracted_dir,"configure"), "0777")

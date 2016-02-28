@@ -33,22 +33,10 @@ lockbox_package_path <- function(locked_package, library = lockbox_library()) {
 }
 
 `place_in_lockbox!` <- function(locked_package) {
-  remote <- locked_package$remote %||% "CRAN"
-
-  install_locked_package(structure(
-    locked_package,
-    class = c(remote, class(locked_package))
-  ))
+  install_locked_package(locked_package)
 }
 
 install_package <- function(locked_package, libP, quiet) {
-  if (!locked_package$is_dependency_package) {
-    cat("Installing", crayon::green(locked_package$name),
-      as.character(locked_package$version), "from", class(locked_package)[1], "\n")
-  } else {
-    cat("Installing dependency", crayon::blue(locked_package$name),
-      "from", locked_package$remote, "\n")
-  }
   UseMethod("install_package")
 }
 
@@ -94,7 +82,14 @@ install_package.github <- function(locked_package, libP, quiet) {
   unlink(locked_package$filepath)
 }
 
-install_locked_package <- function(locked_package, installing_expr) {
+install_locked_package <- function(locked_package) {
+  if (!locked_package$is_dependency_package) {
+    cat("Installing", crayon::green(locked_package$name),
+      as.character(locked_package$version), "from", class(locked_package)[1], "\n")
+  } else {
+    cat("Installing dependency", crayon::blue(locked_package$name),
+      "from", locked_package$remote, "\n")
+  }
   temp_library <- staging_library()
   pkgdir <- file.path(temp_library, locked_package$name)
 

@@ -60,8 +60,6 @@ remote <- function(type, ...) {
   structure(list(...), class = c(paste0(type, "_remote"), "remote"))
 }
 
-#' Parse concise git repo specification: [username/]repo[/subdir][#pull|@ref|@*release]
-#' (the *release suffix represents the latest release)
 parse_git_repo <- function(path) {
   username_rx <- "(?:([^/]+)/)?"
   repo_rx <- "([^/@#]+)"
@@ -92,7 +90,7 @@ parse_git_repo <- function(path) {
 
   params
 }
-#' Resolve the ref
+
 github_resolve_ref <- function(x, params) UseMethod("github_resolve_ref")
 
 github_resolve_ref.default <- function(x, params) {

@@ -71,7 +71,7 @@ install_package.github <- function(locked_package, libP, quiet) {
     extracted_dir <- file.path(extracted_dir, locked_package$subdir)
   }
 
-  ## Absolutely necessary to make these executable
+  # It's absolutely necessary that we these executable
   Sys.chmod(file.path(extracted_dir,"configure"), "0777")
   Sys.chmod(file.path(extracted_dir,"cleanup"), "0777")
 
@@ -97,12 +97,12 @@ install_locked_package <- function(locked_package) {
   # let us install it.
   unlink(pkgdir, TRUE, TRUE)
 
-  ## Install to the staging library
+  # Install to the staging library
   output <- tryCatch(install_package(locked_package, temp_library
     , notTRUE(getOption("lockbox.verbose")))
     , error = function(e) e)
 
-  ## If we have an error during installation try again and show everything
+  # If we have an error during installation try again and show everything
   if (is(output, "error") || !file.exists(pkgdir)) {
     install_package(locked_package, temp_library, FALSE)
     unlink(temp_library, TRUE, TRUE)

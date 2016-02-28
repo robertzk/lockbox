@@ -244,7 +244,7 @@ get_dependencies <- function(package, lock) {
   if (!is.na(locked_package$version) && exists_in_lockbox(locked_package)) {
     dependencies <- dependencies_from_description(locked_package
       , description_file_for(locked_package$name
-        , gsub("/[^/]+$", "", lockbox_package_path(locked_package))))
+        , dirname(lockbox_package_path(locked_package))))
   } else {
     cat(crayon::blue("."))
     output <- tryCatch(get_remote_dependencies(package), error = function(e) e)
@@ -282,8 +282,8 @@ get_remote_dependencies <- function(package) {
 
 #' If a package is local we just read from the directory given
 get_remote_dependencies.local <- function(package) {
-  description_name <- file_list$Name[grepl(paste0("^[^/]+"
-    ,"/DESCRIPTION$"), file_list$Name)]
+  description_name <- file_list$Name[grepl(
+    paste0(.Platform$file.sep, "DESCRIPTION$"), file_list$Name)]
   list(package = package
     , dependencies =
       dependencies_from_description(package, read.dcf(description_name)))
@@ -358,13 +358,13 @@ dependencies_from_description <- function(package, dcf) {
   ## We install 3 kinds of dependencies listed in the description file. If our
   ## dcf does not contain any of these elements we have no dependencies to
   ## speak of
-  dependency_levels <- c("Depends", "Imports", "Remotes")
+  dependency_levels <- c("Depends", "Imports", "LinkingTo", "Remotes")
   if (!any(dependency_levels %in% colnames(dcf))) return(list())
 
   ## The parse_dcf function returns a matrix where rows correspond to packages
   ## and column 1 corresponds to the package name and column 3 corresponds to
   ## its version requirement.  The rownames of this matrix are the type of 
-  ## dependency (Depends, Imports, or Remotes)
+  ## dependency (Depends, Imports, LinkingTo, or Remotes)
   dependencies_parsed <- as.data.frame(parse_dcf(dcf
     , depLevel = dependency_levels[dependency_levels %in%
       colnames(dcf)])[[package$name]])
@@ -536,7 +536,7 @@ get_remote <- function(package) {
 #' Borrowed from tools::package.dependencies and modified to be less breaky
 #' and parse remotes
 parse_dcf <- function (x, check = FALSE, depLevel = c("Depends", "Imports",
-  "Suggests", "Remotes")) {
+  "Suggests", "LinkingTo", "Remotes")) {
   depLevel <- match.arg(depLevel, several.ok = TRUE)
   if (!is.matrix(x))
       x <- matrix(x, nrow = 1L, dimnames = list(NULL, names(x)))

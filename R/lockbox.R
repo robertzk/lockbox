@@ -63,8 +63,10 @@ lockbox.list <- function(lock, env) {
     ## Replace our library so that it has these packages instead.
     align(lock[mismatches])
 
+  browser()
     ## And re-build our search path.
     rebuild(lock)
+  browser()
   })
 }
 

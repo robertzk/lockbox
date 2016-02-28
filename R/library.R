@@ -83,8 +83,10 @@ install_package.github <- function(locked_package, libP, quiet) {
     extracted_dir <- file.path(extracted_dir, locked_package$subdir)
   }
 
+  ## Absolutely necessary to make these executable
   Sys.chmod(file.path(extracted_dir,"configure"), "0777")
   Sys.chmod(file.path(extracted_dir,"cleanup"), "0777")
+
   utils::install.packages(extracted_dir, lib = libP,repos = NULL
     , type = "source", INSTALL_opts = "--vanilla", quiet = quiet)
 
@@ -106,11 +108,8 @@ install_locked_package <- function(locked_package, installing_expr) {
     , error = function(e) e)
 
   ## If we have an error during installation try again and show everything
-  if (is(output, "error")) {
+  if (is(output, "error") || !file.exists(pkgdir)) {
     install_package(locked_package, temp_library, FALSE)
-  }
-
-  if (!file.exists(pkgdir)) {
     unlink(temp_library, TRUE, TRUE)
     stop("Must have installed the package ",
          crayon::red(as.character(locked_package$name)),

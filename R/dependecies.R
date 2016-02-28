@@ -485,10 +485,9 @@ download_package.CRAN <- function(package) {
     , ".tar.gz")
 
   pkg_tarball <- tempfile(fileext = ".tar.gz")
-  out <- suppressWarnings(tryCatch(
+  out <- suppressWarnings(try(
     download.file(url = from, destfile = pkg_tarball
-    , quiet = notTRUE(getOption('lockbox.verbose')))
-      , error = function(e) e))
+    , quiet = notTRUE(getOption('lockbox.verbose')))))
 
   pkg_tarball
 }
@@ -513,7 +512,7 @@ get_available_cran_version <- function(package, repo = "http://cran.r-project.or
   pkg <- available[available$Package == package$name, ]
   if (nrow(pkg) == 0) {
     NA
-  } else{
+  } else {
     pkg$Version
   }
 }
@@ -537,7 +536,7 @@ get_remote <- function(package) {
 }
 
 #' Borrowed from tools::package.dependencies and modified to be less breaky
-#' and parse remotes
+#' and parse remotes and LinkingTo
 parse_dcf <- function (x, check = FALSE, depLevel = c("Depends", "Imports",
   "Suggests", "LinkingTo", "Remotes")) {
   depLevel <- match.arg(depLevel, several.ok = TRUE)

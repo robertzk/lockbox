@@ -357,7 +357,7 @@ version_from_description <- function(package_name, dcf) {
 
 #' Parse dependencies from description
 dependencies_from_description <- function(package, dcf) {
-  # We install 3 kinds of dependencies listed in the description file. If our
+  # We install 4 kinds of dependencies listed in the description file. If our
   # dcf does not contain any of these elements we have no dependencies to
   # speak of
   dependency_levels <- c("Depends", "Imports", "LinkingTo", "Remotes")
@@ -437,7 +437,7 @@ dependencies_from_description <- function(package, dcf) {
     }
   }
 
-  # Remote package names are duplicated in Depends and Imports entries
+  # Remote package names are duplicated in Depends, LinkingTo, and Imports entries
   if (length(remote_list) != 0) {
     non_remote_names <- vapply(non_remote_list, function(pkg) pkg$name, character(1))
     remote_names <- vapply(remote_list, function(pkg) pkg$name, character(1))

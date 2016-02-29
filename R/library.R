@@ -71,7 +71,7 @@ install_package.github <- function(locked_package, libP, quiet) {
     extracted_dir <- file.path(extracted_dir, locked_package$subdir)
   }
 
-  # It's absolutely necessary that we these executable
+  # It's absolutely necessary that we make these executable
   Sys.chmod(file.path(extracted_dir,"configure"), "0777")
   Sys.chmod(file.path(extracted_dir,"cleanup"), "0777")
 

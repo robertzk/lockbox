@@ -19,13 +19,13 @@ get_dependencies_for_list <- function(master_list, lock, previously_parsed_deps)
   for (i in seq_along(master_list)) {
     package <- master_list[[i]]
 
-    # Find out if we've parsed this package's description before and, if so,
-    # where we've stored it's list of dependencies in our humongous
-    # previously_parsed_deps list object.  If this comes back as 0 then we
-    # have not parsed it yet
-    previously_parsed_loc <- which_previously_parsed(
-        package, previously_parsed_deps)
-    if (identical(previously_parsed_loc, 0L)) {
+    # Create a new list for this package if it no dependencies have been parsed
+    # for any version of the package.
+    if(!package$name %in% names(previously_parsed_deps)) {
+      previously_parsed_deps[[package$name]] <- list()
+    }
+    if (!as.character(package$version) %in% 
+      names(previously_parsed_deps[[package$name]])) {
       dependency_output <- get_dependencies(
        structure(package
          , class = c(package$remote %||% "CRAN"
@@ -39,16 +39,17 @@ get_dependencies_for_list <- function(master_list, lock, previously_parsed_deps)
       # version of the package.
       current_dependencies[[package$name]] <- package
 
-      # Store the dependencies for this particular package in our humongous
-      # previously_parsed_deps object
-      previously_parsed_deps[[length(previously_parsed_deps) + 1]] <- list(
-        package = package
-        , dependencies = single_package_dependencies)
+      # Store the dependencies and corresponding package object in our humongous
+      # previously_parsed_deps object using version as the second key level
+      previously_parsed_deps[[package$name]][[as.character(package$version)]] <-
+        list(package = package, dependencies = single_package_dependencies)
     } else {
       single_package_dependencies <-
-        previously_parsed_deps[[previously_parsed_loc]]$dependencies
+        previously_parsed_deps[[package$name]][[
+          as.character(package$version)]]$dependencies
       current_dependencies[[package$name]] <-
-          previously_parsed_deps[[previously_parsed_loc]]$package
+        previously_parsed_deps[[package$name]][[
+          as.character(package$version)]]$package
     }
     # Now combine the dependencies from this package with our big dependency
     # list.
@@ -63,24 +64,6 @@ get_dependencies_for_list <- function(master_list, lock, previously_parsed_deps)
 
   # Run through the entire list again, because we have a bunch of new packages
   get_dependencies_for_list(current_dependencies, lock, previously_parsed_deps)
-}
-
-#' Where, if anywhere, have I stored this packages/version combinations'
-#' previously parsed dependencies?
-which_previously_parsed <- function(package, previously_parsed_deps) {
-  if (length(previously_parsed_deps) == 0) return(0L)
-  previously_parsed_names <- vapply(previously_parsed_deps
-    , function(p) p$package$name, character(1))
-  if (package$name %in% previously_parsed_names) {
-    sel <- which(previously_parsed_names == package$name)
-    subsel <- vapply(previously_parsed_deps[sel]
-      , function(p) identical(p$package$version, package$version)
-      , logical(1))
-    if (any(subsel)) {
-      return(sel[subsel])
-    }
-  }
-  0L
 }
 
 #' Attach the latest available lockbox version to a package

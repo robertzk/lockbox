@@ -467,7 +467,7 @@ download_package.CRAN <- function(package) {
     pkg_tarball <- tempfile(fileext = ".tar.gz")
     unlink(pkg_tarball)
     sep <- .Platform$file.sep
-    dest_dir <- gsub(sep, "[^", sep, "]+$", "", pkg_tarball)
+    dest_dir <- gsub(paste0(sep, "[^", sep, "]+$"), "", pkg_tarball)
     return(download.packages(package$name, dest_dir, repos = repo
       , type = "source", quiet = notTRUE(getOption('lockbox.verbose')))[1, 2])
   }

@@ -51,7 +51,7 @@ install_package.CRAN <- function(locked_package, libP, quiet) {
   filepath <- locked_package$download_path
   utils::install.packages(filepath, lib = libP, repos = NULL, type = "source",
     INSTALL_opts = "--vanilla", quiet = quiet)
-  unlink(locked_package$filepath)
+  unlink(filepath)
 }
 
 install_package.github <- function(locked_package, libP, quiet) {
@@ -79,7 +79,7 @@ install_package.github <- function(locked_package, libP, quiet) {
     , type = "source", INSTALL_opts = "--vanilla", quiet = quiet)
 
   unlink(extracted_dir, TRUE, TRUE)
-  unlink(locked_package$filepath)
+  unlink(filepath)
 }
 
 install_locked_package <- function(locked_package) {

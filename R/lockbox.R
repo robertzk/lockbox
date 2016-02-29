@@ -54,9 +54,9 @@ lockbox.list <- function(lock, env) {
 
   sapply(lock[!mismatches], function(locked_package) {
     if (locked_package$is_dependency_package) {
-      cat('Using dependency', crayon::blue(locked_package$name), as.character(locked_package$version), '\n')
+      cat('Using dependency', crayon_blue(locked_package$name), as.character(locked_package$version), '\n')
     } else {
-      cat('Using', crayon::green(locked_package$name), as.character(locked_package$version), '\n')
+      cat('Using', crayon_green(locked_package$name), as.character(locked_package$version), '\n')
     }
   })
 

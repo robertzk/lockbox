@@ -1,8 +1,9 @@
 #' Get dependencies for all elements in lock
+#' @param lock list.  List of locked packages
 get_ordered_dependencies <- function(lock) {
-   cat(crayon::blue("Retrieving dependency info..."))
+   cat(crayon_blue("Retrieving dependency info..."))
    names(lock) <- vapply(lock, `[[`, character(1), "name")
-   get_dependencies_for_list(lock, lock, list())
+   package_list(lock, lock, list())
 }
 
 #' Recursive function to take a list and lock and extract dependencies, sorting
@@ -11,7 +12,7 @@ get_ordered_dependencies <- function(lock) {
 #' @param lock list.  Original list of locked packages
 #' @param previously_parsed_deps.  List of packages and their dependencies that
 #'   we have already parsed out of their respective description files
-get_dependencies_for_list <- function(master_list, lock, previously_parsed_deps) {
+package_list <- function(master_list, lock, previously_parsed_deps) {
   ## Start off with the master list as our set of packages
   current_dependencies <- master_list
   for (i in seq_along(master_list)) {
@@ -58,27 +59,27 @@ get_dependencies_for_list <- function(master_list, lock, previously_parsed_deps)
   ## If we have not altered the list, then we are done.  Otherwise, we run
   ## through the entire list again, because we have a bunch of new packages
   if (identical(master_list, current_dependencies)) return(master_list)
-  else get_dependencies_for_list(current_dependencies, lock, previously_parsed_deps)
+  else Recall(current_dependencies, lock, previously_parsed_deps)
 }
 
-#' Attach the latest available lockbox version to a package
+## Attach the latest available lockbox version to a package
 add_latest_version_in_lockbox <- function(package) {
   package$latest_version_in_lockbox <- max_package_version(
     list.files(file.path(lockbox_library(), package)))
   package
 }
 
-#' Take a vector of versions and find the max without coercing to package_version
+## Take a vector of versions and find the max without coercing to package_version
 max_package_version <- function(versions) {
   if (length(versions) == 0) return(NULL)
   formatted_versions <- package_version(as.character(versions))
   versions[which(formatted_versions == max(formatted_versions))[1]]
 }
 
-#' Check a dependency list for inclusion in the lockfile and replace the package
-#' with the locked version if it does appear there.  Also throw
-#' an error if we require a dependency version greater than that specified by
-#' the lockfile.
+## Check a dependency list for inclusion in the lockfile and replace the package
+## with the locked version if it does appear there.  Also throw
+## an error if we require a dependency version greater than that specified by
+## the lockfile.
 replace_with_lock <- function(package, lock) {
   lock_names <- vapply(lock, function(l) l$name, character(1))
   if (package$name %in% lock_names) {
@@ -115,18 +116,12 @@ get_latest_version <- function(package) {
   }
 }
 
-#' Combine two lists of dependencies via version comparisons.  Keep packages
-#' found in list1 on the left side of the entirety of list2, while moving
-#' the parent package to the space after it's rightmost dependency found in list2.
+## Combine two lists of dependencies via version comparisons.  Keep packages
+## found in list1 on the left side of the entirety of list2, while moving
+## the parent package to the space after it's rightmost dependency found in list2.
 combine_dependencies <- function(list1, list2, current_parent) {
   names <- lapply(list(list1, list2), function(lst) vapply(lst, `[[`, character(1), "name"))
 
-  ## Certain packages are no longer on cran but incorporated into R Core
-  core_pkgs <- as.character(installed.packages(priority = "base")[,1])
-  list1 <- list1[!names[[1]] %in% core_pkgs]
-  names[[1]] <- names[[1]][!names[[1]] %in% core_pkgs]
-  list2 <- list2[!names[[2]] %in% core_pkgs]
-  names[[2]] <- names[[2]][!names[[2]] %in% core_pkgs]
 
   if (length(list1) == 0) return(list2)
   if (length(list2) == 0) return(list1)
@@ -224,10 +219,10 @@ get_dependencies <- function(package, lock) {
       , description_file_for(locked_package$name
         , dirname(lockbox_package_path(locked_package))))
   } else {
-    cat(crayon::blue("."))
+    cat(crayon_blue("."))
     output <- tryCatch(get_remote_dependencies(package), error = function(e) e)
     if (is(output, "error")) {
-      stop(crayon::red(paste0("Dependencies could not be resolved for package: "
+      stop(crayon_red(paste0("Dependencies could not be resolved for package: "
         , package$name, " version: ", package$version
         , " remote:", package$remote)))
     } else {
@@ -236,7 +231,8 @@ get_dependencies <- function(package, lock) {
     }
   }
   dependencies <- strip_available_dependencies(dependencies)
-  dependencies <- strip_duplicate_dependencies(dependencies)
+  dependencies <- strip_pesky_dependencies(dependencies)
+  dependencies <- strip_core_dependencies(dependencies)
   dependencies <- lapply(dependencies, add_latest_version_in_lockbox)
   dependencies <- lapply(dependencies, function(dep) {
     dep$parent_package <- package$name
@@ -245,13 +241,15 @@ get_dependencies <- function(package, lock) {
   list(package = package, dependencies = dependencies)
 }
 
-strip_available_dependencies <- function(dependencies) {
-  dependencies <- lapply(dependencies
-    , function(package) {
-      if(package$name %in% pesky_namespaces) NULL
-      else package
-    })
- dependencies[!vapply(dependencies, is.null, logical(1))]
+## Remove pesky_namespace dependencies
+strip_pesky_dependencies <- function(dependencies) {
+  dependencies[!vapply(dependencies, function(p) p$name %in% pesky_namespaces, logical(1))]
+}
+
+## Certain packages are no longer on cran but incorporated into R Core
+strip_core_dependencies <- function(dependencies) {
+  core_pkgs <- as.character(installed.packages(priority = "base")[,1])
+  dependencies[!vapply(dependencies, function(p) p$name %in% core_pkgs, logical(1))]
 }
 
 #' We don't trust package authors to only put a package in once

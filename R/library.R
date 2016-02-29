@@ -84,10 +84,10 @@ install_package.github <- function(locked_package, libP, quiet) {
 
 install_locked_package <- function(locked_package) {
   if (!locked_package$is_dependency_package) {
-    cat("Installing", crayon::green(locked_package$name),
+    cat("Installing", crayon_green(locked_package$name),
       as.character(locked_package$version), "from", class(locked_package)[1], "\n")
   } else {
-    cat("Installing dependency", crayon::blue(locked_package$name),
+    cat("Installing dependency", crayon_blue(locked_package$name),
       "from", locked_package$remote, "\n")
   }
   temp_library <- staging_library()
@@ -107,7 +107,7 @@ install_locked_package <- function(locked_package) {
     try(install_package(locked_package, temp_library, FALSE))
     unlink(temp_library, TRUE, TRUE)
     stop("Must have installed the package ",
-         crayon::red(as.character(locked_package$name)),
+         crayon_red(as.character(locked_package$name)),
          " of version ", sQuote(as.character(locked_package$version)))
   }
 
@@ -244,8 +244,8 @@ get_remote <- function(package) {
   if (nzchar(token <- Sys.getenv("GITHUB_PAT"))) {
     arguments$auth_token <- token
   } else {
-      warning(crayon::red("Warning: "), "To download private repositories, please set up your ",
-        sQuote(crayon::yellow("GITHUB_PAT")), " by following the instructions at ",
+      warning(crayon_red("Warning: "), "To download private repositories, please set up your ",
+        sQuote(crayon_yellow("GITHUB_PAT")), " by following the instructions at ",
         "https://help.github.com/articles/creating-an-access-token-for-command-line-use/")
   }
   if (!is.null(package$subdir)) {

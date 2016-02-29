@@ -1,9 +1,8 @@
 #' Get dependencies for all elements in lock
 get_ordered_dependencies <- function(lock) {
-   cat(crayon::blue(paste("Retrieving dependency info...")))
+   cat(crayon::blue("Retrieving dependency info..."))
    names(lock) <- vapply(lock, `[[`, character(1), "name")
-   deps <- get_dependencies_for_list(lock, lock, list())
-   cat("\n")
+   get_dependencies_for_list(lock, lock, list())
    deps
 }
 
@@ -14,13 +13,13 @@ get_ordered_dependencies <- function(lock) {
 #' @param previously_parsed_deps.  List of packages and their dependencies that
 #'   we have already parsed out of their respective description files
 get_dependencies_for_list <- function(master_list, lock, previously_parsed_deps) {
-  # Start off with the master list as our set of packages
+  ## Start off with the master list as our set of packages
   current_dependencies <- master_list
   for (i in seq_along(master_list)) {
     package <- master_list[[i]]
 
-    # Create a new list for this package if it no dependencies have been parsed
-    # for any version of the package.
+    ## Create a new list for this package if it no dependencies have been parsed
+    ## for any version of the package.
     if(!package$name %in% names(previously_parsed_deps)) {
       previously_parsed_deps[[package$name]] <- list()
     }
@@ -34,13 +33,13 @@ get_dependencies_for_list <- function(master_list, lock, previously_parsed_deps)
       package <- dependency_output$package
       single_package_dependencies <- dependency_output$dependencies
 
-      # Our package comes out of dependency search with a download_path
-      # attached.  We will use this for installation (assuming we keep this
-      # version of the package.
+      ## Our package comes out of dependency search with a download_path
+      ## attached.  We will use this for installation (assuming we keep this
+      ## version of the package.
       current_dependencies[[package$name]] <- package
 
-      # Store the dependencies and corresponding package object in our humongous
-      # previously_parsed_deps object using version as the second key level
+      ## Store the dependencies and corresponding package object in our humongous
+      ## previously_parsed_deps object using version as the second key level
       previously_parsed_deps[[package$name]][[paste(package$version)]] <-
         list(package = package, dependencies = single_package_dependencies)
     } else {
@@ -51,8 +50,8 @@ get_dependencies_for_list <- function(master_list, lock, previously_parsed_deps)
         previously_parsed_deps[[package$name]][[
           paste(package$version)]]$package
     }
-    # Now combine the dependencies from this package with our big dependency
-    # list.
+    ## Now combine the dependencies from this package with our big dependency
+    ## list.
 
     current_dependencies <- combine_dependencies(
       single_package_dependencies
@@ -62,7 +61,7 @@ get_dependencies_for_list <- function(master_list, lock, previously_parsed_deps)
 
   if (identical(master_list, current_dependencies)) return(master_list)
 
-  # Run through the entire list again, because we have a bunch of new packages
+  ## Run through the entire list again, because we have a bunch of new packages
   get_dependencies_for_list(current_dependencies, lock, previously_parsed_deps)
 }
 
@@ -126,7 +125,7 @@ get_latest_version <- function(package) {
 combine_dependencies <- function(list1, list2, current_parent) {
   names <- lapply(list(list1, list2), function(lst) vapply(lst, `[[`, character(1), "name"))
 
-  # Certain packages are no longer on cran but incorporated into R Core
+  ## Certain packages are no longer on cran but incorporated into R Core
   core_pkgs <- as.character(installed.packages(priority = "base")[,1])
   list1 <- list1[!names[[1]] %in% core_pkgs]
   names[[1]] <- names[[1]][!names[[1]] %in% core_pkgs]
@@ -139,10 +138,10 @@ combine_dependencies <- function(list1, list2, current_parent) {
   names(list1) <- names[[1]]
   names(list2) <- names[[2]]
 
-  # Find the rightmost dependency of the current package and move our current
-  # package to the immediate right of that spot.  This preserves previous
-  # sorting order while ensuring that the current package will be installed
-  # after all its dependencies
+  ## Find the rightmost dependency of the current package and move our current
+  ## package to the immediate right of that spot.  This preserves previous
+  ## sorting order while ensuring that the current package will be installed
+  ## after all its dependencies
   if (current_parent %in% names[[2]] && any(names[[2]] %in% names[[1]])) {
     init_parent_slot <- which(names[[2]] == current_parent)
     final_parent_slot <- max(which(names[[2]] %in% names[[1]]))
@@ -164,10 +163,10 @@ combine_dependencies <- function(list1, list2, current_parent) {
 #' potentially swapping in the corresponding packages in list1 that have later
 #' version requirements.
 swap_packages <- function(names1, names2, list1, list2) {
-  # Swap packages when the package in list1 is more recent (> version) than
-  # it's corresponding package in list2.  Keep the list 2 element if it is a
-  # locked package, as well.  If their remotes are not identical and neither
-  # has specified a version, then keep whichever remote has a more recent version
+  ## Swap packages when the package in list1 is more recent (> version) than
+  ## it's corresponding package in list2.  Keep the list 2 element if it is a
+  ## locked package, as well.  If their remotes are not identical and neither
+  ## has specified a version, then keep whichever remote has a more recent version
   swap_package2for1 <- vapply(
     names1
     , function(n) {
@@ -189,7 +188,7 @@ swap_packages <- function(names1, names2, list1, list2) {
     }
     , logical(1))
 
-  # Delete temporary files for swapped items if they are distinct
+  ## Delete temporary files for swapped items if they are distinct
   lapply(which(swap_package2for1)
     , function(index) {
       obj2 <- list2[which(names2 == names1[index])]
@@ -199,7 +198,7 @@ swap_packages <- function(names1, names2, list1, list2) {
         unlink(obj2$download_path, TRUE, TRUE)
       }})
 
-  # Swap a package from list1 into list2
+  ## Swap a package from list1 into list2
   list2_swap <- vapply(names1[swap_package2for1]
     , function(n) which(names2 == n)
     , integer(1))
@@ -213,10 +212,10 @@ swap_packages <- function(names1, names2, list1, list2) {
 get_dependencies <- function(package, lock) {
   locked_package <- package
 
-  # When we have a dependency package that has a version in lockbox
-  # we will substitute that version for our package version if that package
-  # version is missing (meaning use any version available) or this required
-  # version is less than that already in the lockbox
+  ## When we have a dependency package that has a version in lockbox
+  ## we will substitute that version for our package version if that package
+  ## version is missing (meaning use any version available) or this required
+  ## version is less than that already in the lockbox
   if (locked_package$is_dependency_package &&
     !is.null(locked_package$latest_version_in_lockbox) &&
     (is.na(locked_package$version) ||
@@ -272,8 +271,11 @@ get_remote_dependencies <- function(package) {
 
 #' If a package is local we just read from the directory given
 get_remote_dependencies.local <- function(package) {
-  description_name <- file_list$Name[grepl(
-    paste0(.Platform$file.sep, "DESCRIPTION$"), file_list$Name)]
+  browser()
+  description_name <- list.files(package$path
+    , paste0(.Platform$file.sep, "DESCRIPTION$"))
+  ## description_name <- file_list$Name[grepl(
+  ##   paste0(.Platform$file.sep, "DESCRIPTION$"), file_list$Name)]
   list(package = package
     , dependencies =
       dependencies_from_description(package, read.dcf(description_name)))
@@ -347,31 +349,31 @@ version_from_description <- function(package_name, dcf) {
 
 #' Parse dependencies from description
 dependencies_from_description <- function(package, dcf) {
-  # We install 4 kinds of dependencies listed in the description file. If our
-  # dcf does not contain any of these elements we have no dependencies to
-  # speak of
+  ## We install 4 kinds of dependencies listed in the description file. If our
+  ## dcf does not contain any of these elements we have no dependencies to
+  ## speak of
   dependency_levels <- c("Depends", "Imports", "LinkingTo", "Remotes")
   if (!any(dependency_levels %in% colnames(dcf))) return(list())
 
-  # The parse_dcf function returns a matrix where rows correspond to packages
-  # and column 1 corresponds to the package name and column 3 corresponds to
-  # its version requirement.  The rownames of this matrix are the type of 
-  # dependency (Depends, Imports, LinkingTo, or Remotes)
+  ## The parse_dcf function returns a matrix where rows correspond to packages
+  ## and column 1 corresponds to the package name and column 3 corresponds to
+  ## its version requirement.  The rownames of this matrix are the type of 
+  ## dependency (Depends, Imports, LinkingTo, or Remotes)
   dependencies_parsed <- as.data.frame(parse_dcf(dcf
     , depLevel = dependency_levels[dependency_levels %in%
       colnames(dcf)])[[package$name]])
 
-  # We separate out non-remote dependencies from remote dependencies, because
-  # they require different logic
+  ## We separate out non-remote dependencies from remote dependencies, because
+  ## they require different logic
   non_remote_dependencies <- dependencies_parsed[rownames(dependencies_parsed) != "Remotes", ]
   remote_dependencies <- dependencies_parsed[rownames(dependencies_parsed) == "Remotes", ]
 
-  # Remove the Depends entry that just corresponds to the R version 
-  # requirements
+  ## Remove the Depends entry that just corresponds to the R version 
+  ## requirements
   non_remote_dependencies <- non_remote_dependencies[!grepl("^[rR]$"
     , non_remote_dependencies[,1]), , drop = FALSE]
 
-  # Parse the non-remote dependencies into a list of packages
+  ## Parse the non-remote dependencies into a list of packages
   if (identical(nrow(non_remote_dependencies),0L)){
     non_remote_list <- list()
   } else {
@@ -383,14 +385,14 @@ dependencies_from_description <- function(package, dcf) {
       })
   }
 
-  # Parse the remote dependencies into a list of packages
+  ## Parse the remote dependencies into a list of packages
   if (identical(nrow(remote_dependencies),0L)){
     remote_list <- list()
   } else {
     matches_github <- grepl("github::"
       , remote_dependencies[,1])
 
-    # We do not currently support non-github remotes
+    ## We do not currently support non-github remotes
     matches_unsupported <- grepl("bitbucket::|svn::|url::|local::|gitorious"
       , remote_dependencies[,1])
     if (any(matches_unsupported)) {
@@ -400,19 +402,19 @@ dependencies_from_description <- function(package, dcf) {
         , function(i) {
           name <- remote_dependencies[i,1]
 
-          # if github is explicitly stated as the remote then we remove
-          # such references
+          ## if github is explicitly stated as the remote then we remove
+          ## such references
           if (matches_github[i]){
             name <- gsub("git::.*github\\.com/", "", name)
             name <- gsub("\\.git", "", name)
           }
 
-          # We extract the package name and repo name from the entry
-          # Could potentially fail if the repo is named something different 
-          # than its package name.  Other option is to download it now
-          # and parse it on the fly, but if we do that we have to do it
-          # every time we load, since we don't know its package name to
-          # look it up in our lockbox directory
+          ## We extract the package name and repo name from the entry
+          ## Could potentially fail if the repo is named something different 
+          ## than its package name.  Other option is to download it now
+          ## and parse it on the fly, but if we do that we have to do it
+          ## every time we load, since we don't know its package name to
+          ## look it up in our lockbox directory
           subname <- gsub("^.*/", "", as.character(remote_dependencies[i,1]))
           subname <- gsub("@.*", "", subname)
           subrepo <- gsub("@.*", "", as.character(remote_dependencies[i,1]))
@@ -427,7 +429,7 @@ dependencies_from_description <- function(package, dcf) {
     }
   }
 
-  # Remote package names are duplicated in Depends, LinkingTo, and Imports entries
+  ## Remote package names are duplicated in Depends, LinkingTo, and Imports entries
   if (length(remote_list) != 0) {
     non_remote_names <- vapply(non_remote_list, function(pkg) pkg$name, character(1))
     remote_names <- vapply(remote_list, function(pkg) pkg$name, character(1))
@@ -437,157 +439,3 @@ dependencies_from_description <- function(package, dcf) {
   }
   c(non_remote_list, remote_list)
 }
-
-download_package <- function(package) {
-  UseMethod("download_package")
-}
-
-#' Download CRAN package, either current or older version
-download_package.CRAN <- function(package) {
-  remote_version <- get_available_cran_version(package)
-  name <- package$name
-  version <- package$version
-  repo <- "http://cran.r-project.org"
-
-  # Dependency package means that we grab the latest.  download.packages
-  # does a better job grabbing the latest than we do.  Edge-cases where certain
-  # things have been updated on the information page for a package but others
-  # have not.
-  if (package$is_dependency_package) {
-    pkg_tarball <- tempfile(fileext = ".tar.gz")
-    unlink(pkg_tarball)
-    sep <- .Platform$file.sep
-    dest_dir <- gsub(paste0(sep, "[^", sep, "]+$"), "", pkg_tarball)
-    return(download.packages(package$name, dest_dir, repos = repo
-      , type = "source", quiet = notTRUE(getOption('lockbox.verbose')))[1, 2])
-  }
-
-  # Simply download latest if version happens to be the latest available on CRAN.
-  remote_version <- as.character(remote_version)
-  if (package_version(remote_version) == package_version(version)) {
-    version <- remote_version
-    archive_addition <- ""
-  } else{
-    archive_addition <- paste0("Archive/", name, "/")
-  }
-
-  from <- paste0(repo, "/src/contrib/", archive_addition, name, "_", version
-    , ".tar.gz")
-
-  pkg_tarball <- tempfile(fileext = ".tar.gz")
-  out <- suppressWarnings(try(
-    download.file(url = from, destfile = pkg_tarball
-    , quiet = notTRUE(getOption('lockbox.verbose')))))
-
-  pkg_tarball
-}
-
-#' Download a package from github using our version of devtools' remote_download
-#' function
-download_package.github <- function(package) {
-  if (is.na(package$version)) {
-    package$version <- NULL
-  }
-  remote <- get_remote(package)
-  remote_download_github_remote(remote, quiet = !isTRUE(getOption('lockbox.verbose')))
-}
-
-#' Return the latest available version of a package from CRAN
-get_available_cran_version <- function(package, repo = "http://cran.r-project.org") {
-  repo = "http://cran.r-project.org"
-  # List available packages on the repo
-  available <- available.packages(contriburl =
-    contrib.url(repos = "http://cran.us.r-project.org", type = "source"))
-  available <- data.frame(unique(available[, c("Package", "Version")]))
-  pkg <- available[available$Package == package$name, ]
-  if (nrow(pkg) == 0) {
-    NA
-  } else {
-    pkg$Version
-  }
-}
-
-#' Create remote in form devtools' remote_download  function likes.
-get_remote <- function(package) {
-  ref <- package$ref %||% package$version
-  if (is.null(ref)) {
-    arguments <- list(package$repo)
-  } else {
-    arguments <- list(
-      paste(package$repo, ref, sep = "@"))
-  }
-  if (nzchar(token <- Sys.getenv("GITHUB_PAT"))) {
-    arguments$auth_token <- token
-  } else {
-      warning(crayon::red("Warning: "), "To download private repositories, please set up your ",
-        sQuote(crayon::yellow("GITHUB_PAT")), " by following the instructions at ",
-        "https://help.github.com/articles/creating-an-access-token-for-command-line-use/")
-  }
-  if (!is.null(package$subdir)) {
-    arguments$subdir <- package$subdir
-  }
-  remote <- do.call(github_remote, arguments)
-}
-
-#' Borrowed from tools::package.dependencies and modified to be less breaky
-#' and parse remotes and LinkingTo
-parse_dcf <- function (x, check = FALSE, depLevel = c("Depends", "Imports",
-  "Suggests", "LinkingTo", "Remotes")) {
-  depLevel <- match.arg(depLevel, several.ok = TRUE)
-  if (!is.matrix(x))
-      x <- matrix(x, nrow = 1L, dimnames = list(NULL, names(x)))
-  if (!any(colnames(x) %in% depLevel)) return(NULL)
-  deps <- list()
-  for (k in 1L:nrow(x)) {
-    z <- x[k, colnames(x) %in% depLevel]
-    if (all(!is.na(z)) & all(z != "")) {
-        z <- unlist(strsplit(z, ",", fixed = TRUE))
-        z <- sub("^[[:space:]]*(.*)", "\\1", z)
-        z <- sub("(.*)[[:space:]]*$", "\\1", z)
-        pat <- "^([^\\([:space:]]+)[[:space:]]*\\(([^\\)]+)\\).*"
-        deps[[k]] <- cbind(sub(pat, "\\1", z), sub(pat, "\\2",
-            z), NA)
-        noversion <- deps[[k]][, 1] == deps[[k]][, 2]
-        deps[[k]][noversion, 2] <- NA
-        pat <- "[[:space:]]*([[<>=]+)[[:space:]]+(.*)"
-        deps[[k]][!noversion, 2:3] <- c(sub(pat, "\\1", deps[[k]][!noversion,
-            2]), sub(pat, "\\2", deps[[k]][!noversion, 2]))
-    }
-    else deps[[k]] <- NA
-  }
-  if (check) {
-      z <- rep.int(TRUE, nrow(x))
-      for (k in 1L:nrow(x)) {
-          if (!is.na(deps[[k]]) && any(ok <- deps[[k]][, 1] ==
-              "R")) {
-              if (!is.na(deps[[k]][ok, 2]) && deps[[k]][ok,
-                2] %in% c("<=", ">=")) {
-                op <- deps[[k]][ok, 2]
-                x1 <- rep.int(0, 6)
-                y <- c(R.version$major, strsplit(R.version$minor,
-                  ".", fixed = TRUE)[[1L]])
-                x1[seq_along(y)] <- y
-                y <- strsplit(deps[[k]][ok, 3], ".", fixed = TRUE)[[1L]]
-                x1[3 + seq_along(y)] <- y
-                x1 <- format(x1, justify = "right")
-                x2 <- paste(x1[4:6], collapse = ".")
-                x1 <- paste(x1[1L:3], collapse = ".")
-                comptext <- paste0("'", x1, "' ", op, " '",
-                  x2, "'")
-                compres <- try(eval(parse(text = comptext)))
-                if (!inherits(compres, "try-error")) {
-                  z[k] <- compres
-                }
-              }
-          }
-      }
-      names(z) <- x[, "Package"]
-      return(z)
-  }
-  else {
-      names(deps) <- x[, "Package"]
-      return(deps)
-  }
-}
-
-

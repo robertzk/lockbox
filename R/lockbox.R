@@ -44,11 +44,12 @@ lockbox.list <- function(lock, env) {
 
   set_transient_library()
 
-  ## Add dependencies to lock
+  ## # Add dependencies to lock
   lock <- get_ordered_dependencies(lock)
   lock <- lapply(lock, reset_to_latest_version)
+  cat("\n")
 
-  ## Find the packages whose version does not match the current library.
+  ## # Find the packages whose version does not match the current library.
   mismatches <- vapply(lock, version_mismatch, logical(1))
 
   sapply(lock[!mismatches], function(locked_package) {
@@ -60,10 +61,10 @@ lockbox.list <- function(lock, env) {
   })
 
   quietly({
-    ## Replace our library so that it has these packages instead.
+    ## # Replace our library so that it has these packages instead.
     align(lock[mismatches])
 
-    ## And re-build our search path.
+    ## # And re-build our search path.
     rebuild(rev(lock))
   })
 }
@@ -104,7 +105,7 @@ as.locked_package <- function(list) {
     list$version <- package_version(list$version)
   }
 
-  # TODO: (RK) Support CRAN version dependencies.
+  ##  TODO: (RK) Support CRAN version dependencies.
   structure(list, class = "locked_package")
 }
 

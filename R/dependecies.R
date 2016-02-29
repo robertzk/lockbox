@@ -241,6 +241,7 @@ get_dependencies <- function(package, lock) {
     }
   }
   dependencies <- strip_available_dependencies(dependencies)
+  dependencies <- strip_duplicate_dependencies(dependencies)
   dependencies <- lapply(dependencies, add_latest_version_in_lockbox)
   dependencies <- lapply(dependencies, function(dep) {
     dep$parent_package <- package$name
@@ -256,6 +257,12 @@ strip_available_dependencies <- function(dependencies) {
       else package
     })
  dependencies[!vapply(dependencies, is.null, logical(1))]
+}
+
+#' We don't trust package authors to only put a package in once
+strip_duplicate_dependencies <- function(dependencies) {
+  dependencies[!duplicated(vapply(dependencies, function(d) d$name
+    , character(1)))]
 }
 
 #' Get the dependencies for a given package

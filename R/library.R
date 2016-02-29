@@ -62,7 +62,7 @@ install_package.github <- function(locked_package, libP, quiet) {
 
   # Be very careful here to get the extracted package directory
   # while maintaining cross-platform support
-  extracted_dir <- gsub(file.path(parent_dir,"")
+  extracted_dir <- gsub(file.path(parent_dir, "")
     , "", unzip(filepath, exdir = parent_dir)[1])
   extracted_dir <- file.path(parent_dir
     , gsub(paste0(.Platform$file.sep,".*"), "", extracted_dir))
@@ -75,7 +75,7 @@ install_package.github <- function(locked_package, libP, quiet) {
   Sys.chmod(file.path(extracted_dir,"configure"), "0777")
   Sys.chmod(file.path(extracted_dir,"cleanup"), "0777")
 
-  utils::install.packages(extracted_dir, lib = libP,repos = NULL
+  utils::install.packages(extracted_dir, lib = libP, repos = NULL
     , type = "source", INSTALL_opts = "--vanilla", quiet = quiet)
 
   unlink(extracted_dir, TRUE, TRUE)

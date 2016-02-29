@@ -33,7 +33,8 @@ lockbox_package_path <- function(locked_package, library = lockbox_library()) {
 }
 
 `place_in_lockbox!` <- function(locked_package) {
-  install_locked_package(locked_package)
+  install_locked_package(structure(locked_package
+    , class = c(locked_package$remote, class(locked_package))))
 }
 
 install_package <- function(locked_package, libP, quiet) {

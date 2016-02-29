@@ -24,7 +24,7 @@ get_dependencies_for_list <- function(master_list, lock, previously_parsed_deps)
     if(!package$name %in% names(previously_parsed_deps)) {
       previously_parsed_deps[[package$name]] <- list()
     }
-    if (!as.character(package$version) %in% 
+    if (!paste(package$version) %in% 
       names(previously_parsed_deps[[package$name]])) {
       dependency_output <- get_dependencies(
        structure(package
@@ -41,15 +41,15 @@ get_dependencies_for_list <- function(master_list, lock, previously_parsed_deps)
 
       # Store the dependencies and corresponding package object in our humongous
       # previously_parsed_deps object using version as the second key level
-      previously_parsed_deps[[package$name]][[as.character(package$version)]] <-
+      previously_parsed_deps[[package$name]][[paste(package$version)]] <-
         list(package = package, dependencies = single_package_dependencies)
     } else {
       single_package_dependencies <-
         previously_parsed_deps[[package$name]][[
-          as.character(package$version)]]$dependencies
+          paste(package$version)]]$dependencies
       current_dependencies[[package$name]] <-
         previously_parsed_deps[[package$name]][[
-          as.character(package$version)]]$package
+          paste(package$version)]]$package
     }
     # Now combine the dependencies from this package with our big dependency
     # list.

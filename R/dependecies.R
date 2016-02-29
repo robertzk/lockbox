@@ -271,11 +271,7 @@ get_remote_dependencies <- function(package) {
 
 #' If a package is local we just read from the directory given
 get_remote_dependencies.local <- function(package) {
-  browser()
-  description_name <- list.files(package$path
-    , paste0(.Platform$file.sep, "DESCRIPTION$"))
-  ## description_name <- file_list$Name[grepl(
-  ##   paste0(.Platform$file.sep, "DESCRIPTION$"), file_list$Name)]
+  description_name <- paste0(package$dir, .Platform$file.sep, "DESCRIPTION")
   list(package = package
     , dependencies =
       dependencies_from_description(package, read.dcf(description_name)))
@@ -396,7 +392,8 @@ dependencies_from_description <- function(package, dcf) {
     matches_unsupported <- grepl("bitbucket::|svn::|url::|local::|gitorious"
       , remote_dependencies[,1])
     if (any(matches_unsupported)) {
-      remote_list <- list()
+      stop(paste0("Package ", package$name, " from repo ", package$repo
+        , " has unsupported (non-github) remote dependencies"))
     } else {
       remote_list <- lapply(seq_along(remote_dependencies[,1])
         , function(i) {

@@ -104,7 +104,7 @@ install_locked_package <- function(locked_package) {
 
   # If we have an error during installation try again and show everything
   if (is(output, "error") || !file.exists(pkgdir)) {
-    install_package(locked_package, temp_library, FALSE)
+    try(install_package(locked_package, temp_library, FALSE))
     unlink(temp_library, TRUE, TRUE)
     stop("Must have installed the package ",
          crayon::red(as.character(locked_package$name)),

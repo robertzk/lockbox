@@ -166,7 +166,6 @@ swap_packages <- function(names1, names2, list1, list2) {
       obj2 <- list2[[n]]
       if (obj1$is_dependency_package && obj2$is_dependency_package) {
         if (is.na(obj1$version) && is.na(obj2$version)) {
-          (obj1$remote != obj2$remote) &&
             package_version(obj1$latest_version) >
             package_version(obj2$latest_version)
         } else {
@@ -265,7 +264,7 @@ get_remote_dependencies <- function(package) {
 
 #' If a package is local we just read from the directory given
 get_remote_dependencies.local <- function(package) {
-  description_name <- paste0(package$dir, .Platform$file.sep, "DESCRIPTION")
+  description_name <- file.path(package$dir, "DESCRIPTION")
   list(package = package
     , dependencies =
       dependencies_from_description(package, read.dcf(description_name)))
@@ -289,12 +288,12 @@ get_remote_dependencies.CRAN <- function(package) {
   description_name <- file_list[grepl(paste0("^[^", sep, "]+", sep
     ,"DESCRIPTION$"), file_list)]
   output <- untar(filepath, description_name, exdir = dirpath)
-  description_path <- paste0(dirpath, sep, description_name)
+  description_path <- (dirpath, sep, description_name)
   package$download_path <- filepath
   package$version <- original_version
   dcf <- read.dcf(file = description_path)
   package$latest_version <- version_from_description(package$name, dcf)
-  unlink(description_path)
+  unlink(dirpath, TRUE, TRUE)
   list(package = package, dependencies = dependencies_from_description(package, dcf))
 }
 
@@ -306,6 +305,7 @@ get_remote_dependencies.github <- function(package) {
 }
 
 download_description_github <- function(package) {
+  browser()
   remote <- package$remote
   filepath <- download_package(structure(
     package,
@@ -327,7 +327,7 @@ download_description_github <- function(package) {
 
 version_from_remote <- function(package) {
   output <- download_description_github(package)
-  unlink(package$download_path)
+  unlink(package$download_path, TRUE, TRUE)
   version_from_description(package
     , output$dcf)
 }

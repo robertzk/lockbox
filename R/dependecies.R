@@ -3,7 +3,6 @@ get_ordered_dependencies <- function(lock) {
    cat(crayon::blue("Retrieving dependency info..."))
    names(lock) <- vapply(lock, `[[`, character(1), "name")
    get_dependencies_for_list(lock, lock, list())
-   deps
 }
 
 #' Recursive function to take a list and lock and extract dependencies, sorting

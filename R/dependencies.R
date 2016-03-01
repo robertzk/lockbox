@@ -373,7 +373,6 @@ get_remote_list <- function(dependencies_parsed) {
   if (identical(NROW(remote_dependencies),0L)){
     list()
   } else {
-    browser()
     matches_github <- grepl("github::", remote_dependencies[,1], fixed = TRUE)
 
     ## We do not currently support non-github remotes
@@ -385,17 +384,18 @@ get_remote_list <- function(dependencies_parsed) {
     } else {
       Map(extract_package_from_remote
         , as.character(remote_dependencies[,1])
-        , as.character(remote_dependencies[,3]))
+        , as.character(remote_dependencies[,3])
+        , matches_github)
     }
   }
 }
 
-extract_package_from_remote <- function(original_name, version) {
+extract_package_from_remote <- function(original_name, version, matches_github) {
   name <- original_name
 
   ## if github is explicitly stated as the remote then we remove
   ## such references
-  if (matches_github[i]){
+  if (matches_github){
     name <- gsub("git::.*github\\.com/", "", name)
     name <- gsub("\\.git", "", name)
   }

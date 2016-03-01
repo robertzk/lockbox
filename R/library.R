@@ -61,10 +61,9 @@ install_package.github <- function(locked_package, libPath, quiet) {
 
   ## Be very careful here to get the extracted package directory
   ## while maintaining cross-platform support
-  extracted_dir <- gsub(file.path(parent_dir, "")
-    , "", unzip(filepath, exdir = parent_dir)[1])
-  extracted_dir <- file.path(parent_dir
-    , gsub(paste0(.Platform$file.sep,".*"), "", extracted_dir))
+  extracted_dir <- gsub(paste0(.Platform$file.sep, ".*"), ""
+    , unzip(filepath, list = TRUE)$Name[1])
+  extracted_dir <- file.path(parent_dir, extracted_dir)
 
   if (!is.null(locked_package$subdir)) {
     extracted_dir <- file.path(extracted_dir, locked_package$subdir)

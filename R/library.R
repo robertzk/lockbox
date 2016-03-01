@@ -169,6 +169,7 @@ download_package.CRAN <- function(package) {
   name <- package$name
   version <- package$version
   repo <- "http://cran.r-project.org"
+  ref <- NULL
 
   ## Dependency package means that we grab the latest.  download.packages
   ## does a better job grabbing the latest than we do.  Edge-cases where certain
@@ -187,7 +188,6 @@ download_package.CRAN <- function(package) {
   if (package_version(remote_version) == package_version(version)) {
     version <- remote_version
     archive_addition <- ""
-    ref <- NULL
   } else {
     archive_addition <- paste0("Archive/", name, "/")
     ref <- package$ref

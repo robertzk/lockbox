@@ -43,6 +43,7 @@ lockbox.list <- function(lock, env) {
   disallow_duplicate_packages(lock)
 
   set_transient_library()
+  set_download_dir()
 
   ## Add dependencies to lock
   lock <- get_ordered_dependencies(lock)
@@ -84,6 +85,11 @@ reset_to_latest_version <- function(locked_package) {
   }
   locked_package$version <- package_version(locked_package$version)
   locked_package
+}
+
+set_download_dir <- function() {
+  download_dir <- lockbox_download_dir()
+  if (!file.exists(download_dir)) dir.create(download_dir, FALSE, TRUE)
 }
 
 as.locked_package <- function(list) {

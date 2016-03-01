@@ -29,7 +29,6 @@ package_list <- function(master_list, lock, previously_parsed_deps) {
         previously_parsed_deps[[package$name]][[
           paste(package$version)]]$package
     } else {
-      print(package$name)
       dependency_output <- get_dependencies(
        structure(package
          , class = c(package$remote %||% "CRAN"
@@ -204,6 +203,7 @@ get_dependencies <- function(package, lock) {
       , description_file_for(locked_package$name
         , dirname(lockbox_package_path(locked_package))))
   } else {
+    if(package$name == "devtools") browser()
     cat(crayon_blue("."))
     output <- tryCatch(get_remote_dependencies(package), error = function(e) e)
     if (is(output, "error")) {

@@ -1,5 +1,5 @@
-#' Borrowed from tools::package.dependencies and modified to be less breaky
-#' and parse remotes and LinkingTo
+## Borrowed from tools::package.dependencies and modified, adding LinkingTo and Remotes
+## to depLevel and allowing for multiple depLevels to be passed in simultaneously
 parse_dcf <- function (x, check = FALSE, depLevel = c("Depends", "Imports",
   "Suggests", "LinkingTo", "Remotes")) {
   depLevel <- match.arg(depLevel, several.ok = TRUE)

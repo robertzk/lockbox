@@ -100,8 +100,7 @@ replace_with_lock <- function(package, lock) {
     package$remote <- "CRAN"
   }
   package <- as.locked_package(package)
-  if (package$is_dependency_package && !package$name %in%
-    as.character(installed.packages(priority = "base")[,1])) {
+  if (package$is_dependency_package) {
       package$latest_version <- package$latest_version_in_lockbox %||%
         package$latest_version %||% get_latest_version(package)
   }
@@ -149,10 +148,10 @@ combine_dependencies <- function(list1, list2, current_parent) {
   c(list1[!names[[1]] %in% names[[2]]], list2)
 }
 
-#' Swap packages by comparing version information. 1ist2 has already
-#' been ordered by dependency, so is imperative that we keep its order while
-#' potentially swapping in the corresponding packages in list1 that have later
-#' version requirements.
+## Swap packages by comparing version information. 1ist2 has already
+## been ordered by dependency, so is imperative that we keep its order while
+## potentially swapping in the corresponding packages in list1 that have later
+## version requirements.
 swap_packages <- function(names1, names2, list1, list2) {
   ## Swap packages when the package in list1 is more recent (> version) than
   ## it's corresponding package in list2.  Keep the list 2 element if it is a
@@ -197,8 +196,8 @@ swap_packages <- function(names1, names2, list1, list2) {
   list2
 }
 
-#' Either use the current lockbox library DESCRIPTION
-#' file or download the accurate remote DESCRIPTION file.
+## Either use the current lockbox library DESCRIPTION
+## file or download the accurate remote DESCRIPTION file.
 get_dependencies <- function(package, lock) {
   locked_package <- package
 
@@ -251,18 +250,18 @@ strip_core_dependencies <- function(dependencies) {
   dependencies[!vapply(dependencies, function(p) p$name %in% core_pkgs, logical(1))]
 }
 
-#' We don't trust package authors to only put a package in once
+## We don't trust package authors to only put a package in once
 strip_duplicate_dependencies <- function(dependencies) {
   dependencies[!duplicated(vapply(dependencies, function(d) d$name
     , character(1)))]
 }
 
-#' Get the dependencies for a given package
+## Get the dependencies for a given package
 get_remote_dependencies <- function(package) {
   UseMethod("get_remote_dependencies")
 }
 
-#' If a package is local we just read from the directory given
+## If a package is local we just read from the directory given
 get_remote_dependencies.local <- function(package) {
   description_name <- file.path(package$dir, "DESCRIPTION")
   list(package = package
@@ -270,10 +269,10 @@ get_remote_dependencies.local <- function(package) {
       dependencies_from_description(package, read.dcf(description_name)))
 }
 
-#' For packages on CRAN we will extract to a temporary directory when we
-#' download the accurate remote DESCRIPTION file. Because these are tarballs
-#' there is no simple way to extract only our desired file like we can with
-#' zipfiles using the unz function.
+## For packages on CRAN we will extract to a temporary directory when we
+## download the accurate remote DESCRIPTION file. Because these are tarballs
+## there is no simple way to extract only our desired file like we can with
+## zipfiles using the unz function.
 get_remote_dependencies.CRAN <- function(package) {
   original_version <- package$version
   if (package$is_dependency_package) {
@@ -288,7 +287,7 @@ get_remote_dependencies.CRAN <- function(package) {
   description_name <- file_list[grepl(paste0("^[^", sep, "]+", sep
     ,"DESCRIPTION$"), file_list)]
   output <- untar(filepath, description_name, exdir = dirpath)
-  description_path <- (dirpath, sep, description_name)
+  description_path <- file.path(dirpath, description_name)
   package$download_path <- filepath
   package$version <- original_version
   dcf <- read.dcf(file = description_path)
@@ -297,7 +296,7 @@ get_remote_dependencies.CRAN <- function(package) {
   list(package = package, dependencies = dependencies_from_description(package, dcf))
 }
 
-#' Download the accurate remote DESCRIPTION file for a github repo.
+## Download the accurate remote DESCRIPTION file for a github repo.
 get_remote_dependencies.github <- function(package) {
   output <- download_description_github(package)
   list(package = output$package
@@ -305,7 +304,6 @@ get_remote_dependencies.github <- function(package) {
 }
 
 download_description_github <- function(package) {
-  browser()
   remote <- package$remote
   filepath <- download_package(structure(
     package,
@@ -333,11 +331,14 @@ version_from_remote <- function(package) {
 }
 
 version_from_description <- function(package_name, dcf) {
-  if (!"Version" %in% colnames(dcf)) return(NA)
-  as.character(dcf[1, which(colnames(dcf) == "Version")])
+  if (is.element("Version", colnames(dcf))) {
+    as.character(dcf[1, "Version"])
+  } else {
+    NA_character_
+  }
 }
 
-#' Parse dependencies from description
+## Parse dependencies from description
 dependencies_from_description <- function(package, dcf) {
   ## We install 4 kinds of dependencies listed in the description file. If our
   ## dcf does not contain any of these elements we have no dependencies to
@@ -355,32 +356,41 @@ dependencies_from_description <- function(package, dcf) {
 
   ## We separate out non-remote dependencies from remote dependencies, because
   ## they require different logic
-  non_remote_dependencies <- dependencies_parsed[rownames(dependencies_parsed) != "Remotes", ]
-  remote_dependencies <- dependencies_parsed[rownames(dependencies_parsed) == "Remotes", ]
+  non_remote_list <- get_non_remote_list(dependencies_parsed)
+  remote_list <- get_remote_list(dependencies_parsed)
 
-  ## Remove the Depends entry that just corresponds to the R version 
-  ## requirements
+  ## Remote package names are duplicated in Depends, LinkingTo, and Imports entries
+  non_remote_list <- non_remote_list[!is.element(
+    vapply(non_remote_list, `[[`, character(1), "name")
+    , vapply(remote_list, `[[`, character(1), "name"))]
+
+  c(non_remote_list, remote_list)
+}
+
+get_non_remote_list <- function(dependencies_parsed) {
+  non_remote_dependencies <- dependencies_parsed[rownames(dependencies_parsed) != "Remotes", ]
+
+  ## Remove the Depends entry that just corresponds to the R version requirements
   non_remote_dependencies <- non_remote_dependencies[!grepl("^[rR]$"
     , non_remote_dependencies[,1]), , drop = FALSE]
 
   ## Parse the non-remote dependencies into a list of packages
-  if (identical(nrow(non_remote_dependencies),0L)){
-    non_remote_list <- list()
+  if (identical(NROW(non_remote_dependencies),0L)){
+    list()
   } else {
-    non_remote_list <- lapply(seq_along(non_remote_dependencies[,1])
-      , function(i) {
-        name <- as.character(non_remote_dependencies[i,1])
-        version <- as.character(non_remote_dependencies[i,3])
-        list(name = name, version = version)
-      })
+    Map(function(u,v) list(name = u, version = v)
+      , as.character(non_remote_dependencies[,1]), as.character(non_remote_dependencies[,3]))
   }
+}
+
+get_remote_list <- function(dependencies_parsed) {
+  remote_dependencies <- dependencies_parsed[rownames(dependencies_parsed) == "Remotes", ]
 
   ## Parse the remote dependencies into a list of packages
-  if (identical(nrow(remote_dependencies),0L)){
-    remote_list <- list()
+  if (identical(NROW(remote_dependencies),0L)){
+    list()
   } else {
-    matches_github <- grepl("github::"
-      , remote_dependencies[,1])
+    matches_github <- grepl("github::", remote_dependencies[,1], fixed = TRUE)
 
     ## We do not currently support non-github remotes
     matches_unsupported <- grepl("bitbucket::|svn::|url::|local::|gitorious"
@@ -389,44 +399,38 @@ dependencies_from_description <- function(package, dcf) {
       stop(paste0("Package ", package$name, " from repo ", package$repo
         , " has unsupported (non-github) remote dependencies"))
     } else {
-      remote_list <- lapply(seq_along(remote_dependencies[,1])
-        , function(i) {
-          name <- remote_dependencies[i,1]
-
-          ## if github is explicitly stated as the remote then we remove
-          ## such references
-          if (matches_github[i]){
-            name <- gsub("git::.*github\\.com/", "", name)
-            name <- gsub("\\.git", "", name)
-          }
-
-          ## We extract the package name and repo name from the entry
-          ## Could potentially fail if the repo is named something different 
-          ## than its package name.  Other option is to download it now
-          ## and parse it on the fly, but if we do that we have to do it
-          ## every time we load, since we don't know its package name to
-          ## look it up in our lockbox directory
-          subname <- gsub("^.*/", "", as.character(remote_dependencies[i,1]))
-          subname <- gsub("@.*", "", subname)
-          subrepo <- gsub("@.*", "", as.character(remote_dependencies[i,1]))
-          pkg <- list(name = subname
-            , repo = subrepo
-            , version = as.character(remote_dependencies[i,3])
-            , remote = "github")
-          if (grepl("@", name)) {
-            pkg$ref <- gsub(".*@", "", name)
-          }
-          pkg})
+      Map(extract_package_from_remote
+        , as.character(non_remote_dependencies[,1])
+        , as.character(non_remote_dependencies[,3]))
     }
   }
+}
 
-  ## Remote package names are duplicated in Depends, LinkingTo, and Imports entries
-  if (length(remote_list) != 0) {
-    non_remote_names <- vapply(non_remote_list, function(pkg) pkg$name, character(1))
-    remote_names <- vapply(remote_list, function(pkg) pkg$name, character(1))
-    if (any(non_remote_names %in% remote_names)) {
-      non_remote_list <- non_remote_list[!non_remote_names %in% remote_names]
-    }
+extract_package_from_remote <- function(original_name, version) {
+  name <- original_name
+
+  ## if github is explicitly stated as the remote then we remove
+  ## such references
+  if (matches_github[i]){
+    name <- gsub("git::.*github\\.com/", "", name)
+    name <- gsub("\\.git", "", name)
   }
-  c(non_remote_list, remote_list)
+
+  ## We extract the package name and repo name from the entry
+  ## Could potentially fail if the repo is named something different 
+  ## than its package name.  Other option is to download it now
+  ## and parse it on the fly, but if we do that we have to do it
+  ## every time we load, since we don't know its package name to
+  ## look it up in our lockbox directory
+  subname <- gsub("^.*/", "", original_name)
+  subname <- gsub("@.*", "", subname)
+  subrepo <- gsub("@.*", "", original_name)
+  pkg <- list(name = subname
+    , repo = subrepo
+    , version = version
+    , remote = "github")
+  if (grepl("@", name)) {
+    pkg$ref <- gsub(".*@", "", name)
+  }
+  pkg
 }

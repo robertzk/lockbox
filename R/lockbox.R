@@ -90,9 +90,7 @@ as.locked_package <- function(list) {
   stopifnot(is.element("name", names(list)),
             is.element("version", names(list)))
 
-  if (is.null(list$is_dependency_package)) {
-    list$is_dependency_package <- FALSE
-  }
+  list$is_dependency_package <- isTRUE(list$is_dependency_package %||% FALSE)
 
   if (is.element("repo", names(list)) && !is.element("remote", names(list))) {
     list$remote <- "github"
@@ -105,7 +103,6 @@ as.locked_package <- function(list) {
     list$version <- package_version(list$version)
   }
 
-  ##  TODO: (RK) Support CRAN version dependencies.
   structure(list, class = "locked_package")
 }
 
@@ -114,6 +111,11 @@ is.locked_package <- function(obj) is(obj, "locked_package")
 #' The secret lockbox library path.
 lockbox_library <- function() {
   getOption("lockbox.directory") %||% normalizePath("~/.R/lockbox", mustWork = FALSE)
+}
+
+#' The lockbox download path.
+lockbox_library <- function() {
+  getOption("lockbox.download_dir") %||% normalizePath("~/.R/lockbox/download", mustWork = FALSE)
 }
 
 #' The transient lockbox library path.
@@ -131,7 +133,7 @@ lockbox_transient_staging_dir <- function() {
 }
 
 disallow_special_packages <- function(lock) {
-  package_names    <- vapply(lock, `[[`, character(1), "name")
+  package_names <- vapply(lock, `[[`, character(1), "name")
 
   if ("lockbox" %in% package_names) {
     stop("Lockbox cannot manage itself, Mr. Hofstadter.", call. = FALSE)
@@ -146,9 +148,9 @@ disallow_special_packages <- function(lock) {
 }
 
 disallow_duplicate_packages <- function(lock) {
-  locked_names <- vapply(lock, function(p) p$name, character(1))
+  locked_names <- vapply(lock, `[[`, character(1), "name")
   if (any(duplicated(locked_names))) {
     stop(paste0("The following packages are duplicated in your lockfile: "
-      , paste(locked_names[duplicated(locked_names)], collapse = ", ")))
+      , paste(unique(locked_names[duplicated(locked_names)]), collapse = ", ")))
   }
 }

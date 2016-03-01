@@ -36,25 +36,25 @@ lockbox_package_path <- function(locked_package, library = lockbox_library()) {
   install_locked_package(locked_package)
 }
 
-install_package <- function(locked_package, libP, quiet) {
+install_package <- function(locked_package, libPath, quiet) {
   UseMethod("install_package")
 }
 
-install_package.local <- function(locked_package, libP, quiet) {
+install_package.local <- function(locked_package, libPath, quiet) {
   stopifnot(is.element("dir", names(locked_package)))
 
-  utils::install.packages(locked_package$dir, lib = libP, repos = NULL
+  utils::install.packages(locked_package$dir, lib = libPath, repos = NULL
     , type = "source", INSTALL_opts = "--vanilla", quiet = quiet)
 }
 
-install_package.CRAN <- function(locked_package, libP, quiet) {
+install_package.CRAN <- function(locked_package, libPath, quiet) {
   filepath <- locked_package$download_path
-  utils::install.packages(filepath, lib = libP, repos = NULL, type = "source",
+  utils::install.packages(filepath, lib = libPath, repos = NULL, type = "source",
     INSTALL_opts = "--vanilla", quiet = quiet)
   unlink(filepath)
 }
 
-install_package.github <- function(locked_package, libP, quiet) {
+install_package.github <- function(locked_package, libPath, quiet) {
   stopifnot(is.element("repo", names(locked_package)))
 
   filepath <- locked_package$download_path
@@ -75,7 +75,7 @@ install_package.github <- function(locked_package, libP, quiet) {
   Sys.chmod(file.path(extracted_dir,"configure"), "0777")
   Sys.chmod(file.path(extracted_dir,"cleanup"), "0777")
 
-  utils::install.packages(extracted_dir, lib = libP, repos = NULL
+  utils::install.packages(extracted_dir, lib = libPath, repos = NULL
     , type = "source", INSTALL_opts = "--vanilla", quiet = quiet)
 
   unlink(extracted_dir, TRUE, TRUE)
@@ -154,8 +154,8 @@ current_version.locked_package <- function(package) {
   current_version(package$name)
 }
 
-description_file_for <- function(package_name, libP) {
-  dcf_file <- file.path(libP, package_name, "DESCRIPTION")
+description_file_for <- function(package_name, libPath) {
+  dcf_file <- file.path(libPath, package_name, "DESCRIPTION")
   if (file.exists(dcf_file)) {
     read.dcf(dcf_file)
   } else {
@@ -180,7 +180,6 @@ download_package.CRAN <- function(package) {
   ## have not.
   if (package$is_dependency_package) {
     pkg_tarball <- tempfile(fileext = ".tar.gz")
-    unlink(pkg_tarball)
     sep <- .Platform$file.sep
     dest_dir <- gsub(paste0(sep, "[^", sep, "]+$"), "", pkg_tarball)
     return(download.packages(package$name, dest_dir, repos = repo
@@ -192,7 +191,7 @@ download_package.CRAN <- function(package) {
   if (package_version(remote_version) == package_version(version)) {
     version <- remote_version
     archive_addition <- ""
-  } else{
+  } else {
     archive_addition <- paste0("Archive/", name, "/")
   }
 
@@ -235,13 +234,11 @@ get_available_cran_version <- function(package, repo = "http://cran.r-project.or
 #' Create remote in form devtools' remote_download  function likes.
 get_remote <- function(package) {
   ref <- package$ref %||% package$version
-  if (is.null(ref)) {
-    arguments <- list(package$repo)
-  } else {
-    arguments <- list(
-      paste(package$repo, ref, sep = "@"))
-  }
-  if (nzchar(token <- Sys.getenv("GITHUB_PAT"))) {
+  if (is.null(ref)) arguments <- list(package$repo)
+  else arguments <- list(paste(package$repo, ref, sep = "@"))
+
+  token <- Sys.getenv("GITHUB_PAT")
+  if (nzchar(token)) {
     arguments$auth_token <- token
   } else {
       warning(crayon_red("Warning: "), "To download private repositories, please set up your ",
@@ -251,5 +248,5 @@ get_remote <- function(package) {
   if (!is.null(package$subdir)) {
     arguments$subdir <- package$subdir
   }
-  remote <- do.call(github_remote, arguments)
+  do.call(github_remote, arguments)
 }

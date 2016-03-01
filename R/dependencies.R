@@ -29,6 +29,7 @@ package_list <- function(master_list, lock, previously_parsed_deps) {
         previously_parsed_deps[[package$name]][[
           paste(package$version)]]$package
     } else {
+      print(package$name)
       dependency_output <- get_dependencies(
        structure(package
          , class = c(package$remote %||% "CRAN"

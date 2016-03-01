@@ -4,7 +4,10 @@
 #'    and \code{name} elements will be used.
 align <- function(locked_package) {
   if (is.list(locked_package) && !is.locked_package(locked_package)) {
-    return(lapply(locked_package, align))
+    lapply(locked_package, align)
+    ## Unlink the download directory to remove temporary files
+    unlink(lockbox_download_dir(), TRUE, TRUE)
+    return()
   }
 
   stopifnot(is.locked_package(locked_package))
@@ -14,9 +17,6 @@ align <- function(locked_package) {
 
   ## Symlink the locked package to the correct lockbox version.
   `symlink_to_lockbox!`(locked_package)
-
-  ## Unlink the download directory to remove temporary files
-  unlink(lockbox_download_dir(), TRUE, TRUE)
 }
 
 `symlink_to_lockbox!` <- function(locked_package) {

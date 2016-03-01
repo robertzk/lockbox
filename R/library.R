@@ -162,7 +162,7 @@ download_package <- function(package) {
   UseMethod("download_package")
 }
 
-#' Download CRAN package, either current or older version
+## Download CRAN package, either current or older version
 download_package.CRAN <- function(package) {
   remote_version <- get_available_cran_version(package)
   name <- package$name
@@ -201,8 +201,8 @@ download_package.CRAN <- function(package) {
   pkg_tarball
 }
 
-#' Download a package from github using our version of devtools' remote_download
-#' function
+## Download a package from github using our version of devtools' remote_download
+## function
 download_package.github <- function(package) {
   if (is.na(package$version)) {
     package$version <- NULL
@@ -211,7 +211,7 @@ download_package.github <- function(package) {
   remote_download.github_remote(remote, quiet = !isTRUE(getOption('lockbox.verbose')))
 }
 
-#' Return the latest available version of a package from CRAN
+## Return the latest available version of a package from CRAN
 get_available_cran_version <- function(package, repo = "http://cran.r-project.org") {
   repo = "http://cran.r-project.org"
   ## List available packages on the repo
@@ -226,7 +226,7 @@ get_available_cran_version <- function(package, repo = "http://cran.r-project.or
   }
 }
 
-#' Create remote in form devtools' remote_download  function likes.
+## Create remote in form devtools' remote_download  function likes.
 get_remote <- function(package) {
   ref <- package$ref %||% package$version
   if (is.null(ref)) arguments <- list(package$repo)

@@ -214,7 +214,7 @@ get_dependencies <- function(package, lock) {
       dependencies <- output$dependencies
     }
   }
-  dependencies <- strip_available_dependencies(dependencies)
+  dependencies <- strip_duplicate_dependencies(dependencies)
   dependencies <- strip_pesky_dependencies(dependencies)
   dependencies <- strip_core_dependencies(dependencies)
   dependencies <- lapply(dependencies, add_latest_version_in_lockbox)

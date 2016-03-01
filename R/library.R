@@ -187,17 +187,29 @@ download_package.CRAN <- function(package) {
   if (package_version(remote_version) == package_version(version)) {
     version <- remote_version
     archive_addition <- ""
+    ref <- NULL
   } else {
     archive_addition <- paste0("Archive/", name, "/")
+    ref <- package$ref
   }
 
-  from <- paste0(repo, "/src/contrib/", archive_addition, name, "_", version
-    , ".tar.gz")
+  from <- paste0(repo, "/src/contrib/", archive_addition, name, "_"
+    , ref %||% version, ".tar.gz")
 
   pkg_tarball <- tempfile(fileext = ".tar.gz", tmpdir = lockbox_download_dir())
-  out <- suppressWarnings(try(
+  out <- suppressWarnings(tryCatch(
     download.file(url = from, destfile = pkg_tarball
-    , quiet = notTRUE(getOption('lockbox.verbose')))))
+    , quiet = notTRUE(getOption('lockbox.verbose'))), error = function(e) e))
+
+  ## Sometimes the current version isn't accessible in it's usual place,
+  ## but is already archived
+  if (is(out, "error")) {
+    archive_addition <- paste0("Archive/", name, "/")
+    from <- paste0(repo, "/src/contrib/", archive_addition, name, "_"
+      , ref %||% version , ".tar.gz")
+    download.file(url = from, destfile = pkg_tarball
+      , quiet = notTRUE(getOption('lockbox.verbose')))
+  }
 
   pkg_tarball
 }

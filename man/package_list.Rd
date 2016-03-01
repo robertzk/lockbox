@@ -12,7 +12,7 @@ package_list(master_list, lock, previously_parsed_deps)
 
 \item{lock}{list.  Original list of locked packages}
 
-\item{previously_parsed_deps.}{List of packages and their dependencies that
+\item{previously_parsed_deps}{list.  List of packages and their dependencies that
 we have already parsed out of their respective description files}
 }
 \description{

@@ -10,7 +10,7 @@ get_ordered_dependencies <- function(lock) {
 #' along the way using the combine_dependencies function.
 #' @param master_list list.  Packages to go through and parse dependencies from
 #' @param lock list.  Original list of locked packages
-#' @param previously_parsed_deps.  List of packages and their dependencies that
+#' @param previously_parsed_deps list.  List of packages and their dependencies that
 #'   we have already parsed out of their respective description files
 package_list <- function(master_list, lock, previously_parsed_deps) {
   ## Start off with the master list as our set of packages

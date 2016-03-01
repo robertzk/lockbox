@@ -123,7 +123,7 @@ github_resolve_ref.github_release <- function(x, params) {
   params$ref <- response[[1L]]$tag_name
   params
 }
-#' Get method for github
+
 github_GET <- function(path, ..., pat = github_pat()) {
   auth <- github_auth(pat)
   req <- httr::GET("https://api.github.com/", path = path, auth, ...)

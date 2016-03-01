@@ -14,6 +14,8 @@
 #' @param file_or_list character or list. A yaml-based lock file or its
 #'    parsed out list format. This set of packages will be loaded into the
 #'    search path and \emph{all other packages will be unloaded}.
+#' @param env character. The name of the entry in the lockfile that contains
+#'    package information.
 lockbox <- function(file_or_list, env = getOption("lockbox.env", "!packages")) {
   UseMethod("lockbox", file_or_list)
 }

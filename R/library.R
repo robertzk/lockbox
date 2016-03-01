@@ -55,7 +55,6 @@ install_package.CRAN <- function(locked_package, libPath, quiet) {
 
 install_package.github <- function(locked_package, libPath, quiet) {
   stopifnot(is.element("repo", names(locked_package)))
-  browser()
 
   filepath <- locked_package$download_path
   parent_dir <- dirname(filepath)

@@ -227,18 +227,18 @@ get_dependencies <- function(package, lock) {
 
 ## Remove pesky_namespace dependencies
 strip_pesky_dependencies <- function(dependencies) {
-  dependencies[!vapply(dependencies, `[[`, "name", character(1)) %in% pesky_namespaces]
+  dependencies[!vapply(dependencies, `[[`, character(1), "name") %in% pesky_namespaces]
 }
 
 ## Certain packages are no longer on cran but incorporated into R Core
 strip_core_dependencies <- function(dependencies) {
   core_pkgs <- as.character(installed.packages(priority = "base")[,1])
-  dependencies[!vapply(dependencies, `[[`, "name", character(1)) %in% core_pkgs]
+  dependencies[!vapply(dependencies, `[[`, character(1), "name") %in% core_pkgs]
 }
 
 ## We don't trust package authors to only put a package in once
 strip_duplicate_dependencies <- function(dependencies) {
-  dependencies[!duplicated(vapply(dependencies, `[[`, "name", character(1)))]
+  dependencies[!duplicated(vapply(dependencies, `[[`, character(1), "name"))]
 }
 
 ## Get the dependencies for a given package

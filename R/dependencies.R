@@ -373,6 +373,7 @@ get_remote_list <- function(dependencies_parsed) {
   if (identical(NROW(remote_dependencies),0L)){
     list()
   } else {
+    browser()
     matches_github <- grepl("github::", remote_dependencies[,1], fixed = TRUE)
 
     ## We do not currently support non-github remotes

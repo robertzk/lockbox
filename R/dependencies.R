@@ -203,7 +203,6 @@ get_dependencies <- function(package, lock) {
       , description_file_for(locked_package$name
         , dirname(lockbox_package_path(locked_package))))
   } else {
-    if(package$name == "devtools") browser()
     cat(crayon_blue("."))
     output <- tryCatch(get_remote_dependencies(package), error = function(e) e)
     if (is(output, "error")) {
@@ -384,8 +383,8 @@ get_remote_list <- function(dependencies_parsed) {
         , " has unsupported (non-github) remote dependencies"))
     } else {
       Map(extract_package_from_remote
-        , as.character(non_remote_dependencies[,1])
-        , as.character(non_remote_dependencies[,3]))
+        , as.character(remote_dependencies[,1])
+        , as.character(remote_dependencies[,3]))
     }
   }
 }

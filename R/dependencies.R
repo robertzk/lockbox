@@ -83,7 +83,7 @@ max_package_version <- function(versions) {
 replace_with_lock <- function(package, lock) {
   lock_names <- vapply(lock, function(l) l$name, character(1))
   if (package$name %in% lock_names) {
-    locked_package <- Filter(function(l) l$name == package$name, lock)[[1]]
+    locked_package <- Find(function(l) l$name == package$name, lock)
     if (!is.na(package$version) && package_version(as.character(package$version)) >
       package_version(as.character(locked_package$version))) {
         stop(paste0("Dependency: \'", package$name, ", Version: ", package$version
@@ -119,12 +119,8 @@ get_latest_version <- function(package) {
 ## found in list1 on the left side of the entirety of list2, while moving
 ## the parent package to the space after it's rightmost dependency found in list2.
 combine_dependencies <- function(list1, list2, current_parent) {
-  names <- lapply(list(list1, list2), function(lst) vapply(lst, `[[`, character(1), "name"))
-
-
   if (length(list1) == 0) return(list2)
-  if (length(list2) == 0) return(list1)
-
+  names <- lapply(list(list1, list2), function(lst) vapply(lst, `[[`, character(1), "name"))
   names(list1) <- names[[1]]
   names(list2) <- names[[2]]
 
@@ -176,16 +172,6 @@ swap_packages <- function(names1, names2, list1, list2) {
       }
     }
     , logical(1))
-
-  ## Delete temporary files for swapped items if they are distinct
-  lapply(which(swap_package2for1)
-    , function(index) {
-      obj2 <- list2[which(names2 == names1[index])]
-      obj1 <- list1[[index]]
-      if (!is.null(obj1$download_path) && !is.null(obj2$download_path) &&
-        obj2$download_path != obj1$download_path) {
-        unlink(obj2$download_path, TRUE, TRUE)
-      }})
 
   ## Swap a package from list1 into list2
   list2_swap <- vapply(names1[swap_package2for1]
@@ -241,19 +227,18 @@ get_dependencies <- function(package, lock) {
 
 ## Remove pesky_namespace dependencies
 strip_pesky_dependencies <- function(dependencies) {
-  dependencies[!vapply(dependencies, function(p) p$name %in% pesky_namespaces, logical(1))]
+  dependencies[!vapply(dependencies, `[[`, "name", character(1)) %in% pesky_namespaces]
 }
 
 ## Certain packages are no longer on cran but incorporated into R Core
 strip_core_dependencies <- function(dependencies) {
   core_pkgs <- as.character(installed.packages(priority = "base")[,1])
-  dependencies[!vapply(dependencies, function(p) p$name %in% core_pkgs, logical(1))]
+  dependencies[!vapply(dependencies, `[[`, "name", character(1)) %in% core_pkgs]
 }
 
 ## We don't trust package authors to only put a package in once
 strip_duplicate_dependencies <- function(dependencies) {
-  dependencies[!duplicated(vapply(dependencies, function(d) d$name
-    , character(1)))]
+  dependencies[!duplicated(vapply(dependencies, `[[`, "name", character(1)))]
 }
 
 ## Get the dependencies for a given package
@@ -292,7 +277,6 @@ get_remote_dependencies.CRAN <- function(package) {
   package$version <- original_version
   dcf <- read.dcf(file = description_path)
   package$latest_version <- version_from_description(package$name, dcf)
-  unlink(dirpath, TRUE, TRUE)
   list(package = package, dependencies = dependencies_from_description(package, dcf))
 }
 
@@ -325,7 +309,6 @@ download_description_github <- function(package) {
 
 version_from_remote <- function(package) {
   output <- download_description_github(package)
-  unlink(package$download_path, TRUE, TRUE)
   version_from_description(package
     , output$dcf)
 }

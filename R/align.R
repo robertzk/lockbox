@@ -9,11 +9,17 @@ align <- function(locked_package) {
 
   stopifnot(is.locked_package(locked_package))
 
+  download_dir <- lockbox_download_dir()
+  if (!file.exists(download_dir)) dir.create(download_dir, FALSE, TRUE)
+
   ## Make sure we have this package version in the lockbox secret library.
   `ensure_package_exists_in_lockbox!`(locked_package)
 
   ## Symlink the locked package to the correct lockbox version.
   `symlink_to_lockbox!`(locked_package)
+
+  ## Unlink the download directory to remove temporary files
+  unlink(download_dir, TRUE, TRUE)
 }
 
 `symlink_to_lockbox!` <- function(locked_package) {

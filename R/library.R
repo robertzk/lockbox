@@ -51,7 +51,6 @@ install_package.CRAN <- function(locked_package, libPath, quiet) {
   filepath <- locked_package$download_path
   utils::install.packages(filepath, lib = libPath, repos = NULL, type = "source",
     INSTALL_opts = "--vanilla", quiet = quiet)
-  unlink(filepath)
 }
 
 install_package.github <- function(locked_package, libPath, quiet) {
@@ -77,9 +76,6 @@ install_package.github <- function(locked_package, libPath, quiet) {
 
   utils::install.packages(extracted_dir, lib = libPath, repos = NULL
     , type = "source", INSTALL_opts = "--vanilla", quiet = quiet)
-
-  unlink(extracted_dir, TRUE, TRUE)
-  unlink(filepath)
 }
 
 install_locked_package <- function(locked_package) {
@@ -179,7 +175,7 @@ download_package.CRAN <- function(package) {
   ## things have been updated on the information page for a package but others
   ## have not.
   if (package$is_dependency_package) {
-    pkg_tarball <- tempfile(fileext = ".tar.gz")
+    pkg_tarball <- tempfile(fileext = ".tar.gz", tmpdir = lockbox_download_dir())
     sep <- .Platform$file.sep
     dest_dir <- gsub(paste0(sep, "[^", sep, "]+$"), "", pkg_tarball)
     return(download.packages(package$name, dest_dir, repos = repo
@@ -198,7 +194,7 @@ download_package.CRAN <- function(package) {
   from <- paste0(repo, "/src/contrib/", archive_addition, name, "_", version
     , ".tar.gz")
 
-  pkg_tarball <- tempfile(fileext = ".tar.gz")
+  pkg_tarball <- tempfile(fileext = ".tar.gz", tmpdir = lockbox_download_dir())
   out <- suppressWarnings(try(
     download.file(url = from, destfile = pkg_tarball
     , quiet = notTRUE(getOption('lockbox.verbose')))))
@@ -213,7 +209,7 @@ download_package.github <- function(package) {
     package$version <- NULL
   }
   remote <- get_remote(package)
-  remote_download_github_remote(remote, quiet = !isTRUE(getOption('lockbox.verbose')))
+  remote_download.github_remote(remote, quiet = !isTRUE(getOption('lockbox.verbose')))
 }
 
 #' Return the latest available version of a package from CRAN

@@ -114,7 +114,7 @@ lockbox_library <- function() {
 }
 
 #' The lockbox download path.
-lockbox_library <- function() {
+lockbox_download_dir <- function() {
   getOption("lockbox.download_dir") %||% normalizePath("~/.R/lockbox/download", mustWork = FALSE)
 }
 

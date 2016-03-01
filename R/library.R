@@ -55,6 +55,7 @@ install_package.CRAN <- function(locked_package, libPath, quiet) {
 
 install_package.github <- function(locked_package, libPath, quiet) {
   stopifnot(is.element("repo", names(locked_package)))
+  browser()
 
   filepath <- locked_package$download_path
   parent_dir <- dirname(filepath)
@@ -64,6 +65,7 @@ install_package.github <- function(locked_package, libPath, quiet) {
   extracted_dir <- gsub(paste0(.Platform$file.sep, ".*"), ""
     , unzip(filepath, list = TRUE)$Name[1])
   extracted_dir <- file.path(parent_dir, extracted_dir)
+  unzip(filepath, exdir = parent_dir)
 
   if (!is.null(locked_package$subdir)) {
     extracted_dir <- file.path(extracted_dir, locked_package$subdir)

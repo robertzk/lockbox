@@ -50,6 +50,7 @@ lockbox.list <- function(lock, env = getOption("lockbox.env", "!packages")) {
 
   ## Find the packages whose version does not match the current library.
   mismatches <- vapply(lock, version_mismatch, logical(1))
+  cat(crayon_red(paste0("Lock now has packages: ", paste(vapply(lock$packages, `[[`, character(1), "name"), collapse = ", "),"\n"," with ",sum(mismatches)," mismatches")))
 
   sapply(lock[!mismatches], function(locked_package) {
     if (locked_package$is_dependency_package) {

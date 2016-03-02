@@ -226,10 +226,8 @@ download_package.github <- function(package) {
 
 ## Return the latest available version of a package from CRAN
 get_available_cran_version <- function(package, repo = "http://cran.r-project.org") {
-  repo = "http://cran.r-project.org"
-  ## List available packages on the repo
   available <- available.packages(contriburl =
-    contrib.url(repos = "http://cran.us.r-project.org", type = "source"))
+    contrib.url(repos = repo, type = "source"))
   available <- data.frame(unique(available[, c("Package", "Version")]))
   pkg <- available[available$Package == package$name, ]
   if (nrow(pkg) == 0) {

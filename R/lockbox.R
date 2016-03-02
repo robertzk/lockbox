@@ -107,8 +107,7 @@ as.locked_package <- function(list) {
   } else if (!list$is_dependency_package) {
     ## This solves the inconsistent x.y-a.b naming convention problems that
     ## arise when transforming to a package_version.
-    locked_package$ref <- locked_package$ref %||% as.character(locked_package$version)
-    list$ref <- list$ref %||% list$version
+    list$ref <- list$ref %||% as.character(list$version)
   }
 
   structure(list, class = "locked_package")

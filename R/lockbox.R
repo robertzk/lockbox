@@ -105,7 +105,10 @@ as.locked_package <- function(list) {
     stop(sprintf("Invalid package %s version %s.",
                  sQuote(list$name), sQuote(list$version)))
   } else if (!list$is_dependency_package) {
-    list$version <- package_version(list$version)
+    ## This solves the inconsistent x.y-a.b naming convention problems that
+    ## arise when transforming to a package_version.
+    locked_package$ref <- locked_package$ref %||% as.character(locked_package$version)
+    list$ref <- list$ref %||% list$version
   }
 
   structure(list, class = "locked_package")
@@ -120,7 +123,7 @@ lockbox_library <- function() {
 
 #' The lockbox download path.
 lockbox_download_dir <- function() {
-  getOption("lockbox.download_dir") %||% normalizePath("~/.R/lockbox/download", mustWork = FALSE)
+  getOption("lockbox.download_dir") %||% file.path(lockbox_library(),".lockbox_download_dir")
 }
 
 #' The transient lockbox library path.

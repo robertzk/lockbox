@@ -17,28 +17,22 @@
 #' @param env character. The name of the entry in the lockfile that contains
 #'    package information.
 lockbox <- function(file_or_list, env = getOption("lockbox.env", "!packages")) {
-  UseMethod("lockbox", file_or_list)
+  UseMethod("lockbox")
 }
 
 #' @export
-lockbox.character <- function(file, env) {
+lockbox.character <- function(file, env = getOption("lockbox.env", "!packages")) {
   lockbox(yaml::yaml.load_file(file), env)
 }
 
 #' @export
-lockbox.list <- function(lock, env) {
-  if (missing(env)) env <- "!packages"
-  if (is.null(lock$packages))
-    stop("Invalid config. Make sure your config format is correct")
-  lock <-
-    if (identical(env, "!packages") || is.null(lock[[env]])) {
-      lock$packages
-    } else {
-      lock <- lapply(lock$packages, function(package) {
-        if(package$name %in% lock[[env]]) package else NULL
-      })
-      lock <- lock[!sapply(lock, is.null)]
-    }
+lockbox.list <- function(lock, env = getOption("lockbox.env", "!packages")) {
+  if (is.null(lock$packages)) stop("Invalid config. Make sure your config format is correct")
+  if (identical(env, "!packages") || is.null(lock[[env]])) {
+    lock <- lock$packages
+  } else {
+    lock <- lock$packages[vapply(lock$packages, `[[`, character(1), "name") %in% lock[[env]]]
+  }
 
   lock <- lapply(lock, as.locked_package)
   disallow_special_packages(lock)

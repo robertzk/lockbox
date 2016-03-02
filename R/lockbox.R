@@ -27,8 +27,8 @@ lockbox.character <- function(file, env = getOption("lockbox.env", "!packages"))
 
 #' @export
 lockbox.list <- function(lock, env = getOption("lockbox.env", "!packages")) {
-  message(crayon_red(paste0("env is ", env)))
-  message(crayon_red(paste0("Lock has packages: ", paste(vapply(lock$packages, `[[`, character(1), "name"), collapse = ", "))))
+  cat(crayon_red(paste0("env is ", env),"\n"))
+  cat(crayon_red(paste0("Lock has packages: ", paste(vapply(lock$packages, `[[`, character(1), "name"), collapse = ", "),"\n")))
   if (is.null(lock$packages)) stop("Invalid config. Make sure your config format is correct")
   if (identical(env, "!packages") || is.null(lock[[env]])) {
     lock <- lock$packages

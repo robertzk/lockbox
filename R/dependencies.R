@@ -103,6 +103,7 @@ replace_with_lock <- function(package, lock) {
   if (package$is_dependency_package) {
       package$latest_version <- package$latest_version_in_lockbox %||%
         package$latest_version %||% get_latest_version(package)
+      if(is.null(package$latest_version)) package <- NULL
   }
   package
 }
@@ -222,6 +223,7 @@ get_dependencies <- function(package, lock) {
     dep$parent_package <- package$name
     dep})
   dependencies <- lapply(dependencies, replace_with_lock, lock)
+  dependencies <- Filter(dependencies, f = Negate(is.null))
   list(package = package, dependencies = dependencies)
 }
 
@@ -336,6 +338,8 @@ dependencies_from_description <- function(package, dcf) {
   dependencies_parsed <- as.data.frame(parse_dcf(dcf
     , depLevel = dependency_levels[dependency_levels %in%
       colnames(dcf)])[[package$name]])
+  
+  if(NROW(dependencies_parsed) == 1 && NCOL(dependencies_parsed) == 1) return(list())
 
   ## We separate out non-remote dependencies from remote dependencies, because
   ## they require different logic

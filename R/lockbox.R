@@ -27,8 +27,6 @@ lockbox.character <- function(file, env = getOption("lockbox.env", "!packages"))
 
 #' @export
 lockbox.list <- function(lock, env = getOption("lockbox.env", "!packages")) {
-  cat(crayon_red(paste0("env is ", env, "\n")))
-  cat(crayon_red(paste0("Lock has packages: ", paste(vapply(lock$packages, `[[`, character(1), "name"), collapse = ", "),"\n")))
   if (is.null(lock$packages)) stop("Invalid config. Make sure your config format is correct")
   if (identical(env, "!packages") || is.null(lock[[env]])) {
     lock <- lock$packages
@@ -50,7 +48,6 @@ lockbox.list <- function(lock, env = getOption("lockbox.env", "!packages")) {
 
   ## Find the packages whose version does not match the current library.
   mismatches <- vapply(lock, version_mismatch, logical(1))
-  cat(crayon_red(paste0("Lock now has packages: ", paste(vapply(lock, `[[`, character(1), "name"), collapse = ", "),"\n"," with ",sum(mismatches)," mismatches")))
 
   sapply(lock[!mismatches], function(locked_package) {
     if (locked_package$is_dependency_package) {

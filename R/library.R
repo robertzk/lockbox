@@ -229,9 +229,15 @@ get_available_cran_version <- function(package, repo = "http://cran.r-project.or
   available <- available.packages(contriburl =
     contrib.url(repos = repo, type = "source"))
   available <- data.frame(unique(available[, c("Package", "Version")]))
+  if (!package$name %in% available$Package) {
+    prefix <- "Locked"
+    if (package$is_dependency_package) prefix <- "Dependency"
+    warning(paste0(prefix, " Package ", package$name, " is not available on CRAN."
+      , " Do you need to specify this package's repo?"))
+  }
   pkg <- available[available$Package == package$name, ]
   if (nrow(pkg) == 0) {
-    NA
+    NULL
   } else {
     pkg$Version
   }

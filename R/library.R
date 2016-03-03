@@ -49,7 +49,8 @@ install_package.local <- function(locked_package, libPath, quiet) {
 
 install_package.CRAN <- function(locked_package, libPath, quiet) {
   try(utils::install.packages(locked_package$download_path, lib = libPath
-    , repos = NULL, type = "source", INSTALL_opts = "--vanilla", quiet = quiet))
+    , repos = NULL, type = get_download_type(locked_package)
+    , INSTALL_opts = "--vanilla", quiet = quiet))
   pkgdir <- file.path(libPath, locked_package$name)
 
   ## Last chance at installation if compilation fails
@@ -57,7 +58,7 @@ install_package.CRAN <- function(locked_package, libPath, quiet) {
     package_version(locked_package$version) == package_version(locked_package$latest_version)) {
     repos <- getOption('lockbox.CRAN_mirror') %||% c(CRAN = "http://cran.r-project.org")
     install.packages(locked_package$name, INSTALL_opts = "--vanilla", repos = repos
-      , lib = libPath, quiet = quiet)
+      , type = get_download_type(locked_package), lib = libPath, quiet = quiet)
   }
 }
 
@@ -80,10 +81,9 @@ install_package.github <- function(locked_package, libPath, quiet) {
 }
 
 install_from_dir <- function(extracted_dir, libPath, quiet) {
-  ## It's absolutely necessary that we make these executable
-  Sys.chmod(file.path(extracted_dir,"configure"), "0777")
-  Sys.chmod(file.path(extracted_dir,"configure.win"), "0777")
-  Sys.chmod(file.path(extracted_dir,"cleanup"), "0777")
+  ## Make every file in the extracted directory executable to cover compilation
+  ## edge-cases
+  lapply(list.files(extracted_dir, full.names = TRUE), Sys.chmod, "0777")
 
   utils::install.packages(extracted_dir, lib = libPath, repos = NULL
     , type = "source", INSTALL_opts = "--vanilla", quiet = quiet)
@@ -187,18 +187,6 @@ download_package.CRAN <- function(package) {
   repo <- getOption('lockbox.CRAN_mirror') %||% c(CRAN = "http://cran.r-project.org")
   ref <- NULL
 
-  ## Dependency package means that we grab the latest.  download.packages
-  ## does a better job grabbing the latest than we do.  Edge-cases where certain
-  ## things have been updated on the information page for a package but others
-  ## have not.
-  if (package$is_dependency_package) {
-    pkg_tarball <- tempfile(fileext = ".tar.gz", tmpdir = lockbox_download_dir())
-    sep <- .Platform$file.sep
-    dest_dir <- gsub(paste0(sep, "[^", sep, "]+$"), "", pkg_tarball)
-    return(download.packages(package$name, dest_dir, repos = repo
-      , type = "source", quiet = notTRUE(getOption('lockbox.verbose')))[1, 2])
-  }
-
   ## Simply download latest if version happens to be the latest available on CRAN.
   remote_version <- as.character(remote_version)
   if (package_version(remote_version) == package_version(version)) {
@@ -240,10 +228,15 @@ download_package.github <- function(package) {
   remote_download.github_remote(remote, quiet = !isTRUE(getOption('lockbox.verbose')))
 }
 
+get_download_type <- function(package) {
+  if (package$is_dependency_package) "binary"
+  else "source"
+}
+
 ## Return the latest available version of a package from CRAN
 get_available_cran_version <- function(package, repo = "http://cran.r-project.org") {
   available <- available.packages(contriburl =
-    contrib.url(repos = repo, type = "source"))
+    contrib.url(repos = repo, type = get_download_type(package)))
   available <- data.frame(unique(available[, c("Package", "Version")]))
   if (!package$name %in% available$Package) {
     prefix <- "Locked"

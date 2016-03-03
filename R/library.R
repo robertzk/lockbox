@@ -229,7 +229,7 @@ download_package.github <- function(package) {
 }
 
 get_download_type <- function(package) {
-  if (package$is_dependency_package) "binary"
+  if (package$is_dependency_package && .Platform$pkgType != "source") "binary"
   else "source"
 }
 

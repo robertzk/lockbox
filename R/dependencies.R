@@ -215,6 +215,11 @@ get_dependencies <- function(package, lock) {
       dependencies <- output$dependencies
     }
   }
+  dependencies <- strip_dependencies(dependencies, package)
+  list(package = package, dependencies = dependencies)
+}
+
+strip_dependencies <- function(dependencies, package) {
   dependencies <- strip_duplicate_dependencies(dependencies)
   dependencies <- strip_pesky_dependencies(dependencies)
   dependencies <- strip_core_dependencies(dependencies)
@@ -223,8 +228,7 @@ get_dependencies <- function(package, lock) {
     dep$parent_package <- package$name
     dep})
   dependencies <- lapply(dependencies, replace_with_lock, lock)
-  dependencies <- Filter(dependencies, f = Negate(is.null))
-  list(package = package, dependencies = dependencies)
+  Filter(dependencies, f = Negate(is.null))
 }
 
 ## Remove pesky_namespace dependencies

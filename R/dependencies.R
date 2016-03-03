@@ -215,11 +215,11 @@ get_dependencies <- function(package, lock) {
       dependencies <- output$dependencies
     }
   }
-  dependencies <- strip_dependencies(dependencies, package)
+  dependencies <- strip_dependencies(dependencies, package, lock)
   list(package = package, dependencies = dependencies)
 }
 
-strip_dependencies <- function(dependencies, package) {
+strip_dependencies <- function(dependencies, package, lock) {
   dependencies <- strip_duplicate_dependencies(dependencies)
   dependencies <- strip_pesky_dependencies(dependencies)
   dependencies <- strip_core_dependencies(dependencies)

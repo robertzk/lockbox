@@ -83,7 +83,7 @@ install_package.github <- function(locked_package, libPath, quiet) {
 install_from_dir <- function(extracted_dir, libPath, quiet) {
   ## Make every file in the extracted directory executable to cover compilation
   ## edge-cases
-  lapply(list.files(extracted_dir, full.names = TRUE), Sys.chmod, "0777")
+  lapply(list.files(extracted_dir, full.names = TRUE, recursive = TRUE), Sys.chmod, "0777")
 
   utils::install.packages(extracted_dir, lib = libPath, repos = NULL
     , type = "source", INSTALL_opts = "--vanilla", quiet = quiet)
@@ -189,7 +189,7 @@ download_package.CRAN <- function(package) {
 
   ## Simply download latest if version happens to be the latest available on CRAN.
   remote_version <- as.character(remote_version)
-  if (package_version(remote_version) == package_version(version)) {
+  if (is.na(package$version) || package_version(remote_version) == package_version(version)) {
     version <- remote_version
     archive_addition <- ""
   } else {

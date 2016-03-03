@@ -48,9 +48,17 @@ install_package.local <- function(locked_package, libPath, quiet) {
 }
 
 install_package.CRAN <- function(locked_package, libPath, quiet) {
-  filepath <- locked_package$download_path
-  utils::install.packages(filepath, lib = libPath, repos = NULL, type = "source",
-    INSTALL_opts = "--vanilla", quiet = quiet)
+  try(utils::install.packages(locked_package$download_path, lib = libPath
+    , repos = NULL, type = "source", INSTALL_opts = "--vanilla", quiet = quiet))
+  pkgdir <- file.path(libPath, locked_package$name)
+
+  ## Last chance at installation if compilation fails
+  if (!file.exists(pkgdir) &&
+    package_version(locked_package$version) == package_version(locked_package$latest_version)) {
+    repos <- getOption('lockbox.CRAN_mirror') %||% c(CRAN = "http://cran.r-project.org")
+    install.packages(locked_package$name, INSTALL_opts = "--vanilla", repos = repos
+      , lib = libPath, quiet = quiet)
+  }
 }
 
 install_package.github <- function(locked_package, libPath, quiet) {
@@ -65,13 +73,16 @@ install_package.github <- function(locked_package, libPath, quiet) {
     , unzip(filepath, list = TRUE)$Name[1])
   extracted_dir <- file.path(parent_dir, extracted_dir)
   unzip(filepath, exdir = parent_dir)
-
   if (!is.null(locked_package$subdir)) {
     extracted_dir <- file.path(extracted_dir, locked_package$subdir)
   }
+  install_from_dir(extracted_dir, libPath, quiet)
+}
 
+install_from_dir <- function(extracted_dir, libPath, quiet) {
   ## It's absolutely necessary that we make these executable
   Sys.chmod(file.path(extracted_dir,"configure"), "0777")
+  Sys.chmod(file.path(extracted_dir,"configure.win"), "0777")
   Sys.chmod(file.path(extracted_dir,"cleanup"), "0777")
 
   utils::install.packages(extracted_dir, lib = libPath, repos = NULL
@@ -107,7 +118,8 @@ install_locked_package <- function(locked_package) {
          " of version ", sQuote(as.character(locked_package$version)))
   }
 
-  if ((ver <- package_version_from_path(pkgdir)) != locked_package$version) {
+  ver <- package_version_from_path(pkgdir)
+  if (ver != locked_package$version) {
     unlink(temp_library, TRUE, TRUE)
     stop(sprintf(paste0(
       "Incorrect version of package %s installed. Expected ",
@@ -115,8 +127,12 @@ install_locked_package <- function(locked_package) {
       sQuote(locked_package$version), sQuote(ver)), call. = FALSE)
   }
 
+
   copy_real_packages_to_lockbox_library(temp_library)
   unlink(temp_library, TRUE, TRUE)
+}
+
+is_installed_to_staging <- function(locked_package, pkgdir) {
 }
 
 #' Find packages whose version does not match the current library's version.
@@ -168,7 +184,7 @@ download_package.CRAN <- function(package) {
   remote_version <- get_available_cran_version(package)
   name <- package$name
   version <- package$version
-  repo <- "http://cran.r-project.org"
+  repo <- getOption('lockbox.CRAN_mirror') %||% c(CRAN = "http://cran.r-project.org")
   ref <- NULL
 
   ## Dependency package means that we grab the latest.  download.packages

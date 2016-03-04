@@ -48,12 +48,15 @@ install_package.local <- function(locked_package, libPath, quiet) {
 }
 
 install_package.CRAN <- function(locked_package, libPath, quiet) {
+  ## We already downloaded a source file when parsing DESCRIPTIONS, so try that
+  ## first
   try(utils::install.packages(locked_package$download_path, lib = libPath
-    , repos = NULL, type = get_download_type(locked_package)
+    , repos = NULL, type = "source"
     , INSTALL_opts = "--vanilla", quiet = quiet))
   pkgdir <- file.path(libPath, locked_package$name)
 
-  ## Last chance at installation if compilation fails
+  ## Last chance at installation if compilation fails.  Install through normal
+  ## CRAN channels
   if (!file.exists(pkgdir) &&
     package_version(locked_package$version) == package_version(locked_package$latest_version)) {
     repos <- getOption('lockbox.CRAN_mirror') %||% c(CRAN = "http://cran.r-project.org")
@@ -127,12 +130,8 @@ install_locked_package <- function(locked_package) {
       sQuote(locked_package$version), sQuote(ver)), call. = FALSE)
   }
 
-
   copy_real_packages_to_lockbox_library(temp_library)
   unlink(temp_library, TRUE, TRUE)
-}
-
-is_installed_to_staging <- function(locked_package, pkgdir) {
 }
 
 #' Find packages whose version does not match the current library's version.

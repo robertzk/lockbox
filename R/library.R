@@ -29,7 +29,9 @@ lockbox_package_path <- function(locked_package, library = lockbox_library()) {
   ## The trailing pkg_name is to ensure help files work, since these depend
   ## on the directory name:
   ## https://github.com/wch/r-source/blob/ed66b715221d2720f5b334470335635bada520b1/src/library/utils/R/help.R#L213
-  file.path(library, locked_package$name, locked_package$version, locked_package$name)
+  file.path(library, locked_package$name
+    , package_version(as.character(locked_package$version))
+    , locked_package$name)
 }
 
 `place_in_lockbox!` <- function(locked_package) {

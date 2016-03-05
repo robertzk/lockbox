@@ -11,7 +11,7 @@ test_random_lockbox <- function(test_dir, num_random_cran, unlink_sub_dir = FALS
 }
 
 get_installation_result <- function(github_packages, cran_packages, test_dir
-  , logfile_name = "logfile", final_msg = "Successfully loaded lockbox\n") {
+  , logfile_name = "logfile", final_msg = "Successfully loaded lockbox") {
     write_yml(cran_packages, github_packages, test_dir)
 
     lockbox_dir <- file.path(test_dir, "lockbox")
@@ -23,7 +23,7 @@ get_installation_result <- function(github_packages, cran_packages, test_dir
     unlink(lockbox_dir, TRUE, TRUE)
     unlink(paste0(lockbox_dir,"_transient"), TRUE, TRUE)
     unlink(paste0(lockbox_dir,"_transient_staging"), TRUE, TRUE)
-    output <- readLines(file.path(test_dir, logfile_name))
+    output <- suppressWarnings(readLines(file.path(test_dir, logfile_name)))
     list(success = grepl(final_msg, tail(output, 1)), log = output)
 }
 

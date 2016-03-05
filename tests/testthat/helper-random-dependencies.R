@@ -1,6 +1,6 @@
 github_yml <- "packages:\n- name: stagerunner\n  version: 0.5.2\n  repo: syberia/stagerunner\n- name: objectdiff\n  version: 0.2.3.9000\n  repo: robertzk/objectdiff\n  ref: ab641a58523e7a1d78f82491838c70d5334d9603\n- name: tundra\n  version: 0.2.3\n  repo: syberia/tundra\n- name: director\n  version: 0.2.1\n  repo: syberia/director\n- name: mungebits\n  version: 0.3.13\n  repo: robertzk/mungebits\n- name: mungebits2\n  version: 0.1.0\n  repo: syberia/mungebits2\n  load: no\n- name: syberiaStages\n  version: 0.2.3\n  repo: robertzk/syberiaStages\n- name: statsUtils\n  version: 0.1.4\n  repo: robertzk/statsUtils\n- name: syberiaStructure\n  version: 0.2.2\n  repo: robertzk/syberiaStructure\n- name: devtools\n  repo: hadley/devtools\n  version: 1.10.0.9000\n  ref: 2b42b846534ceec47a867ad0376a7024ff80eb01\ndevelopment: ~\ntest: ~\nnothing: ~\n"
 
-get_random_result <- function(test_dir, num_random_cran, unlink_sub_dir = FALSE, seed = NULL) {
+test_random_lockbox <- function(test_dir, num_random_cran, unlink_sub_dir = FALSE, seed = NULL) {
   github_packages <- yaml::yaml.load(github_yml)$packages
   cran_packages <- get_random_cran_packages(num_random_cran, seed)
   temp_sub_dir <- tempfile(tmpdir = test_dir)
@@ -11,7 +11,7 @@ get_random_result <- function(test_dir, num_random_cran, unlink_sub_dir = FALSE,
 }
 
 get_installation_result <- function(github_packages, cran_packages, test_dir
-  , logfile_name = "logfile", final_msg = "Successfully loaded lockbox") {
+  , logfile_name = "logfile", final_msg = "Successfully loaded lockbox\n") {
     write_yml(cran_packages, github_packages, test_dir)
 
     lockbox_dir <- file.path(test_dir, "lockbox")

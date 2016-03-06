@@ -1,3 +1,4 @@
+Sys.setenv("R_TESTS" = "")
 context('random-dependencies')
 
 test_that('Our random selection of CRAN and syberia packages can install', {

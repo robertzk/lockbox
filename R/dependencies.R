@@ -81,7 +81,7 @@ max_package_version <- function(versions) {
 ## an error if we require a dependency version greater than that specified by
 ## the lockfile.
 replace_with_lock <- function(package, lock) {
-  lock_names <- vapply(lock, function(l) l$name, character(1))
+  lock_names <- vapply(lock, `[[`, character(1), "name")
   if (package$name %in% lock_names) {
     locked_package <- Find(function(l) l$name == package$name, lock)
     if (!is.na(package$version) && package_version(as.character(package$version)) >

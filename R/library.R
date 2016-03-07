@@ -236,9 +236,17 @@ get_download_type <- function(package) {
 
 ## Return the latest available version of a package from CRAN
 get_available_cran_version <- function(package, repo = "http://cran.r-project.org") {
+  type <- get_download_type(package)
   available <- available.packages(contriburl =
-    contrib.url(repos = repo, type = get_download_type(package)))
+    contrib.url(repos = repo, type = type))
   available <- data.frame(unique(available[, c("Package", "Version")]))
+
+  ## If package is only available in source redo this call
+  if (!package$name %in% available$Package && type != "source") {
+    available <- available.packages(contriburl =
+      contrib.url(repos = repo, type = "source"))
+    available <- data.frame(unique(available[, c("Package", "Version")]))
+  }
   if (!package$name %in% available$Package) {
     prefix <- "Locked"
     if (package$is_dependency_package) prefix <- "Dependency"

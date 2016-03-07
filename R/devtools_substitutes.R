@@ -32,7 +32,7 @@ download <- function(path, url, ...) {
 }
 
 github_remote <- function(repo, username = NULL, ref = NULL, subdir = NULL,
-                       auth_token = github_pat(), sha = NULL,
+                       auth_token = NULL, sha = NULL,
                        host = "api.github.com") {
 
   meta <- parse_git_repo(repo)

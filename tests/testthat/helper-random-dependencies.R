@@ -49,7 +49,7 @@ get_rscript_command <- function(lockbox_dir, logfile_name, final_msg, install_di
     , lock_cmd, ";", msg_cmd, "\" > ", logfile_name)
 }
 
-get_random_cran_packages <- function(num, seed, repo = "http://cran.r-project.org") {
+get_random_cran_packages <- function(num, seed = NULL, repo = "http://cran.r-project.org") {
   available <- available.packages(contriburl =
     contrib.url(repos = repo, type = "binary"))
   available <- data.frame(unique(available[, c("Package", "Version")]))

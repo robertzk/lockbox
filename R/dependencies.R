@@ -209,7 +209,7 @@ get_dependencies <- function(package, lock) {
     if (is(output, "error")) {
       stop(crayon_red(paste0("Dependencies could not be resolved for package: "
         , package$name, " version: ", package$version
-        , " remote:", package$remote)))
+        , " remote: ", package$remote, " due to error: ", e)))
     } else {
       package <- output$package
       dependencies <- output$dependencies

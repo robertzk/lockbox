@@ -1,12 +1,14 @@
 get_hardcoded_github_yml <- function() return("packages:\n- name: stagerunner\n  version: 0.5.2\n  repo: syberia/stagerunner\n- name: objectdiff\n  version: 0.2.3.9000\n  repo: robertzk/objectdiff\n  ref: ab641a58523e7a1d78f82491838c70d5334d9603\n- name: tundra\n  version: 0.2.3\n  repo: syberia/tundra\n- name: director\n  version: 0.2.1\n  repo: syberia/director\n- name: mungebits\n  version: 0.3.13\n  repo: robertzk/mungebits\n- name: mungebits2\n  version: 0.1.0\n  repo: syberia/mungebits2\n  load: no\n- name: syberiaStages\n  version: 0.2.3\n  repo: robertzk/syberiaStages\n- name: statsUtils\n  version: 0.1.4\n  repo: robertzk/statsUtils\n- name: syberiaStructure\n  version: 0.2.2\n  repo: robertzk/syberiaStructure\n- name: devtools\n  repo: hadley/devtools\n  version: 1.10.0.9000\n  ref: 2b42b846534ceec47a867ad0376a7024ff80eb01\ndevelopment: ~\ntest: ~\nnothing: ~\n")
 
-test_random_lockbox <- function(test_dir, num_random_cran, unlink_install_dir = FALSE, seed = NULL) {
+get_hardcoded_cran_yml <- function() return("packages:\n- name: Rcpp\n  version: 0.12.3\n- name: foreign\n  version: 0.8-66\n  load: no\n- name: plyr\n  version: 1.8.3\n  remote: CRAN\n  load: no\n- name: crayon\n  version: 1.2.1\n  load: no\n- name: maptools\n  version: 0.8.36\n  ref: 0.8-36\n  load: no\n- name: dplyr\n  version: 0.4.3\n  load: no\n- name: stringr\n  version: 1.0.0\n  load: no\n- name: lubridate\n  version: 1.3.3\n- name: knitr\n  version: 1.12.3\n- name: lme4\n  version: 1.1.11\n  ref: 1.1-11\n- name: memoise\n  version: 1.0.0\n")
+
+test_lockbox <- function(test_dir) {
   github_packages <- yaml::yaml.load(get_hardcoded_github_yml())$packages
-  cran_packages <- get_random_cran_packages(num_random_cran, seed)
+  cran_packages <- yaml::yaml.load(get_hardcoded_cran_yml())$packages
   install_dir <- tempfile(tmpdir = test_dir)
   dir.create(install_dir)
   result <- get_installation_result(github_packages, cran_packages, install_dir)
-  if (unlink_install_dir) unlink(install_dir, TRUE, TRUE)
+  unlink(install_dir, TRUE, TRUE)
   result
 }
 
@@ -49,6 +51,7 @@ get_rscript_command <- function(lockbox_dir, logfile_name, final_msg, install_di
     , lock_cmd, ";", msg_cmd, "\" > ", logfile_name)
 }
 
+## Not currently in use, but left in case we want to do randomized tests in the future
 get_random_cran_packages <- function(num, seed = NULL, repo = "http://cran.r-project.org") {
   available <- available.packages(contriburl =
     contrib.url(repos = repo, type = "binary"))

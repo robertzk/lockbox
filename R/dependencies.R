@@ -277,12 +277,14 @@ get_remote_dependencies.CRAN <- function(package) {
   file_list <- untar(filepath, list = TRUE)
   description_name <- file_list[grepl(paste0("^[^", sep, "]+", sep
     ,"DESCRIPTION$"), file_list)]
-  output <- untar(filepath, description_name, exdir = dirpath)
+  untar(filepath, description_name, exdir = dirpath)
   description_path <- file.path(dirpath, description_name)
   package$download_path <- filepath
   package$version <- original_version
   dcf <- read.dcf(file = description_path)
-  package$latest_version <- version_from_description(package$name, dcf)
+  if (package$is_dependency_package) {
+    package$latest_version <- version_from_description(package$name, dcf)
+  }
   list(package = package, dependencies = dependencies_from_description(package, dcf))
 }
 

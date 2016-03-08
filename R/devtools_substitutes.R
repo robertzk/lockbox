@@ -154,3 +154,14 @@ github_response <- function(req) {
 
   parsed
 }
+
+github_pat <- function(quiet = FALSE) {
+  pat <- Sys.getenv('GITHUB_PAT')
+  if (identical(pat, "")) return(NULL)
+
+  if (!quiet) {
+    message("Using github PAT from envvar GITHUB_PAT")
+  }
+
+  pat
+}

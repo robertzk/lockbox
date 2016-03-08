@@ -267,7 +267,7 @@ get_remote <- function(package) {
   if (is.null(ref)) arguments <- list(package$repo)
   else arguments <- list(paste(package$repo, ref, sep = "@"))
 
-  token <- Sys.getenv("GITHUB_PAT")
+  token <- github_pat(quiet = notTRUE(getOption('lockbox.verbose')))
   if (nzchar(token)) {
     arguments$auth_token <- token
   } else {

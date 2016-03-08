@@ -21,12 +21,13 @@ lockbox <- function(file_or_list, env = getOption("lockbox.env", "!packages")) {
 }
 
 #' @export
-lockbox.character <- function(file, env = getOption("lockbox.env", "!packages")) {
+lockbox.character <- function(file, env) {
   lockbox(yaml::yaml.load_file(file), env)
 }
 
 #' @export
-lockbox.list <- function(lock, env = getOption("lockbox.env", "!packages")) {
+lockbox.list <- function(lock, env) {
+  if (missing(env)) env <- "!packages"
   if (is.null(lock$packages)) stop("Invalid config. Make sure your config format is correct")
   if (identical(env, "!packages") || is.null(lock[[env]])) {
     lock <- lock$packages
@@ -119,7 +120,7 @@ lockbox_library <- function() {
 
 #' The lockbox download path.
 lockbox_download_dir <- function() {
-  getOption("lockbox.download_dir") %||% file.path(lockbox_library(),".lockbox_download_dir")
+  getOption("lockbox.download_dir") %||% file.path(lockbox_library(), "lockbox_download_dir")
 }
 
 #' The transient lockbox library path.

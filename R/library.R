@@ -268,7 +268,7 @@ get_remote <- function(package) {
   else arguments <- list(paste(package$repo, ref, sep = "@"))
 
   token <- github_pat(quiet = notTRUE(getOption('lockbox.verbose')))
-  if (nzchar(token)) {
+  if (!is.null(token)) {
     arguments$auth_token <- token
   } else {
       warning(crayon_red("Warning: "), "To download private repositories, please set up your ",

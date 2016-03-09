@@ -1,6 +1,6 @@
 #' Bundler-style Package Management for R.
 #'
 #' @name lockbox
-#' @import testthatsomemore yaml digest utils
+#' @import yaml digest utils
 #' @docType package
 NULL

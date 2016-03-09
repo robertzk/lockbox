@@ -34,7 +34,7 @@ reset_search_path <- function() {
 }
 
 attach <- function(locked_package) {
-  if (!identical(locked_package$load, FALSE)) {
+  if (!identical(locked_package$load, FALSE) && !locked_package$is_dependency_package) {
     library(locked_package$name, character.only = TRUE)
   }
   locked_package$name
@@ -47,10 +47,7 @@ native_namespaces <-
     "tools", "translations", "utils", "lattice", "Matrix")
 
 # These namespaces are particularly difficult to unload because of dependencies.
-pesky_namespaces <-
-  c("lockbox", "httr", "RCurl", "bitops", "crayon", "yaml", "testthat",
-    "testthatsomemore", "stringr", "digest", "lubridate", "memoise",
-    "plyr", "magrittr", "devtools", "Rcpp", "roxygen")
+pesky_namespaces <- c("lockbox", "yaml", "digest", "utils", "httr")
 
 special_namespaces <- c(native_namespaces, pesky_namespaces)
 

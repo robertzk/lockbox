@@ -14,8 +14,10 @@
 #' @param file_or_list character or list. A yaml-based lock file or its
 #'    parsed out list format. This set of packages will be loaded into the
 #'    search path and \emph{all other packages will be unloaded}.
+#' @param env character. The name of the entry in the lockfile that contains
+#'    package information.
 lockbox <- function(file_or_list, env = getOption("lockbox.env", "!packages")) {
-  UseMethod("lockbox", file_or_list)
+  UseMethod("lockbox")
 }
 
 #' @export
@@ -26,36 +28,42 @@ lockbox.character <- function(file, env) {
 #' @export
 lockbox.list <- function(lock, env) {
   if (missing(env)) env <- "!packages"
-  if (is.null(lock$packages))
-    stop("Invalid config. Make sure your config format is correct")
-  lock <-
-    if (identical(env, "!packages") || is.null(lock[[env]])) {
-      lock$packages
-    } else {
-      lock <- lapply(lock$packages, function(package) {
-        if(package$name %in% lock[[env]]) package else NULL
-      })
-      lock <- lock[!sapply(lock, is.null)]
-    }
+  if (is.null(lock$packages)) stop("Invalid config. Make sure your config format is correct")
+  if (identical(env, "!packages") || is.null(lock[[env]])) {
+    lock <- lock$packages
+  } else {
+    lock <- lock$packages[vapply(lock$packages, `[[`, character(1), "name") %in% lock[[env]]]
+  }
 
   lock <- lapply(lock, as.locked_package)
   disallow_special_packages(lock)
+  disallow_duplicate_packages(lock)
 
   set_transient_library()
+  set_download_dir()
+
+  ## Add dependencies to lock
+  lock <- get_ordered_dependencies(lock)
+  lock <- lapply(lock, reset_to_latest_version)
+  cat("\n")
 
   ## Find the packages whose version does not match the current library.
   mismatches <- vapply(lock, version_mismatch, logical(1))
 
   sapply(lock[!mismatches], function(locked_package) {
-    cat('Using', crayon::green(locked_package$name), as.character(locked_package$version), '\n')
+    if (locked_package$is_dependency_package) {
+      cat('Using dependency', crayon_blue(locked_package$name), as.character(locked_package$version), '\n')
+    } else {
+      cat('Using', crayon_green(locked_package$name), as.character(locked_package$version), '\n')
+    }
   })
 
   quietly({
     ## Replace our library so that it has these packages instead.
     align(lock[mismatches])
 
-    ## And re-build our search path.
-    rebuild(lock)
+    ## And re-build our search path. Do so in the reverse order of dependencies.
+    rebuild(rev(lock))
   })
 }
 
@@ -68,22 +76,38 @@ lockbox.default <- function(obj) {
   )
 }
 
+reset_to_latest_version <- function(locked_package) {
+  if (locked_package$is_dependency_package) {
+    locked_package$version <- locked_package$latest_version
+  }
+  locked_package$version <- package_version(locked_package$version)
+  locked_package
+}
+
+set_download_dir <- function() {
+  download_dir <- lockbox_download_dir()
+  if (!file.exists(download_dir)) dir.create(download_dir, FALSE, TRUE)
+}
+
 as.locked_package <- function(list) {
   stopifnot(is.element("name", names(list)),
             is.element("version", names(list)))
+
+  list$is_dependency_package <- isTRUE(list$is_dependency_package %||% FALSE)
 
   if (is.element("repo", names(list)) && !is.element("remote", names(list))) {
     list$remote <- "github"
   }
 
-  if (is.na(package_version(list$version))) {
+  if (!list$is_dependency_package && is.na(package_version(list$version))) {
     stop(sprintf("Invalid package %s version %s.",
                  sQuote(list$name), sQuote(list$version)))
-  } else {
-    list$version <- package_version(list$version)
+  } else if (!list$is_dependency_package) {
+    ## This solves the inconsistent x.y-a.b naming convention problems that
+    ## arise when transforming to a package_version.
+    list$ref <- list$ref %||% as.character(list$version)
   }
 
-  # TODO: (RK) Support CRAN version dependencies.
   structure(list, class = "locked_package")
 }
 
@@ -92,6 +116,11 @@ is.locked_package <- function(obj) is(obj, "locked_package")
 #' The secret lockbox library path.
 lockbox_library <- function() {
   getOption("lockbox.directory") %||% normalizePath("~/.R/lockbox", mustWork = FALSE)
+}
+
+#' The lockbox download path.
+lockbox_download_dir <- function() {
+  getOption("lockbox.download_dir") %||% file.path(lockbox_library(), "lockbox_download_dir")
 }
 
 #' The transient lockbox library path.
@@ -109,7 +138,7 @@ lockbox_transient_staging_dir <- function() {
 }
 
 disallow_special_packages <- function(lock) {
-  package_names    <- vapply(lock, `[[`, character(1), "name")
+  package_names <- vapply(lock, `[[`, character(1), "name")
 
   if ("lockbox" %in% package_names) {
     stop("Lockbox cannot manage itself, Mr. Hofstadter.", call. = FALSE)
@@ -120,5 +149,13 @@ disallow_special_packages <- function(lock) {
       "supported by lockbox: ",
       paste(intersect(special_namespaces, package_names), collapse = ", "),
       ".", call. = FALSE)
+  }
+}
+
+disallow_duplicate_packages <- function(lock) {
+  locked_names <- vapply(lock, `[[`, character(1), "name")
+  if (any(duplicated(locked_names))) {
+    stop(paste0("The following packages are duplicated in your lockfile: "
+      , paste(unique(locked_names[duplicated(locked_names)]), collapse = ", ")))
   }
 }

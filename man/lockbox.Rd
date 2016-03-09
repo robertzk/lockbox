@@ -12,6 +12,9 @@ lockbox(file_or_list, env = getOption("lockbox.env", "!packages"))
 \item{file_or_list}{character or list. A yaml-based lock file or its
 parsed out list format. This set of packages will be loaded into the
 search path and \emph{all other packages will be unloaded}.}
+
+\item{env}{character. The name of the entry in the lockfile that contains
+package information.}
 }
 \description{
 The lockbox package provides a separate directory, by default under

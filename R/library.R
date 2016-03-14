@@ -46,15 +46,14 @@ install_package.local <- function(locked_package, libPath, quiet) {
   stopifnot(is.element("dir", names(locked_package)))
 
   utils::install.packages(locked_package$dir, lib = libPath, repos = NULL
-    , type = "source", INSTALL_opts = "--vanilla", quiet = quiet)
+    , type = "source", quiet = quiet)
 }
 
 install_package.CRAN <- function(locked_package, libPath, quiet) {
   ## We already downloaded a source file when parsing DESCRIPTIONS, so try that
   ## first
   try(utils::install.packages(locked_package$download_path, lib = libPath
-    , repos = NULL, type = "source"
-    , INSTALL_opts = "--vanilla", quiet = quiet))
+    , repos = NULL, type = "source", quiet = quiet))
   pkgdir <- file.path(libPath, locked_package$name)
 
   ## Last chance at installation if compilation fails.  Install through normal
@@ -62,7 +61,7 @@ install_package.CRAN <- function(locked_package, libPath, quiet) {
   if (!file.exists(pkgdir) &&
     package_version(locked_package$version) == package_version(locked_package$latest_version)) {
     repos <- getOption('lockbox.CRAN_mirror') %||% c(CRAN = "http://cran.r-project.org")
-    install.packages(locked_package$name, INSTALL_opts = "--vanilla", repos = repos
+    install.packages(locked_package$name, repos = repos
       , type = get_download_type(locked_package), lib = libPath, quiet = quiet)
   }
 }
@@ -91,7 +90,7 @@ install_from_dir <- function(extracted_dir, libPath, quiet) {
   lapply(list.files(extracted_dir, full.names = TRUE, recursive = TRUE), Sys.chmod, "0777")
 
   utils::install.packages(extracted_dir, lib = libPath, repos = NULL
-    , type = "source", INSTALL_opts = "--vanilla", quiet = quiet)
+    , type = "source", quiet = quiet)
 }
 
 install_locked_package <- function(locked_package) {
@@ -237,14 +236,14 @@ get_download_type <- function(package) {
 ## Return the latest available version of a package from CRAN
 get_available_cran_version <- function(package, repo = "http://cran.r-project.org") {
   type <- get_download_type(package)
-  available <- available.packages(contriburl =
-    contrib.url(repos = repo, type = type))
+  available <- available.packages(contriburl = contrib.url(repos = repo)
+    , type = type, filter = c("OS_type", "subarch", "duplicates"))
   available <- data.frame(unique(available[, c("Package", "Version")]))
 
   ## If package is only available in source redo this call
   if (!package$name %in% available$Package && type != "source") {
-    available <- available.packages(contriburl =
-      contrib.url(repos = repo, type = "source"))
+    available <- available.packages(contriburl = contrib.url(repos = repo)
+    , type = "source", filter = c("OS_type", "subarch", "duplicates"))
     available <- data.frame(unique(available[, c("Package", "Version")]))
   }
   if (!package$name %in% available$Package) {

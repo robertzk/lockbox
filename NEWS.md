@@ -1,3 +1,11 @@
+# Version 0.2.1
+
+  * Ignore locks from parent directories when creating the staging library.
+
+# Version 0.2.0
+
+  * Support recursive downloading of CRAN dependencies.
+
 # Version 0.1.12
 
   * Use a path for the staging library that is always available

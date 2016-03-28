@@ -88,6 +88,8 @@ install_package.github <- function(locked_package, libPath, quiet) {
 install_from_dir <- function(extracted_dir, libPath, quiet) {
   ## Make every file in the extracted directory executable to cover compilation
   ## edge-cases
+  unlink(list.files(libPath, full.names = TRUE, pattern = "^00LOCK"),
+         recursive = TRUE, force = TRUE)
   lapply(list.files(extracted_dir, full.names = TRUE, recursive = TRUE), Sys.chmod, "0777")
 
   utils::install.packages(extracted_dir, lib = libPath, repos = NULL

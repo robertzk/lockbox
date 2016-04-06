@@ -361,7 +361,7 @@ dependencies_from_description <- function(package, dcf) {
 }
 
 get_non_remote_list <- function(dependencies_parsed) {
-  non_remote_dependencies <- dependencies_parsed[rownames(dependencies_parsed) != "Remotes", ]
+  non_remote_dependencies <- dependencies_parsed[!grepl("^Remotes", rownames(dependencies_parsed)), ]
 
   ## Remove the Depends entry that just corresponds to the R version requirements
   non_remote_dependencies <- non_remote_dependencies[!grepl("^[rR]$"
@@ -377,7 +377,7 @@ get_non_remote_list <- function(dependencies_parsed) {
 }
 
 get_remote_list <- function(dependencies_parsed) {
-  remote_dependencies <- dependencies_parsed[rownames(dependencies_parsed) == "Remotes", ]
+  remote_dependencies <- dependencies_parsed[grepl("^Remotes", rownames(dependencies_parsed)), ]
 
   ## Parse the remote dependencies into a list of packages
   if (identical(NROW(remote_dependencies),0L)){

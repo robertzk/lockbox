@@ -64,7 +64,7 @@ lockbox.list <- function(lock, env) {
     align(lock[mismatches])
 
     ## And re-build our search path. Do so in the reverse order of dependencies.
-    rebuild(c(lock[vapply(is.dependency_package, lock, logical(1))], original_lock))
+    rebuild(c(lock[vapply(lock, `[[`, logical(1), "is_dependency_package")], original_lock))
   })
 }
 

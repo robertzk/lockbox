@@ -63,7 +63,7 @@ lockbox.list <- function(lock, env) {
     align(lock[mismatches])
 
     ## And re-build our search path. Do so in the reverse order of dependencies.
-    rebuild(rev(lock))
+    rebuild(lock)
   })
 }
 

@@ -43,6 +43,7 @@ lockbox.list <- function(lock, env) {
   set_download_dir()
 
   ## Add dependencies to lock
+  original_lock <- lock
   lock <- get_ordered_dependencies(lock)
   lock <- lapply(lock, reset_to_latest_version)
   cat("\n")
@@ -63,7 +64,7 @@ lockbox.list <- function(lock, env) {
     align(lock[mismatches])
 
     ## And re-build our search path. Do so in the reverse order of dependencies.
-    rebuild(lock)
+    rebuild(c(lock[vapply(is.dependency_package, lock, logical(1))], original_lock))
   })
 }
 

@@ -233,6 +233,7 @@ download_package.CRAN <- function(package, force) {
     download.file(url = from, destfile = pkg_tarball
       , quiet = notTRUE(getOption('lockbox.verbose')))
   }
+
   pkg_tarball
 }
 
@@ -244,9 +245,7 @@ download_package.github <- function(package, force) {
     package$version <- NULL
   }
   remote <- get_remote(package)
-
   remote_download.github_remote(remote, dest, quiet = !isTRUE(getOption('lockbox.verbose')))
-  dest
 }
 
 get_download_type <- function(package) {

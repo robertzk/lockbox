@@ -304,6 +304,7 @@ download_description_github <- function(package) {
   filepath <- download_package(structure(
     package,
     class = c(remote, class(package))))
+  package$download_path <- filepath
   file_list <- try(unzip(filepath, list = TRUE))
   if (is(file_list, "try-error")) {
     filepath <- download_package(structure(
@@ -311,7 +312,6 @@ download_description_github <- function(package) {
       class = c(remote, class(package))), force = TRUE)
     file_list <- unzip(filepath, list = TRUE)
   }
-  package$download_path <- filepath
   sep <- .Platform$file.sep
   subdir <- ""
   if (!is.null(package$subdir)){

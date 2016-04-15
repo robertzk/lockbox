@@ -274,7 +274,11 @@ get_remote_dependencies.CRAN <- function(package) {
   sep <- .Platform$file.sep
   split_fp <- strsplit(filepath,sep)[[1]]
   dirpath <- dirname(filepath)
-  file_list <- untar(filepath, list = TRUE)
+  file_list <- tryCatch(untar(filepath, list = TRUE))
+  if (length(file_list) == 0 || identical(attr(file_list, "status"), 1L)) {
+    filepath <- download_package(package, force = TRUE)
+    file_list <- untar(filepath, list = TRUE)
+  }
   description_name <- file_list[grepl(paste0("^[^", sep, "]+", sep
     ,"DESCRIPTION$"), file_list)]
   untar(filepath, description_name, exdir = dirpath)
@@ -300,8 +304,14 @@ download_description_github <- function(package) {
   filepath <- download_package(structure(
     package,
     class = c(remote, class(package))))
+  file_list <- try(unzip(filepath, list = TRUE))
+  if (is(file_list, "try-error")) {
+    filepath <- download_package(structure(
+      package,
+      class = c(remote, class(package))), force = TRUE)
+    file_list <- unzip(filepath, list = TRUE)
+  }
   package$download_path <- filepath
-  file_list <- unzip(filepath, list = TRUE)
   sep <- .Platform$file.sep
   subdir <- ""
   if (!is.null(package$subdir)){

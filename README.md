@@ -70,6 +70,8 @@ Example Lock File
 -
   # Install a local package and re-install it every time your lockbox loads
   # regardless of package version, to make quick development possible.
+  # ...Keep in mind that the contents of autoinstalled packages are only
+  # *loaded*, and not re-saved to lockbox each time...
   name: yourpkg
   version: 0.1.0
   remote: local

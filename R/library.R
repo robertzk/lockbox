@@ -16,12 +16,24 @@
 #' @name ensure_package_exists_in_lockbox
 `ensure_package_exists_in_lockbox!` <- function(locked_package) {
   if (!exists_in_lockbox(locked_package)) {
-    `place_in_lockbox!`(locked_package)
+    if (is.local_package(locked_package) && is.autoinstall_package(locked_package)) {
+      load_package(locked_package)
+    } else {
+      `place_in_lockbox!`(locked_package)
+    }
   }
 }
 
 exists_in_lockbox <- function(locked_package) {
   file.exists(lockbox_package_path(locked_package))
+}
+
+is.local_package <- function(locked_package) {
+  identical(locked_package$remote, "local")
+}
+
+is.autoinstall_package <- function(locked_package) {
+  isTRUE(locked_package$autoinstall)
 }
 
 lockbox_package_path <- function(locked_package, library = lockbox_library()) {
@@ -42,11 +54,22 @@ install_package <- function(locked_package, libPath, quiet) {
   UseMethod("install_package")
 }
 
+load_package <- function(locked_package) {
+  UseMethod("load_package")
+}
+
 install_package.local <- function(locked_package, libPath, quiet) {
   stopifnot(is.element("dir", names(locked_package)))
 
   utils::install.packages(locked_package$dir, lib = libPath, repos = NULL
     , type = "source", quiet = quiet)
+}
+
+load_package.local <- function(locked_package) {
+  stopifnot(is.element("dir", names(locked_package)))
+  cat("Reinstalling", crayon_green(locked_package$name),
+    as.character(locked_package$version), "from", class(locked_package)[1], "\n")
+  devtools::load_all(locked_package$dir)
 }
 
 install_package.CRAN <- function(locked_package, libPath, quiet) {

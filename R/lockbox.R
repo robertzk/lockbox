@@ -49,7 +49,7 @@ lockbox.list <- function(lock, env) {
 
   ## Find the packages whose version does not match the current library.
   mismatches <- vapply(lock, version_mismatch, logical(1))
-  autoinstall_packages <- vapply(lock, function(lock) is.autoinstall_package(lock), logical(1))
+  autoinstall_packages <- vapply(lock, is.autoinstall_package, logical(1))
   load_these_packages <- mismatches | autoinstall_packages
 
   sapply(lock[!load_these_packages], function(locked_package) {

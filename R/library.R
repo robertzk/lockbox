@@ -16,11 +16,7 @@
 #' @name ensure_package_exists_in_lockbox
 `ensure_package_exists_in_lockbox!` <- function(locked_package) {
   if (!exists_in_lockbox(locked_package)) {
-    if (is.local_package(locked_package) && is.autoinstall_package(locked_package)) {
-      load_package(locked_package)
-    } else {
-      `place_in_lockbox!`(locked_package)
-    }
+    `place_in_lockbox!`(locked_package)
   }
 }
 
@@ -33,7 +29,7 @@ is.local_package <- function(locked_package) {
 }
 
 is.autoinstall_package <- function(locked_package) {
-  isTRUE(locked_package$autoinstall)
+  is.local_package(locked_package) && isTRUE(locked_package$autoinstall)
 }
 
 lockbox_package_path <- function(locked_package, library = lockbox_library()) {

@@ -69,7 +69,7 @@ Example Lock File
   dir: /your/pkg
 -
   # Install a local package and re-install it every time your lockbox loads
-  # regardless of package verison, to make quick development possible.
+  # regardless of package version, to make quick development possible.
   name: yourpkg
   version: 0.1.0
   remote: local

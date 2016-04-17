@@ -2,7 +2,7 @@ Package: lockbox
 Type: Package
 Title: lockbox (http://github.com/robertzk/lockbox)
 Description: Bundler-style dependency management for R.
-Version: 0.2.2
+Version: 0.2.3
 Author: Robert Krzyzanowski <technoguyrob@gmail.com>
 Maintainer: Robert Krzyzanowski <technoguyrob@gmail.com>
 Authors@R: c(person("Robert", "Krzyzanowski",
@@ -19,7 +19,8 @@ Imports:
 Suggests:
     knitr,
     microbenchmark,
-    testthat
+    testthat,
+    devtools
 Roxygen: list(wrap = FALSE)
 VignetteBuilder: knitr
 RoxygenNote: 5.0.1.9000

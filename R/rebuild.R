@@ -35,7 +35,8 @@ reset_search_path <- function() {
 
 attach <- function(locked_package) {
   if (!identical(locked_package$load, FALSE) && !locked_package$is_dependency_package) {
-    library(locked_package$name, character.only = TRUE)
+    if (is.autoinstall_package(locked_package)) { load_package(locked_package) }
+    else { library(locked_package$name, character.only = TRUE) }
   }
   locked_package$name
 }

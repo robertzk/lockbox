@@ -1,3 +1,11 @@
+# Version 0.2.3
+
+  * Adds an option for `autoinstall: true` for quick development on local packages.
+
+# Version 0.2.2
+
+  * Fix regex to handle multiple remotes and be more flexible on CRAN's available packages filter.
+
 # Version 0.2.1
 
   * Ignore locks from parent directories when creating the staging library.

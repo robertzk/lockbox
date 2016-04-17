@@ -63,6 +63,9 @@ install_package.local <- function(locked_package, libPath, quiet) {
 
 load_package.local <- function(locked_package) {
   stopifnot(is.element("dir", names(locked_package)))
+  if (!requireNamespace("devtools", quietly = TRUE)) {
+    stop("Autoloading packages requires devtools. Please `install.packages('devtools')`.")
+  }
   cat("Reinstalling", crayon_green(locked_package$name),
     as.character(locked_package$version), "from", class(locked_package)[1], "\n")
   devtools::load_all(locked_package$dir)

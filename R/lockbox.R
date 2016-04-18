@@ -50,8 +50,10 @@ lockbox.list <- function(lock, env) {
 
   ## Find the packages whose version does not match the current library.
   mismatches <- vapply(lock, version_mismatch, logical(1))
+  autoinstall_packages <- vapply(lock, is.autoinstall_package, logical(1))
+  load_these_packages <- mismatches | autoinstall_packages
 
-  sapply(lock[!mismatches], function(locked_package) {
+  sapply(lock[!load_these_packages], function(locked_package) {
     if (locked_package$is_dependency_package) {
       cat('Using dependency', crayon_blue(locked_package$name), as.character(locked_package$version), '\n')
     } else {
@@ -61,7 +63,7 @@ lockbox.list <- function(lock, env) {
 
   quietly({
     ## Replace our library so that it has these packages instead.
-    align(lock[mismatches])
+    align(lock[load_these_packages])
 
     ## And re-build our search path. Do so in the reverse order of dependencies.
     rebuild(c(lock[vapply(lock, `[[`, logical(1), "is_dependency_package")], original_lock))

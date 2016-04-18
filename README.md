@@ -68,6 +68,16 @@ Example Lock File
   remote: local
   dir: /your/pkg
 -
+  # Install a local package and re-install it every time your lockbox loads
+  # regardless of package version, to make quick development possible.
+  # ...Keep in mind that the contents of autoinstalled packages are only
+  # *loaded*, and not re-saved to lockbox each time...
+  name: yourpkg
+  version: 0.1.0
+  remote: local
+  dir: /your/pkg
+  autoinstall: true
+-
   # You can even install repos that are private on Github, as long as your
   # GIT_PAT environment variable is set (using your shell or, e.g., Sys.setenv)
   # to the value of your Github authorization token. To obtain one, see:

@@ -42,8 +42,22 @@ lockbox_package_path <- function(locked_package, library = lockbox_library()) {
     , locked_package$name)
 }
 
+lockbox_package_download_path <- function(locked_package, library = lockbox_library()) {
+  file.path(lockbox_download_dir(), locked_package$name
+    , paste0(
+      as.character(locked_package$remote %||% "CRAN")
+      , strsplit(locked_package$repo, "/")[[1]]
+      , as.character(locked_package$ref %||% locked_package$version)
+      , get_extension(locked_package)))
+}
+
 `place_in_lockbox!` <- function(locked_package) {
   install_locked_package(locked_package)
+}
+
+get_extension <- function(package) {
+  if (is.null(package$repo) || package$remote == "CRAN") return(".tar.gz")
+  ".zip"
 }
 
 install_package <- function(locked_package, libPath, quiet) {
@@ -199,12 +213,20 @@ description_file_for <- function(package_name, libPath) {
   }
 }
 
-download_package <- function(package) {
+download_package <- function(package, force = FALSE) {
+  download_path <- lockbox_package_download_path(package)
+  if (isTRUE(force)) unlink(download_path, force = TRUE)
+  if (file.exists(download_path)) return(download_path)
+  download_dir <- dirname(download_path)
+  if (!file.exists(download_dir)) {
+    out <- dir.create(download_dir, FALSE, TRUE)
+  }
   UseMethod("download_package")
 }
 
 ## Download CRAN package, either current or older version
-download_package.CRAN <- function(package) {
+download_package.CRAN <- function(package, force) {
+  pkg_tarball <- lockbox_package_download_path(package)
   remote_version <- get_available_cran_version(package)
   name <- package$name
   version <- package$version
@@ -224,7 +246,6 @@ download_package.CRAN <- function(package) {
   from <- paste0(repo, "/src/contrib/", archive_addition, name, "_"
     , ref %||% version, ".tar.gz")
 
-  pkg_tarball <- tempfile(fileext = ".tar.gz", tmpdir = lockbox_download_dir())
   out <- suppressWarnings(tryCatch(
     download.file(url = from, destfile = pkg_tarball
     , quiet = notTRUE(getOption('lockbox.verbose'))), error = function(e) e))
@@ -244,12 +265,13 @@ download_package.CRAN <- function(package) {
 
 ## Download a package from github using our version of devtools' remote_download
 ## function
-download_package.github <- function(package) {
+download_package.github <- function(package, force) {
+  dest <- lockbox_package_download_path(package)
   if (is.na(package$version)) {
     package$version <- NULL
   }
   remote <- get_remote(package)
-  remote_download.github_remote(remote, quiet = !isTRUE(getOption('lockbox.verbose')))
+  remote_download.github_remote(remote, dest, quiet = !isTRUE(getOption('lockbox.verbose')))
 }
 
 get_download_type <- function(package) {

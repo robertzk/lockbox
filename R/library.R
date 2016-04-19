@@ -46,7 +46,7 @@ lockbox_package_download_path <- function(locked_package, library = lockbox_libr
   file.path(lockbox_download_dir(), locked_package$name
     , paste0(
       as.character(locked_package$remote %||% "CRAN")
-      , strsplit(locked_package$repo, "/")[[1]]
+      , gsub("/.*", "", locked_package$repo)
       , as.character(locked_package$ref %||% locked_package$version)
       , get_extension(locked_package)))
 }

@@ -46,7 +46,7 @@ lockbox_package_download_path <- function(locked_package, library = lockbox_libr
   file.path(lockbox_download_dir(), locked_package$name
     , paste0(
       as.character(locked_package$remote %||% "CRAN")
-      , gsub("/.*", "", locked_package$repo)
+      , strsplit(locked_package$repo, "/")[[1]]
       , as.character(locked_package$ref %||% locked_package$version)
       , get_extension(locked_package)))
 }
@@ -215,7 +215,7 @@ description_file_for <- function(package_name, libPath) {
 
 download_package <- function(package, force = FALSE) {
   download_path <- lockbox_package_download_path(package)
-  if (isTRUE(force)) unlink(download_path)
+  if (isTRUE(force)) unlink(download_path, force = TRUE)
   if (file.exists(download_path)) return(download_path)
   download_dir <- dirname(download_path)
   if (!file.exists(download_dir)) {

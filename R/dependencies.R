@@ -363,10 +363,25 @@ dependencies_from_description <- function(package, dcf) {
   remote_list <- get_remote_list(dependencies_parsed)
 
   ## Remote package names are duplicated in Depends, LinkingTo, and Imports entries
+  ## If a version is specified there use that for version requirements
+  combine_remotes_non_remotes(non_remote_list, remote_list)
+}
+
+combine_remotes_non_remotes <- function(non_remote_list, remote_list) {
+  non_remote_names <- vapply(non_remote_list, `[[`, character(1), "name")
+  remote_list <- lapply(remote_list, function(pkg) {
+      overlapping_selection <- which(non_remote_names == pkg$name)
+      if (length(overlapping_selection) > 0) {
+        non_remote_version <- non_remote_list[[overlapping_selection[[1]]]][["version"]]
+        if (!is.na(non_remote_version)) {
+          pkg[["version"]] <- non_remote_version
+        }
+      }
+      pkg
+    })
   non_remote_list <- non_remote_list[!is.element(
     vapply(non_remote_list, `[[`, character(1), "name")
     , vapply(remote_list, `[[`, character(1), "name"))]
-
   c(non_remote_list, remote_list)
 }
 

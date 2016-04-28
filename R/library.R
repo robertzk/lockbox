@@ -60,22 +60,7 @@ get_extension <- function(package) {
   ".zip"
 }
 
-install_package <- function(locked_package, libPath, quiet) {
-  UseMethod("install_package")
-}
-
 load_package <- function(locked_package) {
-  load_package.local(locked_package)
-}
-
-install_package.local <- function(locked_package, libPath, quiet) {
-  stopifnot(is.element("dir", names(locked_package)))
-
-  utils::install.packages(locked_package$dir, lib = libPath, repos = NULL
-    , type = "source", quiet = quiet)
-}
-
-load_package.local <- function(locked_package) {
   stopifnot(is.element("dir", names(locked_package)))
   if (!requireNamespace("devtools", quietly = TRUE)) {
     stop("Autoloading packages requires devtools. Please `install.packages('devtools')`.")
@@ -83,6 +68,17 @@ load_package.local <- function(locked_package) {
   cat("Reinstalling", crayon_green(locked_package$name),
     as.character(locked_package$version), "from", class(locked_package)[1], "\n")
   devtools::load_all(locked_package$dir)
+}
+
+install_package <- function(locked_package, libPath, quiet) {
+  UseMethod("install_package")
+}
+
+install_package.local <- function(locked_package, libPath, quiet) {
+  stopifnot(is.element("dir", names(locked_package)))
+
+  utils::install.packages(locked_package$dir, lib = libPath, repos = NULL
+    , type = "source", quiet = quiet)
 }
 
 install_package.CRAN <- function(locked_package, libPath, quiet) {

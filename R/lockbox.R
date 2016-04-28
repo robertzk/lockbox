@@ -43,6 +43,7 @@ lockbox.list <- function(lock, env) {
   set_download_dir()
 
   ## Add dependencies to lock
+  original_lock <- lock
   lock <- get_ordered_dependencies(lock)
   lock <- lapply(lock, reset_to_latest_version)
   cat("\n")
@@ -64,8 +65,8 @@ lockbox.list <- function(lock, env) {
     ## Replace our library so that it has these packages instead.
     align(lock[load_these_packages])
 
-    ## And re-build our search path. Do so in the reverse order of dependencies.
-    rebuild(rev(lock))
+    ## And re-build our search path. Keep the order of packages in the original lockfile, but load dependencies first.
+    rebuild(c(lock[vapply(lock, `[[`, logical(1), "is_dependency_package")], original_lock))
   })
 }
 

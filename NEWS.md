@@ -1,3 +1,7 @@
+# Version 0.2.4.1
+
+  * Fix a bug for autoinstall.
+
 # Version 0.2.4
 
   * Do not re-download packages during dependency downloading/parsing phase.

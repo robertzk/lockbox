@@ -51,7 +51,7 @@ install_package <- function(locked_package, libPath, quiet) {
 }
 
 load_package <- function(locked_package) {
-  UseMethod("load_package")
+  load_package.local(locked_package)
 }
 
 install_package.local <- function(locked_package, libPath, quiet) {

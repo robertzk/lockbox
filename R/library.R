@@ -149,11 +149,19 @@ install_locked_package <- function(locked_package) {
 
   ## If we have an error during installation try again and show everything
   if (is(output, "error") || !file.exists(pkgdir)) {
-    try(install_package(locked_package, temp_library, FALSE))
-    unlink(temp_library, TRUE, TRUE)
-    stop("Must have installed the package ",
-         crayon_red(as.character(locked_package$name)),
-         " of version ", sQuote(as.character(locked_package$version)))
+    if (is.null(locked_package$is_suggests)) {
+      try(install_package(locked_package, temp_library, FALSE))
+      unlink(temp_library, TRUE, TRUE)
+      stop("Must have installed the package ",
+           crayon_red(as.character(locked_package$name)),
+           " of version ", sQuote(as.character(locked_package$version)))
+    } else {
+      warning("Tried and failed to install suggested package ",
+           crayon_red(as.character(locked_package$name)),
+           " of version ", sQuote(as.character(locked_package$version)))
+      unlink(temp_library, TRUE, TRUE)
+      return()
+    }
   }
 
   ver <- package_version_from_path(pkgdir)

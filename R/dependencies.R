@@ -345,6 +345,9 @@ dependencies_from_description <- function(package, dcf) {
   ## dcf does not contain any of these elements we have no dependencies to
   ## speak of
   dependency_levels <- c("Depends", "Imports", "LinkingTo", "Remotes")
+  if (package$is_dependency_package && getOption("lockbox.auto_install_suggests", FALSE)) {
+    dependency_levels <- c(dependency_levels, "Suggests")
+  }
   if (!any(dependency_levels %in% colnames(dcf))) return(list())
 
   ## The parse_dcf function returns a matrix where rows correspond to packages
@@ -356,6 +359,7 @@ dependencies_from_description <- function(package, dcf) {
       colnames(dcf)])[[package$name]])
   
   if(NROW(dependencies_parsed) == 1 && NCOL(dependencies_parsed) == 1) return(list())
+  suggests_dependencies <- dependencies_parsed[grepl("^Suggests", rownames(dependencies_parsed)), 1]
 
   ## We separate out non-remote dependencies from remote dependencies, because
   ## they require different logic
@@ -367,7 +371,17 @@ dependencies_from_description <- function(package, dcf) {
     vapply(non_remote_list, `[[`, character(1), "name")
     , vapply(remote_list, `[[`, character(1), "name"))]
 
+  non_remote_list <- mark_suggests(non_remote_list, suggests_dependencies)
   c(non_remote_list, remote_list)
+}
+
+mark_suggests <- function(non_remote_list, suggests_dependencies) {
+  lapply(non_remote_list, function(pkg) {
+    if (pkg$name %in% suggests_dependencies) {
+      pkg$is_suggests <- TRUE
+    }
+    pkg
+  })
 }
 
 get_non_remote_list <- function(dependencies_parsed) {

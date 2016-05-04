@@ -345,7 +345,7 @@ dependencies_from_description <- function(package, dcf) {
   ## dcf does not contain any of these elements we have no dependencies to
   ## speak of
   dependency_levels <- c("Depends", "Imports", "LinkingTo", "Remotes")
-  if (package$is_dependency_package && getOption("lockbox.auto_install_suggests", FALSE)) {
+  if (package$is_dependency_package && isTRUE(getOption("lockbox.auto_install_suggests", FALSE))) {
     dependency_levels <- c(dependency_levels, "Suggests")
   }
   if (!any(dependency_levels %in% colnames(dcf))) return(list())

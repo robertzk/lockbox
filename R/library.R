@@ -296,7 +296,7 @@ get_available_cran_version <- function(package, repo = "http://cran.r-project.or
     , filter = c("OS_type", "subarch", "duplicates"))
     available <- data.frame(unique(available[, c("Package", "Version")]))
   }
-  if (!package$name %in% available$Package) {
+  if (!package$name %in% available$Package && is.null(package$is_suggests)) {
     prefix <- "Locked"
     if (package$is_dependency_package) prefix <- "Dependency"
     stop(paste0(prefix, " Package ", package$name, " is not available on CRAN."

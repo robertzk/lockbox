@@ -45,10 +45,11 @@ get_rscript_command <- function(lockbox_dir, logfile_name, final_msg, install_di
   option_cmd1 <- paste0("options(lockbox.directory = '", lockbox_dir,"');")
   option_cmd2 <- paste0("options(lockbox.transient_dir = '", lockbox_dir
     , "_transient","');")
-  lock_cmd <- "library(methods);lockbox::lockbox('generated_lockfile.yml')"
+  lock_cmd <- paste0("setwd('", dirname(lockbox_dir),"');library(methods);lockbox::lockbox('generated_lockfile.yml');")
+  option_cmd_sink <- paste0("sink('", logfile_name,"', split = TRUE);")
   msg_cmd <- paste0("cat('", final_msg, "')")
   paste0("cd ", install_dir, ";Rscript -e ","\"", option_cmd1, option_cmd2
-    , lock_cmd, ";", msg_cmd, "\" | tee ", logfile_name)
+    , lock_cmd, option_cmd_sink, msg_cmd, "\"")
 }
 
 ## Not currently in use, but left in case we want to do randomized tests in the future

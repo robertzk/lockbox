@@ -1,3 +1,12 @@
+# Version 0.2.4.1
+
+  * Fix a bug for autoinstall.
+
+# Version 0.2.4
+
+  * Do not re-download packages during dependency downloading/parsing phase.
+  * Use order in lockfile for namespace loading.
+
 # Version 0.2.3
 
   * Adds an option for `autoinstall: true` for quick development on local packages.

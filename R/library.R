@@ -290,8 +290,12 @@ get_available_cran_version <- function(package, repo = "http://cran.r-project.or
   }
   if (!package$name %in% available$Package) {
     prefix <- "Locked"
-    if (package$is_dependency_package) prefix <- "Dependency"
-    stop(paste0(prefix, " Package ", package$name, " is not available on CRAN."
+    parent_string <- ""
+    if (package$is_dependency_package) {
+      prefix <- "Dependency"
+      parent_string <- paste0(" from parent package ", package$parent_package)
+    }
+    stop(paste0(prefix, " Package ", package$name, parent_string, " is not available on CRAN."
       , " Do you need to specify this package's repo?"))
   }
   pkg <- available[available$Package == package$name, ]

@@ -1,4 +1,4 @@
-# Version 0.2.4.1
+# Version 0.2.4.1-2
 
   * Fix a bug for autoinstall.
 

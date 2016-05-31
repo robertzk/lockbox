@@ -66,7 +66,7 @@ load_package <- function(locked_package) {
     stop("Autoloading packages requires devtools. Please `install.packages('devtools')`.")
   }
   cat("Reinstalling", crayon_green(locked_package$name),
-    as.character(locked_package$version), "from", class(locked_package)[1], "\n")
+    as.character(locked_package$version), "from", locked_package$dir, "\n")
   devtools::load_all(locked_package$dir)
 }
 

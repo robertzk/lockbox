@@ -101,6 +101,10 @@ as.locked_package <- function(list) {
   if (is.element("repo", names(list)) && !is.element("remote", names(list))) {
     list$remote <- "github"
   }
+  
+  if (is.element("dir", names(list)) && !is.element("remote", names(list))) {
+    list$remote <- "local"
+  }
 
   if (!list$is_dependency_package && is.na(package_version(list$version))) {
     stop(sprintf("Invalid package %s version %s.",

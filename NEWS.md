@@ -1,3 +1,7 @@
+# Version 0.2.4.3
+
+  * Local remote can be inferred from the presence of a `dir` key.
+
 # Version 0.2.4.1-2
 
   * Fix a bug for autoinstall.

@@ -90,11 +90,13 @@ install_package.CRAN <- function(locked_package, libPath, quiet) {
 
   ## Last chance at installation if compilation fails.  Install through normal
   ## CRAN channels
-  if (!file.exists(pkgdir) &&
-    package_version(locked_package$version) == package_version(locked_package$latest_version)) {
-    repos <- getOption('lockbox.CRAN_mirror') %||% c(CRAN = "http://cran.r-project.org")
-    install.packages(locked_package$name, repos = repos
-      , type = get_download_type(locked_package), lib = libPath, quiet = quiet)
+  if (!file.exists(pkgdir)) {
+    locked_package$latest_version <- locked_package$latest_version %||% get_latest_version(locked_package)
+    if (package_version(locked_package$version) == package_version(locked_package$latest_version)) {
+      repos <- getOption('lockbox.CRAN_mirror') %||% c(CRAN = "http://cran.r-project.org")
+      install.packages(locked_package$name, repos = repos
+        , type = get_download_type(locked_package), lib = libPath, quiet = quiet)
+    }
   }
 }
 

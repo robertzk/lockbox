@@ -66,6 +66,7 @@ packages:
     # for development prior to pushing a new version to, e.g., github.
     name: yourpkg
     version: 0.1.0
+    remote: local
     dir: /your/pkg
   -
     # Install a local package and re-install it every time your lockbox loads
@@ -74,6 +75,7 @@ packages:
     # *loaded*, and not re-saved to lockbox each time...
     name: yourpkg
     version: 0.1.0
+    remote: local
     dir: /your/pkg
     autoinstall: true
   -

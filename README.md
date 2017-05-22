@@ -32,6 +32,12 @@ if (!require("devtools")) install.packages("devtools")
 devtools::install_github("robertzk/lockbox")
 ```
 
+Real examples
+------------
+
+* [A very simple lockfile](https://github.com/syberia/base.sy/blob/master/lockfile.yml) 
+* [A more complicated lockfile](https://github.com/syberia/example.sy/blob/master/lockfile.yml)
+
 Example Lock File
 -----------------
 

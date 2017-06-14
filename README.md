@@ -4,9 +4,8 @@ Painless Dependencies in R [![Build Status](https://img.shields.io/travis/robert
 [Lockbox](https://screen.yahoo.com/gore-bush-first-debate-strategery-050000058.html) is
 a very minimalistic [bundler](http://bundler.io/)-style dependency manager for R.
 
-The main difference between lockbox and more heavy-duty approaches like [Packrat](https://github.com/rstudio/packrat)
-is that lockbox believes you should spend a specific amount of time
-thinking about dependencies: none.
+The goal of lockbox is to ensure you have to spend no time thinking about
+package dependencies and get back to doing real work in R.
 
 To get started, just write a lockfile.yml (see an example below) and execute
 

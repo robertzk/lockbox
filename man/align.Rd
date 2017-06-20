@@ -13,4 +13,3 @@ and \code{name} elements will be used.}
 \description{
 Symlink a package with the appropriate version into the current library.
 }
-

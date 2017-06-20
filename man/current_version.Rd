@@ -16,4 +16,3 @@ a \code{\link{package_version}} object representing the version of
 \description{
 The current version of this package in the current library.
 }
-

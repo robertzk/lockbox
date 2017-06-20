@@ -3,6 +3,7 @@
 \docType{package}
 \name{lockbox}
 \alias{lockbox}
+\alias{lockbox}
 \alias{lockbox-package}
 \title{Re-organize Search Path to Use Lockbox Library.}
 \usage{
@@ -30,4 +31,3 @@ Bundler-style Package Management for R.
 Since lockbox maintains a separate directory for its library, it will not
 interfere with R's usual packages or libraries when R is restarted.
 }
-

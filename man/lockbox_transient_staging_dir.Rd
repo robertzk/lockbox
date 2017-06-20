@@ -10,4 +10,3 @@ lockbox_transient_staging_dir()
 This will be used to copy interactively installed packages to
 the vanilla library.
 }
-

@@ -14,7 +14,18 @@ after_failure:
 - "./travis-tool.sh dump_logs"
 after_success:
 - Rscript -e 'library(covr);coveralls()'
-
+notifications:
+  email:
+    on_success: change
+    on_failure: change
+  hipchat:
+    rooms:
+      secure: VTFCz8WDWrQR5xufo8BGXhDppc5ZIIbw4CEOLIoRpt8GBTDRNMGHBpgUlCZL3nWzWY98nH438NgnPla+N9qjlTNQJU1y5v06OA9AJIs0r/9YMTnbt0bQhPIyugzZr4XdJzedZLffactXhee8zU9ZdSc2ahgquRac9TqTvAkj5xA=
+    on_success: change
+    on_failure: change
+    template:
+    - "%{repository}#%{build_number} (%{branch} - %{commit} : %{author}): %{message}
+      | Details: %{build_url} | Changes: %{compare_url}"
 #env:
 #- global:
 #  - WARNINGS_ARE_ERRORS=1

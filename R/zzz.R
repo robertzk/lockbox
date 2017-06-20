@@ -1,25 +1,21 @@
 .lockbox_env <- new.env(parent = emptyenv())
 
-.get_safely_from_envir <- function(target, default = NULL) {
-  res <- tryCatch(
-    get(target, envir = .lockbox_env)
-  , error = function(e) {default})
-}
-
 set_session_id <- function() {
-  if (is.null(.get_safely_from_envir("session_id"))) {
-    if (requireNamespace("uuid", quietly = TRUE)) {
-      assign("session_id", uuid::UUIDgenerate(), envir = .lockbox_env)
-    } else {
-      assign("session_id", digest::digest(as.integer(Sys.time())), envir = .lockbox_env)
-    }
+  if (is.null(.lockbox_env$session_id)) {
+    ## This is our first run, so we want to register the finalizer to drop our temp directories
+    reg.finalizer(.lockbox_env, function(env) {
+      try(unlink(normalizePath(paste0("~/.R/", env$session_id), mustWork = FALSE), recursive = TRUE), silent = TRUE)
+      try(unlink(normalizePath(paste0("~/.R/", env$session_id, "_staging"), mustWork = FALSE), recursive = TRUE), silent = TRUE)
+    }, onexit = TRUE)  
   }
   
-  ## We don't want to clutter up ~/.R/ with tons of symlinked dirs, let's try to do some housekeeping
-  reg.finalizer(.lockbox_env, function(env) {
-    try(unlink(normalizePath(paste0("~/.R/", env$session_id), mustWork = FALSE), recursive = TRUE), silent = TRUE)
-    try(unlink(normalizePath(paste0("~/.R/", env$session_id, "_staging"), mustWork = FALSE), recursive = TRUE), silent = TRUE)
-  }, onexit = TRUE)  
+  if (requireNamespace("uuid", quietly = TRUE)) {
+    .lockbox_env$session_id <- .lockbox_env$session_id %||% uuid::UUIDgenerate()
+  } else {
+    message("Install package::uuid for decreased risk of ")
+    .lockbox_env$session_id <- .lockbox_env$session_id %||% digest::digest(as.integer(Sys.time()))
+  }
+  
 }
 
 set_transient_library <- function() {

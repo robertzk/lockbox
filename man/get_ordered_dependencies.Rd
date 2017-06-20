@@ -12,4 +12,3 @@ get_ordered_dependencies(lock)
 \description{
 Get dependencies for all elements in lock
 }
-

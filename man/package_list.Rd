@@ -19,4 +19,3 @@ we have already parsed out of their respective description files}
 Recursive function to take a list and lock and extract dependencies, sorting
 along the way using the combine_dependencies function.
 }
-

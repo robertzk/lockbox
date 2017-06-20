@@ -23,4 +23,4 @@ Suggests:
     devtools
 Roxygen: list(wrap = FALSE)
 VignetteBuilder: knitr
-RoxygenNote: 5.0.1.9000
+RoxygenNote: 6.0.1

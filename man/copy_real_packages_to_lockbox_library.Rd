@@ -12,4 +12,3 @@ copy_real_packages_to_lockbox_library(staging_library)
 \description{
 Copy real (non-symlinked) packages to the lockbox library.
 }
-

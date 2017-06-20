@@ -20,7 +20,8 @@ Suggests:
     knitr,
     microbenchmark,
     testthat,
-    devtools
+    devtools,
+    uuid
 Roxygen: list(wrap = FALSE)
 VignetteBuilder: knitr
 RoxygenNote: 5.0.1.9000

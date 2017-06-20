@@ -133,7 +133,7 @@ lockbox_download_dir <- function() {
 #' The transient lockbox library path.
 lockbox_transient_dir <- function() {
   getOption("lockbox.transient_dir") %||%
-    normalizePath("~/.R/lockbox_transient", mustWork = FALSE)
+    normalizePath(paste0("~/.R/", .get_safely_from_envir("session_id")), mustWork = FALSE)
 }
 
 #' The transient staging lockbox library path.

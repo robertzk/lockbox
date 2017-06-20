@@ -1,5 +1,27 @@
 .lockbox_env <- new.env()
 
+.get_safely_from_envir <- function(target, default = NULL) {
+  res <- tryCatch(
+    get(target, envir = .lockbox_env)
+  , error = function(e) {default})
+}
+
+set_session_id <- function() {
+  if (is.null(.get_safely_from_envir("session_id"))) {
+    if (requireNamespace("uuid", quietly = TRUE)) {
+      assign("session_id", uuid::UUIDgenerate(), envir = .lockbox_env)
+    } else {
+      assign("session_id", digest::digest(as.integer(Sys.time())), envir = .lockbox_env)
+    }
+  }
+  
+  # We don't want to clutter up ~/.R/ with tons of symlinked dirs, lets try to do some housekeeping
+  reg.finalizer(.lockbox_env, function(env) {
+    try(unlink(normalizePath(paste0("~/.R/", env$session_id), mustWork = FALSE), recursive = TRUE), silent = TRUE)
+    try(unlink(normalizePath(paste0("~/.R/", env$session_id, "_staging"), mustWork = FALSE), recursive = TRUE), silent = TRUE)
+  }, onexit = TRUE)  
+}
+
 set_transient_library <- function() {
   if (!is.null(.lockbox_env$old_dir)) return()
 
@@ -82,6 +104,7 @@ sanitize_transient_library <- function(...) {
 }
 
 .onLoad <- function(pkg, libPath) {
+  set_session_id()
   set_transient_library()
   addTaskCallback(sanitize_transient_library, "lockbox_callback")
 }

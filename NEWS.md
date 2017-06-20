@@ -1,3 +1,7 @@
+# Version 0.2.4.4
+
+  * Remove unnecessary package exports (`setNames`, `packageVersion`, `untar`).
+
 # Version 0.2.4.3
 
   * Local remote can be inferred from the presence of a `dir` key.

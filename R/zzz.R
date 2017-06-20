@@ -15,7 +15,7 @@ set_session_id <- function() {
     }
   }
   
-  # We don't want to clutter up ~/.R/ with tons of symlinked dirs, lets try to do some housekeeping
+  ## We don't want to clutter up ~/.R/ with tons of symlinked dirs, let's try to do some housekeeping
   reg.finalizer(.lockbox_env, function(env) {
     try(unlink(normalizePath(paste0("~/.R/", env$session_id), mustWork = FALSE), recursive = TRUE), silent = TRUE)
     try(unlink(normalizePath(paste0("~/.R/", env$session_id, "_staging"), mustWork = FALSE), recursive = TRUE), silent = TRUE)

@@ -1,4 +1,4 @@
-.lockbox_env <- new.env()
+.lockbox_env <- new.env(parent = emptyenv())
 
 .get_safely_from_envir <- function(target, default = NULL) {
   res <- tryCatch(

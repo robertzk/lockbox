@@ -12,7 +12,6 @@ set_session_id <- function() {
   if (requireNamespace("uuid", quietly = TRUE)) {
     .lockbox_env$session_id <- .lockbox_env$session_id %||% uuid::UUIDgenerate()
   } else {
-    message("Install package::uuid for decreased risk of ")
     .lockbox_env$session_id <- .lockbox_env$session_id %||% digest::digest(as.integer(Sys.time()))
   }
   

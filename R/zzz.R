@@ -6,8 +6,8 @@ set_session_id <- function() {
     reg.finalizer(.lockbox_env, function(env) {
       lapply(
         c(lockbox_transient_staging_dir(), lockbox_transient_dir()), 
-          function(path) {  try(unlink(x, recursive = TRUE, force = TRUE), silent = TRUE) })
-      )
+          function(path) {  try(unlink(x, recursive = TRUE, force = TRUE), silent = TRUE) }
+        )
     }, onexit = TRUE)  
   }
   

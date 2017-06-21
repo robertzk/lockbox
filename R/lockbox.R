@@ -1,7 +1,7 @@
 #' Re-organize Search Path to Use Lockbox Library.
 #'
 #' The lockbox package provides a separate directory, by default under
-#' \code{"~/.R/.lockbox"} (although this is configurable from the global option
+#' \code{"~/.R/lockbox"} (although this is configurable from the global option
 #' \code{"lockbox.directory"}) that maintains different versions of packages
 #' on demand. When a given set of versioned packages is requested, lockbox will
 #' unload \emph{all other packages} and ensure only the given set of packages

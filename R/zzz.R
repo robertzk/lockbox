@@ -1,4 +1,23 @@
-.lockbox_env <- new.env()
+.lockbox_env <- new.env(parent = emptyenv())
+
+set_session_id <- function() {
+  if (is.null(.lockbox_env$session_id)) {
+    ## This is our first run, so we want to register the finalizer to drop our temp directories
+    reg.finalizer(.lockbox_env, function(env) {
+      lapply(
+        lockbox_session_dirs(), 
+          function(path) {  try(unlink(x, recursive = TRUE, force = TRUE), silent = TRUE) }
+        )
+    }, onexit = TRUE)  
+  }
+  
+  if (requireNamespace("uuid", quietly = TRUE)) {
+    .lockbox_env$session_id <- .lockbox_env$session_id %||% uuid::UUIDgenerate()
+  } else {
+    .lockbox_env$session_id <- .lockbox_env$session_id %||% digest::digest(as.integer(Sys.time()))
+  }
+  
+}
 
 set_transient_library <- function() {
   if (!is.null(.lockbox_env$old_dir)) return()
@@ -82,6 +101,7 @@ sanitize_transient_library <- function(...) {
 }
 
 .onLoad <- function(pkg, libPath) {
+  set_session_id()
   set_transient_library()
   addTaskCallback(sanitize_transient_library, "lockbox_callback")
 }

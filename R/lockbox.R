@@ -1,7 +1,7 @@
 #' Re-organize Search Path to Use Lockbox Library.
 #'
 #' The lockbox package provides a separate directory, by default under
-#' \code{"~/.R/.lockbox"} (although this is configurable from the global ption
+#' \code{"~/.R/lockbox"} (although this is configurable from the global option
 #' \code{"lockbox.directory"}) that maintains different versions of packages
 #' on demand. When a given set of versioned packages is requested, lockbox will
 #' unload \emph{all other packages} and ensure only the given set of packages
@@ -127,13 +127,13 @@ lockbox_library <- function() {
 
 #' The lockbox download path.
 lockbox_download_dir <- function() {
-  getOption("lockbox.download_dir") %||% file.path(lockbox_library(), "lockbox_download_dir")
+  getOption("lockbox.download_dir") %||% file.path(lockbox_library(), "lockbox_download_dir", .lockbox_env$session_id)
 }
 
 #' The transient lockbox library path.
 lockbox_transient_dir <- function() {
   getOption("lockbox.transient_dir") %||%
-    normalizePath("~/.R/lockbox_transient", mustWork = FALSE)
+    normalizePath(file.path("~/.R/lockbox_transient", .lockbox_env$session_id), mustWork = FALSE)
 }
 
 #' The transient staging lockbox library path.
@@ -165,4 +165,9 @@ disallow_duplicate_packages <- function(lock) {
     stop(paste0("The following packages are duplicated in your lockfile: "
       , paste(unique(locked_names[duplicated(locked_names)]), collapse = ", ")))
   }
+}
+
+lockbox_session_dirs <- function() {
+  # get all directories associated with a transient session
+  c(lockbox_transient_staging_dir(), lockbox_transient_dir(), lockbox_download_dir())
 }

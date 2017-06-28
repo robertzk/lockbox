@@ -166,3 +166,8 @@ disallow_duplicate_packages <- function(lock) {
       , paste(unique(locked_names[duplicated(locked_names)]), collapse = ", ")))
   }
 }
+
+lockbox_session_dirs <- function() {
+  # get all directories associated with a transient session
+  c(lockbox_transient_staging_dir(), lockbox_transient_dir(), lockbox_download_dir())
+}

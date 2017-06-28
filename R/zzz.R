@@ -5,7 +5,7 @@ set_session_id <- function() {
     ## This is our first run, so we want to register the finalizer to drop our temp directories
     reg.finalizer(.lockbox_env, function(env) {
       lapply(
-        c(lockbox_transient_staging_dir(), lockbox_transient_dir()), 
+        lockbox_session_dirs(), 
           function(path) {  try(unlink(x, recursive = TRUE, force = TRUE), silent = TRUE) }
         )
     }, onexit = TRUE)  

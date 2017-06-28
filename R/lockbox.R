@@ -127,7 +127,7 @@ lockbox_library <- function() {
 
 #' The lockbox download path.
 lockbox_download_dir <- function() {
-  getOption("lockbox.download_dir") %||% file.path(lockbox_library(), "lockbox_download_dir")
+  getOption("lockbox.download_dir") %||% file.path(lockbox_library(), "lockbox_download_dir", .lockbox_env$session_id)
 }
 
 #' The transient lockbox library path.

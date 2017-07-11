@@ -1,3 +1,11 @@
+# Version 0.2.4.6
+
+  * Explicitly reference `methods::is`.
+
+# Version 0.2.4.5 
+
+  * Add session identifiers to staging library.
+
 # Version 0.2.4.4
 
   * Remove unnecessary package exports (`setNames`, `packageVersion`, `untar`).

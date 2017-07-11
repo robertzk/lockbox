@@ -118,7 +118,7 @@ as.locked_package <- function(list) {
   structure(list, class = "locked_package")
 }
 
-is.locked_package <- function(obj) is(obj, "locked_package")
+is.locked_package <- function(obj) { methods::is(obj, "locked_package") }
 
 #' The secret lockbox library path.
 lockbox_library <- function() {

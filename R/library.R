@@ -150,7 +150,7 @@ install_locked_package <- function(locked_package) {
     , error = function(e) e)
 
   ## If we have an error during installation try again and show everything
-  if (is(output, "error") || !file.exists(pkgdir)) {
+  if (methods::is(output, "error") || !file.exists(pkgdir)) {
     try(install_package(locked_package, temp_library, FALSE))
     unlink(temp_library, TRUE, TRUE)
     stop("Must have installed the package ",
@@ -250,7 +250,7 @@ download_package.CRAN <- function(package, force) {
 
   ## Sometimes the current version isn't accessible in it's usual place,
   ## but is already archived
-  if (is(out, "error")) {
+  if (methods::is(out, "error")) {
     archive_addition <- paste0("Archive/", name, "/")
     from <- paste0(repo, "/src/contrib/", archive_addition, name, "_"
       , ref %||% version , ".tar.gz")

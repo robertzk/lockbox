@@ -1,8 +1,12 @@
+# Version 0.2.4.7
+
+  * Fix the bug surfaced by https://github.com/robertzk/lockbox/issues/116.
+
 # Version 0.2.4.6
 
   * Explicitly reference `methods::is`.
 
-# Version 0.2.4.5 
+# Version 0.2.4.5
 
   * Add session identifiers to staging library.
 
@@ -43,7 +47,7 @@
 
   * Use a path for the staging library that is always available
     from a permissions perspective. (`tempdir()` may not always be
-    writable) 
+    writable)
 
 # Version 0.1.11
 
@@ -59,7 +63,7 @@
     a [task callback](https://stat.ethz.ch/R-manual/R-devel/library/base/html/taskCallbackManager.html)
     to transfer interactively installed packages to the vanilla library.
 
-    The location of the transient staging library is fixed to be the 
+    The location of the transient staging library is fixed to be the
     same as the transient library suffixed with `_staging`.
 
 # Version 0.1.9.6

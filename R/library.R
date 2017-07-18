@@ -110,20 +110,20 @@ install_package.github <- function(locked_package, libPath, quiet) {
   ## while maintaining cross-platform support
   extracted_dir <- gsub(paste0(.Platform$file.sep, ".*"), ""
     , unzip(filepath, list = TRUE)$Name[1])
-  extracted_dir <- file.path(parent_dir, extracted_dir)
+  package_root <- extracted_dir <- file.path(parent_dir, extracted_dir)
   unzip(filepath, exdir = parent_dir)
   if (!is.null(locked_package$subdir)) {
     extracted_dir <- file.path(extracted_dir, locked_package$subdir)
   }
-  install_from_dir(extracted_dir, libPath, quiet)
+  install_from_dir(extracted_dir, libPath, quiet, package_root)
 }
 
-install_from_dir <- function(extracted_dir, libPath, quiet) {
+install_from_dir <- function(extracted_dir, libPath, quiet, package_root = extracted_dir) {
   ## Make every file in the extracted directory executable to cover compilation
   ## edge-cases
   unlink(list.files(libPath, full.names = TRUE, pattern = "^00LOCK"),
          recursive = TRUE, force = TRUE)
-  lapply(list.files(extracted_dir, full.names = TRUE, recursive = TRUE), Sys.chmod, "0777")
+  lapply(list.files(package_root, full.names = TRUE, recursive = TRUE), Sys.chmod, "0777")
 
   utils::install.packages(extracted_dir, lib = libPath, repos = NULL
     , type = "source", quiet = quiet)

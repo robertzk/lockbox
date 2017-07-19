@@ -16,6 +16,14 @@ lockbox_imports <- function() {
   Filter(nzchar, strsplit(read.dcf(dcf)[,"Imports"], "[\n, ]+")[[1]])
 }
 
+announce_package_usage <- function(name, version, dependency = FALSE) {
+  if (isTRUE(dependency)) {
+    cat("Using dependency", crayon_blue(name), as.character(version), "\n")
+  } else {
+    cat("Using", crayon_green(name), as.character(version), "\n")
+  }
+}
+
 #' @author Kevin Ushey
 #' @source \url{https://github.com/rstudio/packrat/blob/92492ebc882bd048f092238af033d8a6fd03902f/R/utils.R#L469}
 symlink <- function(from, to, force = FALSE) {

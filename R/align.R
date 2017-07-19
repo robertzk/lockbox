@@ -2,6 +2,7 @@
 #'
 #' @param locked_package locked_package. In particular, the \code{version}
 #'    and \code{name} elements will be used.
+#' @param verbose logical. Whether or not to announce usage of the package.
 align <- function(locked_package) {
   if (is.list(locked_package) && !is.locked_package(locked_package)) {
     lapply(locked_package, align)
@@ -17,6 +18,8 @@ align <- function(locked_package) {
 
   ## Symlink the locked package to the correct lockbox version.
   `symlink_to_lockbox!`(locked_package)
+
+  announce_package_usage(locked_package$name, locked_package$version)
 }
 
 `symlink_to_lockbox!` <- function(locked_package) {

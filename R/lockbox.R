@@ -55,9 +55,9 @@ lockbox.list <- function(lock, env) {
 
   sapply(lock[!load_these_packages], function(locked_package) {
     if (locked_package$is_dependency_package) {
-      cat('Using dependency', crayon_blue(locked_package$name), as.character(locked_package$version), '\n')
+      announce_package_usage(locked_package$name, locked_package$version, TRUE)
     } else {
-      cat('Using', crayon_green(locked_package$name), as.character(locked_package$version), '\n')
+      announce_package_usage(locked_package$name, locked_package$version)
     }
   })
 
@@ -132,8 +132,12 @@ lockbox_download_dir <- function() {
 
 #' The transient lockbox library path.
 lockbox_transient_dir <- function() {
-  getOption("lockbox.transient_dir") %||%
+  if (!is.null(.lockbox_env$session_id)) {
     normalizePath(file.path("~/.R/lockbox_transient", .lockbox_env$session_id), mustWork = FALSE)
+  } else {
+    getOption("lockbox.transient_dir") %||%
+      normalizePath("~/.R/lockbox_transient", mustWork = FALSE)
+  }
 }
 
 #' The transient staging lockbox library path.

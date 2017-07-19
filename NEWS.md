@@ -1,3 +1,7 @@
+# Version 0.2.4.8
+
+  * Fix printing of dependencies loaded during `lockbox::lockbox` call.
+
 # Version 0.2.4.7
 
   * Fix the bug surfaced by https://github.com/robertzk/lockbox/issues/116.

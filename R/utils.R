@@ -54,8 +54,7 @@ is.symlink <- function(path) {
   ## Sys.readlink returns NA for error, "" for 'not a symlink', and <path> for symlink
   ## return false for first two cases, true for second
   result <- Sys.readlink(path)
-  if (is.na(result)) FALSE
-  else nzchar(result)
+  ifelse(is.na(result), FALSE, nzchar(result))
 }
 
 quietly <- function(expr) {

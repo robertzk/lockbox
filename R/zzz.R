@@ -43,10 +43,7 @@ set_transient_library <- function() {
   with_real_packages(lockbox_library(), function(pkgpath) {
     versions <- list.files(pkgpath)
     if (length(versions) == 0) { return() }
-    # This will choose "2.0.0" over "10.0.0", but this will be fixed later
-    # during alignment, so we do not bother correctly extracting the latest
-    # version. Note max(c("0.1.0", "1.0.0", "1.0.2")) == "1.0.2"
-    src <- file.path(pkgpath, max(versions, na.rm = TRUE), basename(pkgpath))
+    src <- file.path(pkgpath, max(as.package_version(versions), na.rm = TRUE), basename(pkgpath))
     symlink(src, file.path(dir, basename(pkgpath)), force = TRUE)
   })
 }

@@ -25,3 +25,4 @@ The weird name is a derivative of a \href{http://stackoverflow.com/questions/612
    download the package from CRAN or github if the name + version combo
    does not exist.
 }
+

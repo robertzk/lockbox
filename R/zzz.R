@@ -42,6 +42,7 @@ set_transient_library <- function() {
   # Finally, we initialize the transient library with some sane default symlinks.
   with_real_packages(lockbox_library(), function(pkgpath) {
     versions <- list.files(pkgpath)
+    versions <- grep("^[0-9.]+$", versions, value = TRUE)
     if (length(versions) == 0) { return() }
     src <- file.path(pkgpath, max(as.package_version(versions), na.rm = TRUE), basename(pkgpath))
     symlink(src, file.path(dir, basename(pkgpath)), force = TRUE)

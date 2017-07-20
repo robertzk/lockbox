@@ -122,21 +122,28 @@ is.locked_package <- function(obj) { methods::is(obj, "locked_package") }
 
 #' The secret lockbox library path.
 lockbox_library <- function() {
-  getOption("lockbox.directory") %||% normalizePath("~/.R/lockbox", mustWork = FALSE)
+  getOption("lockbox.directory")[1L] %||% normalizePath("~/.R/lockbox", mustWork = FALSE)
 }
 
 #' The lockbox download path.
 lockbox_download_dir <- function() {
-  getOption("lockbox.download_dir") %||% file.path(lockbox_library(), "lockbox_download_dir", .lockbox_env$session_id)
+  if (!is.null(getOption("lockbox.download_dir"))) {
+    getOption("lockbox.download_dir")[1L]
+  } else if (!is.null(.lockbox_env$session_id)) {
+    file.path(paste0(lockbox_library(), "_download_dir_sessions"), .lockbox_env$session_id)
+  } else {
+    paste0(lockbox_library(), "_download_dir")
+  }
 }
 
 #' The transient lockbox library path.
 lockbox_transient_dir <- function() {
-  if (!is.null(.lockbox_env$session_id)) {
-    normalizePath(file.path("~/.R/lockbox_transient", .lockbox_env$session_id), mustWork = FALSE)
+  if (!is.null(getOption("lockbox.transient_dir"))) {
+    getOption("lockbox.transient_dir")[1L]
+  } else if (!is.null(.lockbox_env$session_id)) {
+    normalizePath(file.path("~/.R/lockbox_transient_sessions", .lockbox_env$session_id), mustWork = FALSE)
   } else {
-    getOption("lockbox.transient_dir") %||%
-      normalizePath("~/.R/lockbox_transient", mustWork = FALSE)
+    normalizePath("~/.R/lockbox_transient", mustWork = FALSE)
   }
 }
 

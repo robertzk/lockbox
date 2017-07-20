@@ -16,4 +16,3 @@ By default \code{TRUE}.}
 \description{
 Symlink a package with the appropriate version into the current library.
 }
-

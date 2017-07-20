@@ -9,4 +9,3 @@ lockbox_transient_dir()
 \description{
 The transient lockbox library path.
 }
-

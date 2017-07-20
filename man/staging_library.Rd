@@ -16,4 +16,3 @@ constructed that is used during the installation process. This
 function generates that library and returns its (temporary)
 directory name. See the vignette on "Libraries in Lockbox" for more details.
 }
-

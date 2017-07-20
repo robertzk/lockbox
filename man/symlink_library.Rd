@@ -17,4 +17,3 @@ library.}
 \description{
 Symlink all packages from a destination library to a target library.
 }
-

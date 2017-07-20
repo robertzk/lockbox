@@ -4,11 +4,14 @@
 \alias{align}
 \title{Symlink a package with the appropriate version into the current library.}
 \usage{
-align(locked_package)
+align(locked_package, verbose = TRUE)
 }
 \arguments{
 \item{locked_package}{locked_package. In particular, the \code{version}
 and \code{name} elements will be used.}
+
+\item{verbose}{logical. Whether or not to announce usage of the package.
+By default \code{TRUE}.}
 }
 \description{
 Symlink a package with the appropriate version into the current library.

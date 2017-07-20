@@ -16,6 +16,14 @@ lockbox_imports <- function() {
   Filter(nzchar, strsplit(read.dcf(dcf)[,"Imports"], "[\n, ]+")[[1]])
 }
 
+announce_package_usage <- function(name, version, dependency = FALSE) {
+  if (isTRUE(dependency)) {
+    cat("Using dependency", crayon_blue(name), as.character(version), "\n")
+  } else {
+    cat("Using", crayon_green(name), as.character(version), "\n")
+  }
+}
+
 #' @author Kevin Ushey
 #' @source \url{https://github.com/rstudio/packrat/blob/92492ebc882bd048f092238af033d8a6fd03902f/R/utils.R#L469}
 symlink <- function(from, to, force = FALSE) {
@@ -54,8 +62,7 @@ is.symlink <- function(path) {
   ## Sys.readlink returns NA for error, "" for 'not a symlink', and <path> for symlink
   ## return false for first two cases, true for second
   result <- Sys.readlink(path)
-  if (is.na(result)) FALSE
-  else nzchar(result)
+  ifelse(is.na(result), FALSE, nzchar(result))
 }
 
 quietly <- function(expr) {

@@ -1,3 +1,7 @@
+# Version 0.2.5.1
+
+  * Version numbers with two digits (e.g., "0.2") are now cast as character.
+
 # Version 0.2.5.0
 
   * Stores and restores github packages specified by ref by hash.  They are only used if specified in the lockfile.

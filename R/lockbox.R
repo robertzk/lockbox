@@ -27,14 +27,7 @@ lockbox.character <- function(file, env) {
 
 #' @export
 lockbox.list <- function(lock, env) {
-  if (missing(env)) env <- "!packages"
-  if (is.null(lock$packages)) stop("Invalid config. Make sure your config format is correct")
-  if (identical(env, "!packages") || is.null(lock[[env]])) {
-    lock <- lock$packages
-  } else {
-    lock <- lock$packages[vapply(lock$packages, `[[`, character(1), "name") %in% lock[[env]]]
-  }
-
+  lock <- parse_lock(lock, env)
   lock <- lapply(lock, as.locked_package)
   disallow_special_packages(lock)
   disallow_duplicate_packages(lock)
@@ -77,6 +70,17 @@ lockbox.default <- function(obj) {
     "must be a ", sQuote("character"), " or ", sQuote("list"), " but ",
     "instead I got a ", sQuote(class(obj)[1]), "."
   )
+}
+
+
+parse_lock <- function(lock, env = "!packages") {
+  if (is.null(lock$packages)) stop("Invalid config. Make sure your config format is correct")
+  lock <- if (identical(env, "!packages") || is.null(lock[[env]])) {
+    lock$packages
+  } else {
+    lock$packages[vapply(lock$packages, `[[`, character(1), "name") %in% lock[[env]]]
+  }
+  lapply(lock, function(xs) lapply(xs, function(x) as.character(x)))
 }
 
 reset_to_latest_version <- function(locked_package) {

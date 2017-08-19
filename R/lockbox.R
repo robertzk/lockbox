@@ -73,7 +73,7 @@ lockbox.default <- function(obj) {
 }
 
 
-parse_lock <- function(lock, env = "!packages") {
+parse_lock <- function(lock, env = getOption("lockbox.env", "!packages")) {
   if (is.null(lock$packages)) stop("Invalid config. Make sure your config format is correct")
   lock <- if (identical(env, "!packages") || is.null(lock[[env]])) {
     lock$packages

@@ -1,9 +1,0 @@
-packages:
-  -
-    name: test
-    version: 0.2.2
-    repo: test/test
-  -
-    name: test-two
-    version: 2.5
-    repo: test/test-two

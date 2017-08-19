@@ -1,0 +1,15 @@
+packages:
+  -
+    name: test
+    version: 1.2
+    repo: test/test
+  -
+    name: other_test
+    version: 3.2
+    repo: test/other_test
+
+dev:
+  - test
+
+prod:
+  - other_test

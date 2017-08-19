@@ -35,6 +35,31 @@ test_that("it can check for invalid config", {
   expect_error(lockbox:::parse_lock(list()), "Invalid config")
 })
 
+test_that("it rejects inputs that are not list or character", {
+  expect_error(lockbox:::parse_lock(42), "Invalid parameters")
+})
+
+test_that("it can parse a yaml file", {
+  parsed_lock <- lockbox:::parse_lock("data/test-basic.yml")
+  expect_equal(length(parsed_lock), 1)
+  expect_equal(parsed_lock[[1]][["name"]], "test")
+  expect_equal(parsed_lock[[1]][["version"]], "1.0.0")
+})
+
+test_that("it can parse a yaml file with multiple packages", {
+  parsed_lock <- lockbox:::parse_lock("data/test-multiple.yml")
+  expect_equal(length(parsed_lock), 2)
+  expect_equal(parsed_lock[[1]][["name"]], "test")
+  expect_equal(parsed_lock[[1]][["version"]], "1.0.0")
+  expect_equal(parsed_lock[[2]][["name"]], "other_test")
+  expect_equal(parsed_lock[[2]][["version"]], "2.0.0")
+})
+
+test_that("version numbers on yaml files are correct", {
+  parsed_lock <- lockbox:::parse_lock("data/test-versions.yml")
+  expect_equal(parsed_lock[[1]][["version"]], "1.0")
+})
+
 describe("it can read envs", {
   packages <- list(list(name = "test", version = "1.2", repo = "test/test"),
                    list(name = "other_test", version = "3.2", repo = "test/other_test"))
@@ -56,6 +81,31 @@ describe("it can read envs", {
   test_that("version numbers are still character", {
     for (env in c("dev", "prod")) {
       parsed_lock <- lockbox:::parse_lock(lock, env = env)
+      for (element in parsed_lock[[1]]) {
+        expect_is(element, "character")
+      }
+    }
+  })
+})
+
+describe("it can read envs from a yaml", {
+  describe("dev env", {
+    parsed_lock <- lockbox:::parse_lock("data/test-envs.yml", env = "dev")
+    test_that("it ignores other_test", {
+      expect_equal(length(parsed_lock), 1)
+      expect_equal(parsed_lock[[1]]$name, "test")
+    })
+  })
+  describe("dev env", {
+    parsed_lock <- lockbox:::parse_lock("data/test-envs.yml", env = "prod")
+    test_that("it ignores test", {
+      expect_equal(length(parsed_lock), 1)
+      expect_equal(parsed_lock[[1]]$name, "other_test")
+    })
+  })
+  test_that("version numbers are still character", {
+    for (env in c("dev", "prod")) {
+      parsed_lock <- lockbox:::parse_lock("data/test-envs.yml", env = env)
       for (element in parsed_lock[[1]]) {
         expect_is(element, "character")
       }

@@ -69,7 +69,7 @@ parse_lock <- function(lock, env = getOption("lockbox.env", "!packages")) {
   } else {
     lock$packages[vapply(lock$packages, `[[`, character(1), "name") %in% lock[[env]]]
   }
-  lapply(lock, function(xs) lapply(xs, function(x) as.character(x)))
+  lapply(lock, function(xs) lapply(xs, as.character))
 }
 
 reset_to_latest_version <- function(locked_package) {

@@ -58,6 +58,8 @@ test_that("it can parse a yaml file with multiple packages", {
 test_that("version numbers on yaml files are correct", {
   parsed_lock <- lockbox:::parse_lock("data/test-versions.yml")
   expect_equal(parsed_lock[[1]][["version"]], "1.0")
+  expect_equal(parsed_lock[[2]][["version"]], "1.1")
+  expect_equal(parsed_lock[[3]][["version"]], "1")
 })
 
 describe("it can read envs", {
@@ -111,4 +113,20 @@ describe("it can read envs from a yaml", {
       }
     }
   })
+})
+
+test_that("it loads the example from the README", {
+  parsed_lock <- lockbox:::parse_lock("data/test-readme-example.yml")
+  expect_equal(names(parsed_lock[[1]]), c("name", "version", "repo"))
+  expect_is(parsed_lock[[1]]$version, "character")
+  expect_equal(names(parsed_lock[[2]]), c("name", "version", "repo", "load"))
+  expect_is(parsed_lock[[2]]$version, "character")
+  expect_is(parsed_lock[[2]]$load, "logical")
+  expect_equal(names(parsed_lock[[3]]), c("name", "version"))
+  expect_is(parsed_lock[[3]]$version, "character")
+  expect_equal(names(parsed_lock[[4]]), c("name", "version", "dir"))
+  expect_equal(names(parsed_lock[[5]]), c("name", "version", "dir", "autoinstall"))
+  expect_is(parsed_lock[[5]]$version, "character")
+  expect_is(parsed_lock[[5]]$autoinstall, "logical")
+  expect_equal(names(parsed_lock[[6]]), c("name", "version", "repo"))
 })

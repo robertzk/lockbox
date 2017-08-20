@@ -55,7 +55,9 @@ lockbox <- function(file_or_list, env = getOption("lockbox.env", "!packages")) {
 
 parse_lock <- function(lock, env = getOption("lockbox.env", "!packages")) {
   if (is.character(lock) && length(lock) == 1) {
-    handle_float_version <- function(x) { sprintf("%.1f", x) }
+    handle_float_version <- function(x) {
+      if (is.numeric(x)) { sprintf("%.1f", x) }
+      else { x }}
     lock <- yaml::yaml.load_file(lock, handlers = list("float#fix" = handle_float_version))
   }
   else if (!is.list(lock)) {
@@ -69,7 +71,11 @@ parse_lock <- function(lock, env = getOption("lockbox.env", "!packages")) {
   } else {
     lock$packages[vapply(lock$packages, `[[`, character(1), "name") %in% lock[[env]]]
   }
-  lapply(lock, function(xs) lapply(xs, as.character))
+  format_fn <- function(x) {
+    if (is.numeric(x)) { as.character(x) }
+    else { x }
+  }
+  lapply(lock, function(xs) lapply(xs, format_fn))
 }
 
 reset_to_latest_version <- function(locked_package) {

@@ -33,12 +33,12 @@ is.autoinstall_package <- function(locked_package) {
 }
 
 lockbox_package_path <- function(locked_package, library = lockbox_library()) {
-  ## The final package is stored in lockbox_lib_path/pkg_name/version/pkg_name
+  ## The final package is stored in lockbox_lib_path/pkg_name/ref %||% version/pkg_name
   ## The trailing pkg_name is to ensure help files work, since these depend
   ## on the directory name:
   ## https://github.com/wch/r-source/blob/ed66b715221d2720f5b334470335635bada520b1/src/library/utils/R/help.R#L213
   file.path(library, locked_package$name
-    , package_version(as.character(locked_package$version))
+    , locked_package$ref %||% as.character(package_version(locked_package$version))
     , locked_package$name)
 }
 
@@ -132,7 +132,7 @@ install_from_dir <- function(extracted_dir, libPath, quiet) {
 install_locked_package <- function(locked_package) {
   if (!locked_package$is_dependency_package) {
     cat("Installing", crayon_green(locked_package$name),
-      as.character(locked_package$version), "from", class(locked_package)[1], "\n")
+      as.character(locked_package$ref %||% locked_package$version), "from", class(locked_package)[1], "\n")
   } else {
     cat("Installing dependency", crayon_blue(locked_package$name),
       "from", locked_package$remote, "\n")
@@ -167,7 +167,7 @@ install_locked_package <- function(locked_package) {
       sQuote(locked_package$version), sQuote(ver)), call. = FALSE)
   }
 
-  copy_real_packages_to_lockbox_library(temp_library)
+  move_package_to_lockbox_library(pkg_path = file.path(temp_library, locked_package$name), ref = locked_package$ref)
   unlink(temp_library, TRUE, TRUE)
 }
 

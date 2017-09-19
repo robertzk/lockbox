@@ -71,6 +71,8 @@ add_latest_version_in_lockbox <- function(package) {
 
 ## Take a vector of versions and find the max without coercing to package_version
 max_package_version <- function(versions) {
+  # Only consider versions that are parsable as versions
+  versions <- versions[!is.na(package_version(versions, strict = FALSE))]
   if (length(versions) == 0) return(NULL)
   formatted_versions <- package_version(as.character(versions))
   versions[which(formatted_versions == max(formatted_versions))[1]]

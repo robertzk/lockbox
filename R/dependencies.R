@@ -208,7 +208,7 @@ get_dependencies <- function(package, lock) {
   } else {
     cat(crayon_blue("."))
     output <- tryCatch(get_remote_dependencies(package), error = function(e) e)
-    if (is(output, "error")) {
+    if (methods::is(output, "error")) {
       stop(crayon_red(paste0("Dependencies could not be resolved for package: "
         , package$name, " version: ", package$version
         , " remote: ", package$remote, " due to error: ", output)))
@@ -308,7 +308,7 @@ download_description_github <- function(package) {
     class = c(remote, class(package))))
   package$download_path <- filepath
   file_list <- try(unzip(filepath, list = TRUE))
-  if (is(file_list, "try-error")) {
+  if (methods::is(file_list, "try-error")) {
     filepath <- download_package(structure(
       package,
       class = c(remote, class(package))), force = TRUE)

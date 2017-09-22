@@ -1,11 +1,15 @@
 .lockbox_env <- new.env(parent = emptyenv())
 
 set_session_id <- function() {
+  if (isTRUE(getOption("lockbox.disable_sessions"))) {
+    return()
+  }
+
   if (is.null(.lockbox_env$session_id)) {
     ## This is our first run, so we want to register the finalizer to drop our temp directories
     reg.finalizer(.lockbox_env, function(env) {
       lapply(
-        c(lockbox_transient_staging_dir(), lockbox_transient_dir()), 
+        lockbox_session_dirs(), 
           function(path) {  try(unlink(x, recursive = TRUE, force = TRUE), silent = TRUE) }
         )
     }, onexit = TRUE)  
@@ -16,7 +20,6 @@ set_session_id <- function() {
   } else {
     .lockbox_env$session_id <- .lockbox_env$session_id %||% digest::digest(as.integer(Sys.time()))
   }
-  
 }
 
 set_transient_library <- function() {
@@ -35,6 +38,15 @@ set_transient_library <- function() {
     dir.create(transient_staging_path, FALSE, TRUE)
   }
   .libPaths(c(transient_staging_path, dir, .libPaths()))
+
+  # Finally, we initialize the transient library with some sane default symlinks.
+  with_real_packages(lockbox_library(), function(pkgpath) {
+    versions <- list.files(pkgpath)
+    versions <- grep("^[0-9.]+$", versions, value = TRUE)
+    if (length(versions) == 0) { return() }
+    src <- file.path(pkgpath, max(as.package_version(versions), na.rm = TRUE), basename(pkgpath))
+    symlink(src, file.path(dir, basename(pkgpath)), force = TRUE)
+  })
 }
 
 set_default_mirror <- function() {

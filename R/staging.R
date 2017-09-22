@@ -49,10 +49,10 @@ with_real_packages <- function(libpath, action) {
   stopifnot(is.function(action))
 
   packages <- list.files(libpath, full.names = TRUE)
-  packages <- Filter(Negate(is.symlink), packages)
+  packages <- packages[!is.symlink(packages)]
 
   for (i in seq_along(packages)) {
-    action(packages[[i]])
+    action(packages[i])
   }
 }
 

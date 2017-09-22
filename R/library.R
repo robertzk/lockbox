@@ -38,7 +38,7 @@ lockbox_package_path <- function(locked_package, library = lockbox_library()) {
   ## on the directory name:
   ## https://github.com/wch/r-source/blob/ed66b715221d2720f5b334470335635bada520b1/src/library/utils/R/help.R#L213
   file.path(library, locked_package$name
-    , locked_package$ref %||% as.character(package_version(locked_package$version))
+    , locked_package$ref %||% package_version(as.character(locked_package$version))
     , locked_package$name)
 }
 

@@ -1,3 +1,7 @@
+# Version 0.2.5.0
+
+  * Stores and restores github packages specified by ref by hash.  They are only used if specified in the lockfile.
+
 # Version 0.2.4.8
 
   * Fix printing of dependencies loaded during `lockbox::lockbox` call.

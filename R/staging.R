@@ -37,16 +37,9 @@ symlink_library <- function(src, target) {
   }
 }
 
-#' Copy real (non-symlinked) packages to the lockbox library.
-#'
-#' @param staging_library character. The location of the staging library.
-copy_real_packages_to_lockbox_library <- function(staging_library) {
-  with_real_packages(staging_library, move_package_to_lockbox_library)
-}
-
-move_package_to_lockbox_library <- function(pkg_path) {
+move_package_to_lockbox_library <- function(pkg_path, ref = NULL) {
   tmp_path <- file.path(lockbox_library(), basename(pkg_path))
-  new_path <- file.path(tmp_path, package_version_from_path(pkg_path), basename(pkg_path))
+  new_path <- file.path(tmp_path, ref %||% package_version_from_path(pkg_path), basename(pkg_path))
   dir.create(dirname(new_path), FALSE, TRUE)
   unlink(new_path, TRUE, TRUE)
   file.rename(pkg_path, new_path)

@@ -10,32 +10,14 @@
 #' Since lockbox maintains a separate directory for its library, it will not
 #' interfere with R's usual packages or libraries when R is restarted.
 #'
-#' @export
 #' @param file_or_list character or list. A yaml-based lock file or its
 #'    parsed out list format. This set of packages will be loaded into the
 #'    search path and \emph{all other packages will be unloaded}.
 #' @param env character. The name of the entry in the lockfile that contains
 #'    package information.
+#' @export
 lockbox <- function(file_or_list, env = getOption("lockbox.env", "!packages")) {
-  UseMethod("lockbox")
-}
-
-#' @export
-lockbox.character <- function(file, env) {
-  lockbox(yaml::yaml.load_file(file), env)
-}
-
-#' @export
-lockbox.list <- function(lock, env) {
-  if (missing(env)) env <- "!packages"
-  if (is.null(lock$packages)) stop("Invalid config. Make sure your config format is correct")
-  if (identical(env, "!packages") || is.null(lock[[env]])) {
-    lock <- lock$packages
-  } else {
-    lock <- lock$packages[vapply(lock$packages, `[[`, character(1), "name") %in% lock[[env]]]
-  }
-
-  lock <- lapply(lock, as.locked_package)
+  lock <- lapply(parse_lock(file_or_list, env), as.locked_package)
   disallow_special_packages(lock)
   disallow_duplicate_packages(lock)
 
@@ -70,13 +52,27 @@ lockbox.list <- function(lock, env) {
   })
 }
 
-#' @export
-lockbox.default <- function(obj) {
-  stop(
-    "Invalid parameters passed to ", sQuote("lockbox"), " method: ",
-    "must be a ", sQuote("character"), " or ", sQuote("list"), " but ",
-    "instead I got a ", sQuote(class(obj)[1]), "."
-  )
+
+parse_lock <- function(lock, env = getOption("lockbox.env", "!packages")) {
+  if (is.character(lock) && length(lock) == 1) {
+    lock <- yaml::yaml.load_file(lock, handlers = list("float#fix" = identity))
+  }
+  else if (!is.list(lock)) {
+  stop("Invalid parameters passed to ", sQuote("lockbox"), " method: ",
+       "must be a ", sQuote("character"), " or ", sQuote("list"), " but ",
+       "instead I got a ", sQuote(class(lock)[1]), ".")
+  }
+  if (is.null(lock$packages)) stop("Invalid config. Make sure your config format is correct")
+  lock <- if (identical(env, "!packages") || is.null(lock[[env]])) {
+    lock$packages
+  } else {
+    lock$packages[vapply(lock$packages, `[[`, character(1), "name") %in% lock[[env]]]
+  }
+  format_fn <- function(x) {
+    if (is.numeric(x)) { as.character(x) }
+    else { x }
+  }
+  lapply(lock, function(xs) lapply(xs, format_fn))
 }
 
 reset_to_latest_version <- function(locked_package) {

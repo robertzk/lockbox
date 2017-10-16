@@ -1,0 +1,26 @@
+packages:
+  -
+    name: tundra
+    version: 0.2.2
+    repo: robertzk/tundra
+  -
+    name: director
+    version: 0.2.1
+    repo: robertzk/director
+    load: false
+  -
+    name: kselection
+    version: 0.2.0
+  -
+    name: yourpkg
+    version: 0.1.0
+    dir: /your/pkg
+  -
+    name: yourpkg
+    version: 0.1.0
+    dir: /your/pkg
+    autoinstall: true
+  -
+    name: privatepkg
+    version: 0.1.4
+    repo: privateorg/privatepkg

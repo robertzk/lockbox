@@ -1,0 +1,20 @@
+packages:
+  -
+    name: test
+    version: 1.2
+    repo: test/test
+  -
+    name: test2
+    version: 0.999
+    repo: test/test2
+  -
+    name: other_test
+    version: 3.2
+    repo: test/other_test
+
+dev:
+  - test
+  - test2
+
+prod:
+  - other_test

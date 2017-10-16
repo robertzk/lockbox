@@ -55,10 +55,7 @@ lockbox <- function(file_or_list, env = getOption("lockbox.env", "!packages")) {
 
 parse_lock <- function(lock, env = getOption("lockbox.env", "!packages")) {
   if (is.character(lock) && length(lock) == 1) {
-    handle_float_version <- function(x) {
-      if (is.numeric(x)) { sprintf("%.1f", x) }
-      else { x }}
-    lock <- yaml::yaml.load_file(lock, handlers = list("float#fix" = handle_float_version))
+    lock <- yaml::yaml.load_file(lock, handlers = list("float#fix" = identity))
   }
   else if (!is.list(lock)) {
   stop("Invalid parameters passed to ", sQuote("lockbox"), " method: ",

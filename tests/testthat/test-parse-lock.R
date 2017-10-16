@@ -94,11 +94,15 @@ describe("it can read envs from a yaml", {
   describe("dev env", {
     parsed_lock <- lockbox:::parse_lock("data/test-envs.yml", env = "dev")
     test_that("it ignores other_test", {
-      expect_equal(length(parsed_lock), 1)
+      expect_equal(length(parsed_lock), 2)
       expect_equal(parsed_lock[[1]]$name, "test")
     })
+
+    test_that("it can handle versions with more than one digit", {
+      expect_equal(parsed_lock[[2]]$version, "0.999") 
+    })
   })
-  describe("dev env", {
+  describe("prod env", {
     parsed_lock <- lockbox:::parse_lock("data/test-envs.yml", env = "prod")
     test_that("it ignores test", {
       expect_equal(length(parsed_lock), 1)

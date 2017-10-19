@@ -15,7 +15,7 @@ lockbox::lockbox("lockfile.yml")
 
 Your search path will be cleared of all other loaded packages, ensuring you
 have exactly and only what is in the lockfile. If you place the above line
-in the `.Rprofile` accompanying your project directory and keep the
+in the `.Rprofile` accompanying your project directory and keep the 
 `lockfile.yml` under source control, launching the R console after
 switching to earlier commits will instantly load your old dependencies,
 forever freeing you from having to worry about dependency management.
@@ -34,7 +34,7 @@ devtools::install_github("robertzk/lockbox")
 Real examples
 ------------
 
-* [A very simple lockfile](https://github.com/syberia/base.sy/blob/master/lockfile.yml)
+* [A very simple lockfile](https://github.com/syberia/base.sy/blob/master/lockfile.yml) 
 * [A more complicated lockfile](https://github.com/syberia/example.sy/blob/master/lockfile.yml)
 
 Example Lock File
@@ -48,11 +48,11 @@ packages:
     # off tag 0.2.2. You can specify a different tag / branch / ref using:
     #   ref: v0.2.2 # For example
     name: tundra
-    version: "0.2.2"
+    version: 0.2.2
     repo: robertzk/tundra
   -
     name: director
-    version: "0.2.1"
+    version: 0.2.1
     repo: robertzk/director
     load: false # This package will not be loaded by default. The user must
                 # request it by calling library(director). In that case,
@@ -61,7 +61,7 @@ packages:
     # Use the kselection package version 0.2.0 from CRAN.
     # If this is not the current version, the CRAN archive will be used.
     name: kselection
-    version: "0.2.0"
+    version: 0.2.0
   -
     # Install a local (development) package version 0.1.0 from directory
     # /your/pkg. Using this approach is not recommended, since you will
@@ -70,7 +70,7 @@ packages:
     # the same package / version in the same directory. However, it is useful
     # for development prior to pushing a new version to, e.g., github.
     name: yourpkg
-    version: "0.1.0"
+    version: 0.1.0
     dir: /your/pkg
   -
     # Install a local package and re-install it every time your lockbox loads
@@ -78,7 +78,7 @@ packages:
     # ...Keep in mind that the contents of autoinstalled packages are only
     # *loaded*, and not re-saved to lockbox each time...
     name: yourpkg
-    version: "0.1.0"
+    version: 0.1.0
     dir: /your/pkg
     autoinstall: true
   -
@@ -88,7 +88,7 @@ packages:
     #   https://help.github.com/articles/creating-an-access-token-for-command-line-use/
     # It should be a 32-character hexadecimal string.
     name: privatepkg
-    version: "0.1.4"
+    version: 0.1.4
     repo: privateorg/privatepkg
 ```
 
@@ -97,7 +97,7 @@ Notes
 
 If you call `library(lockbox)` from within a directory that contains
 a `lockfile.yml` somewhere in a parent directory, that lockfile
-will be loaded and the relevant package versions attached to the
+will be loaded and the relevant package versions attached to the 
 search path. In particular, you can place `library(lockbox)` in
 your `~/.Rprofile` and lockbox will be loaded if and only if
 you start your R session from a project that is managed by lockbox.

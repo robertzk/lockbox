@@ -3,6 +3,7 @@
 export(emptybox)
 export(lockbox)
 import(digest)
+import(jsonlite)
 import(utils)
 import(yaml)
 useDynLib(lockbox,duplicate_lockbox_)

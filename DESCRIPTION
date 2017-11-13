@@ -12,15 +12,16 @@ Depends:
 License: MIT
 LazyData: true
 Imports:
-    httr,
-    yaml,
     digest,
-    utils
+    httr,
+    jsonlite,
+    utils,
+    yaml
 Suggests:
+    devtools,
     knitr,
     microbenchmark,
     testthat,
-    devtools,
     uuid
 Roxygen: list(wrap = FALSE)
 VignetteBuilder: knitr

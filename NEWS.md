@@ -1,3 +1,7 @@
+# Version 0.2.5.2
+
+  * Support `tarball` remote in `lockfile.yml`.
+
 # Version 0.2.5.1
 
   * Version numbers with two digits (e.g., "0.2") are now cast as character.

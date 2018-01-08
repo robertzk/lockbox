@@ -15,7 +15,7 @@ lockbox::lockbox("lockfile.yml")
 
 Your search path will be cleared of all other loaded packages, ensuring you
 have exactly and only what is in the lockfile. If you place the above line
-in the `.Rprofile` accompanying your project directory and keep the 
+in the `.Rprofile` accompanying your project directory and keep the
 `lockfile.yml` under source control, launching the R console after
 switching to earlier commits will instantly load your old dependencies,
 forever freeing you from having to worry about dependency management.
@@ -34,7 +34,7 @@ devtools::install_github("robertzk/lockbox")
 Real examples
 ------------
 
-* [A very simple lockfile](https://github.com/syberia/base.sy/blob/master/lockfile.yml) 
+* [A very simple lockfile](https://github.com/syberia/base.sy/blob/master/lockfile.yml)
 * [A more complicated lockfile](https://github.com/syberia/example.sy/blob/master/lockfile.yml)
 
 Example Lock File
@@ -90,6 +90,13 @@ packages:
     name: privatepkg
     version: 0.1.4
     repo: privateorg/privatepkg
+  -
+    # You can install packages directly from a file hosting server or AWS S3
+    # If they are distributed in a form of a CRAN-compatible tarball
+    name: tarballpkg
+    version: 3.2.2
+    remote: tarball
+    url: https://example.org/tarball.tar.gz
 ```
 
 Notes
@@ -97,7 +104,7 @@ Notes
 
 If you call `library(lockbox)` from within a directory that contains
 a `lockfile.yml` somewhere in a parent directory, that lockfile
-will be loaded and the relevant package versions attached to the 
+will be loaded and the relevant package versions attached to the
 search path. In particular, you can place `library(lockbox)` in
 your `~/.Rprofile` and lockbox will be loaded if and only if
 you start your R session from a project that is managed by lockbox.

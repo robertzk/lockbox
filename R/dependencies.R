@@ -98,7 +98,7 @@ replace_with_lock <- function(package, lock) {
   } else {
     package$is_dependency_package <- TRUE
   }
-  if (!"remote" %in% names(package) || is.na(package$remote)) {
+  if (is.null(package$remote) || is.na(package$remote)) {
     package$remote <- "CRAN"
   }
   package <- as.locked_package(package)
@@ -294,6 +294,12 @@ get_remote_dependencies.CRAN <- function(package) {
   list(package = package, dependencies = dependencies_from_description(package, dcf))
 }
 
+
+## For packages from a tarball we can reuse all of the CRAN code
+## Method dispatch in `download_package` will take care of the
+## differences
+get_remote_dependencies.tarball <- get_remote_dependencies.CRAN
+
 ## Download the accurate remote DESCRIPTION file for a github repo.
 get_remote_dependencies.github <- function(package) {
   output <- download_description_github(package)
@@ -351,12 +357,12 @@ dependencies_from_description <- function(package, dcf) {
 
   ## The parse_dcf function returns a matrix where rows correspond to packages
   ## and column 1 corresponds to the package name and column 3 corresponds to
-  ## its version requirement.  The rownames of this matrix are the type of 
+  ## its version requirement.  The rownames of this matrix are the type of
   ## dependency (Depends, Imports, LinkingTo, or Remotes)
   dependencies_parsed <- as.data.frame(parse_dcf(dcf
     , depLevel = dependency_levels[dependency_levels %in%
       colnames(dcf)])[[package$name]])
-  
+
   if(NROW(dependencies_parsed) == 1 && NCOL(dependencies_parsed) == 1) return(list())
 
   ## We separate out non-remote dependencies from remote dependencies, because
@@ -423,7 +429,7 @@ extract_package_from_remote <- function(original_name, version, matches_github) 
   }
 
   ## We extract the package name and repo name from the entry
-  ## Could potentially fail if the repo is named something different 
+  ## Could potentially fail if the repo is named something different
   ## than its package name.  Other option is to download it now
   ## and parse it on the fly, but if we do that we have to do it
   ## every time we load, since we don't know its package name to

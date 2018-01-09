@@ -82,10 +82,17 @@ install_package.local <- function(locked_package, libPath, quiet) {
 }
 
 install_package.tarball <- function(locked_package, libPath, quiet) {
-  stopifnot(is.element("url", names(locked_package)))
+  ## First, attempt to install the already downloaded tarball
+  try(utils::install.packages(locked_package$download_path, lib = libPath
+    , repos = NULL, type = "source", quiet = quiet))
+  pkgdir <- file.path(libPath, locked_package$name)
 
-  utils::install.packages(locked_package$url, lib = libPath, repos = NULL
-    , quiet = quiet)
+  ## If that didn't work out, attempt to download directly from URL
+  if (!file.exists(pkgdir)) {
+    stopifnot(is.element("url", names(locked_package)))
+    utils::install.packages(locked_package$url, lib = libPath, repos = NULL
+      , quiet = quiet)
+  }
 }
 
 install_package.CRAN <- function(locked_package, libPath, quiet) {

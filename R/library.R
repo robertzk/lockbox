@@ -84,7 +84,7 @@ install_package.local <- function(locked_package, libPath, quiet) {
 install_package.tarball <- function(locked_package, libPath, quiet) {
   ## First, attempt to install the already downloaded tarball
   try(utils::install.packages(locked_package$download_path, lib = libPath
-    , repos = NULL, type = "source", quiet = quiet))
+    , repos = NULL, type = "source", quiet = quiet), silent = TRUE)
   pkgdir <- file.path(libPath, locked_package$name)
 
   ## If that didn't work out, attempt to download directly from URL
@@ -99,7 +99,7 @@ install_package.CRAN <- function(locked_package, libPath, quiet) {
   ## We already downloaded a source file when parsing DESCRIPTIONS, so try that
   ## first
   try(utils::install.packages(locked_package$download_path, lib = libPath
-    , repos = NULL, type = "source", quiet = quiet))
+    , repos = NULL, type = "source", quiet = quiet), silent = TRUE)
   pkgdir <- file.path(libPath, locked_package$name)
 
   ## Last chance at installation if compilation fails.  Install through normal

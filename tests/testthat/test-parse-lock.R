@@ -99,7 +99,7 @@ describe("it can read envs from a yaml", {
     })
 
     test_that("it can handle versions with more than one digit", {
-      expect_equal(parsed_lock[[2]]$version, "0.999") 
+      expect_equal(parsed_lock[[2]]$version, "0.999")
     })
   })
   describe("prod env", {
@@ -133,4 +133,5 @@ test_that("it loads the example from the README", {
   expect_is(parsed_lock[[5]]$version, "character")
   expect_is(parsed_lock[[5]]$autoinstall, "logical")
   expect_equal(names(parsed_lock[[6]]), c("name", "version", "repo"))
+  expect_equal(names(parsed_lock[[7]]), c("name", "version", "remote", "url"))
 })

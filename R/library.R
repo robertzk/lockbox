@@ -81,11 +81,25 @@ install_package.local <- function(locked_package, libPath, quiet) {
     , type = "source", quiet = quiet)
 }
 
+install_package.tarball <- function(locked_package, libPath, quiet) {
+  ## First, attempt to install the already downloaded tarball
+  try(utils::install.packages(locked_package$download_path, lib = libPath
+    , repos = NULL, type = "source", quiet = quiet), silent = TRUE)
+  pkgdir <- file.path(libPath, locked_package$name)
+
+  ## If that didn't work out, attempt to download directly from URL
+  if (!file.exists(pkgdir)) {
+    stopifnot(is.element("url", names(locked_package)))
+    utils::install.packages(locked_package$url, lib = libPath, repos = NULL
+      , quiet = quiet)
+  }
+}
+
 install_package.CRAN <- function(locked_package, libPath, quiet) {
   ## We already downloaded a source file when parsing DESCRIPTIONS, so try that
   ## first
   try(utils::install.packages(locked_package$download_path, lib = libPath
-    , repos = NULL, type = "source", quiet = quiet))
+    , repos = NULL, type = "source", quiet = quiet), silent = TRUE)
   pkgdir <- file.path(libPath, locked_package$name)
 
   ## Last chance at installation if compilation fails.  Install through normal
@@ -270,6 +284,20 @@ download_package.github <- function(package, force) {
   }
   remote <- get_remote(package)
   remote_download.github_remote(remote, dest, quiet = !isTRUE(getOption('lockbox.verbose')))
+}
+
+## download a raw tarball from a URL
+download_package.tarball <- function(package, force) {
+  dest <- lockbox_package_download_path(package)
+  if (is.na(package$version)) {
+    package$version <- NULL
+  }
+
+  suppressWarnings(tryCatch(
+    download.file(url = package$url, destfile = lockbox_package_download_path(package)
+    , quiet = notTRUE(getOption('lockbox.verbose'))), error = function(e) e))
+
+  dest
 }
 
 get_download_type <- function(package) {

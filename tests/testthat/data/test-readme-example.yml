@@ -24,3 +24,8 @@ packages:
     name: privatepkg
     version: 0.1.4
     repo: privateorg/privatepkg
+  -
+    name: tarballpkg
+    version: 3.2.2
+    remote: tarball
+    url: https://example.org/tarball.tar.gz
